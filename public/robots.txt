@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# TODO: 실제 도메인으로 교체
+Sitemap: https://example.com/sitemap-index.xml

@@ -1,0 +1,70 @@
+---
+import Base from '../layouts/Base.astro';
+import { RATES } from '../rates/2026';
+---
+
+<Base
+  title={`${RATES.year}년 주휴수당 계산기 (시급·주 근로시간별)`}
+  description={`${RATES.year}년 최저시급 ${RATES.minWageHourly.toLocaleString('ko-KR')}원 기준. 시급과 주 근로시간으로 주휴수당과 월 환산 급여를 계산합니다.`}
+>
+  <h1>{RATES.year}년 주휴수당 계산기</h1>
+  <p class="lead">시급과 주 소정근로시간만 입력하면 주휴수당과 월 환산 급여가 나와요.</p>
+
+  <form id="calc-form" class="card" onsubmit="return false;">
+    <label for="wage">시급 (원)</label>
+    <input id="wage" type="number" inputmode="numeric" min="0" step="10" value={RATES.minWageHourly} />
+    <div class="hint">{RATES.year}년 최저시급은 {RATES.minWageHourly.toLocaleString('ko-KR')}원입니다.</div>
+
+    <label for="hours">1주 소정근로시간</label>
+    <input id="hours" type="number" inputmode="decimal" min="0" max="52" step="0.5" value="40" />
+    <div class="hint">1주 개근한 경우를 기준으로 계산합니다.</div>
+  </form>
+
+  <div class="card">
+    <div class="result-main">
+      <div class="label">주휴수당 (1주)</div>
+      <div class="big" id="out-weekly">-</div>
+    </div>
+    <table>
+      <tbody>
+        <tr><th>주휴수당 지급 대상</th><td id="out-eligible">-</td></tr>
+        <tr><th>주휴시간</th><td id="out-hours">-</td></tr>
+        <tr><th>주휴수당 (월 환산)</th><td id="out-monthly-holiday">-</td></tr>
+        <tr><th>월 환산 근로시간 (주휴 포함)</th><td id="out-paid-hours">-</td></tr>
+        <tr class="total"><th>월 환산 급여 (주휴수당 포함)</th><td id="out-monthly-total">-</td></tr>
+        <tr><th>최저시급 충족</th><td id="out-minwage">-</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>계산 방법</h2>
+  <p>
+    주휴수당은 1주 소정근로시간이 15시간 이상이고 1주를 개근했을 때 지급됩니다.
+    <strong>주휴수당 = (1주 소정근로시간 ÷ 40) × 8시간 × 시급</strong>이며, 주 40시간을 넘어도 40시간까지만 계산합니다.
+    월 환산은 4.345주(365일 ÷ 7일 ÷ 12개월)를 곱해 시간을 정수로 반올림합니다. 주 40시간이면 209시간입니다.
+  </p>
+
+  <script>
+    import { calcWeeklyHolidayPay } from '../lib/weeklyHolidayPay';
+
+    const num = (id: string) => Number((document.getElementById(id) as HTMLInputElement).value) || 0;
+    const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
+    const set = (id: string, text: string) => {
+      document.getElementById(id)!.textContent = text;
+    };
+
+    function render() {
+      const r = calcWeeklyHolidayPay({ hourlyWage: num('wage'), weeklyHours: num('hours') });
+      set('out-weekly', won(r.weeklyHolidayPay));
+      set('out-eligible', r.eligible ? '해당 (주 15시간 이상)' : '해당 없음 (주 15시간 미만)');
+      set('out-hours', `${r.holidayHours}시간`);
+      set('out-monthly-holiday', won(r.monthlyHolidayPay));
+      set('out-paid-hours', `${r.monthlyPaidHours}시간`);
+      set('out-monthly-total', won(r.monthlyTotal));
+      set('out-minwage', r.meetsMinWage ? '충족' : '최저시급 미달');
+    }
+
+    document.getElementById('calc-form')!.addEventListener('input', render);
+    render();
+  </script>
+</Base>

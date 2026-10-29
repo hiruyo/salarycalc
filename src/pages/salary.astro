@@ -1,0 +1,110 @@
+---
+import Base from '../layouts/Base.astro';
+import { RATES } from '../rates/2026';
+
+const pct = (n: number) => `${Number((n * 100).toFixed(3))}%`;
+const man = (n: number) => `${(n / 10000).toLocaleString('ko-KR')}만원`;
+---
+
+<Base
+  title={`${RATES.year}년 연봉 실수령액 계산기 (4대보험·소득세 반영)`}
+  description={`${RATES.year}년 기준 국민연금 ${pct(RATES.pension.rate)}, 건강보험 ${pct(RATES.health.rate)} 요율로 연봉별 월 실수령액을 계산합니다. 비과세 식대, 부양가족 반영.`}
+>
+  <h1>{RATES.year}년 연봉 실수령액 계산기</h1>
+  <p class="lead">연봉을 입력하면 4대보험과 소득세를 뺀 월 실수령액을 바로 보여드려요.</p>
+
+  <form id="calc-form" class="card" onsubmit="return false;">
+    <label for="salary">세전 연봉 (만원)</label>
+    <input id="salary" type="number" inputmode="numeric" min="0" step="100" value="4000" />
+    <div class="hint">퇴직금 별도 기준 연봉을 입력하세요. 예: 4,000만원 → 4000</div>
+
+    <label for="nontax">월 비과세 금액 (원)</label>
+    <input id="nontax" type="number" inputmode="numeric" min="0" step="10000" value="200000" />
+    <div class="hint">식대 등. 식대 비과세 한도는 월 {RATES.mealAllowanceExemptMax.toLocaleString('ko-KR')}원입니다.</div>
+
+    <label for="family">공제대상가족 수 (본인·배우자 포함)</label>
+    <input id="family" type="number" inputmode="numeric" min="1" step="1" value="1" />
+
+    <label for="children">8세 이상 20세 이하 자녀 수</label>
+    <input id="children" type="number" inputmode="numeric" min="0" step="1" value="0" />
+  </form>
+
+  <div class="card">
+    <div class="result-main">
+      <div class="label">월 예상 실수령액</div>
+      <div class="big" data-out="netMonthly">-</div>
+    </div>
+    <table>
+      <tbody>
+        <tr><th>월 급여 (세전)</th><td data-out="grossMonthly">-</td></tr>
+        <tr><th>국민연금</th><td data-out="pension">-</td></tr>
+        <tr><th>건강보험</th><td data-out="health">-</td></tr>
+        <tr><th>장기요양보험</th><td data-out="longTermCare">-</td></tr>
+        <tr><th>고용보험</th><td data-out="employment">-</td></tr>
+        <tr><th>소득세</th><td data-out="incomeTax">-</td></tr>
+        <tr><th>지방소득세</th><td data-out="localIncomeTax">-</td></tr>
+        <tr class="total"><th>공제 합계</th><td data-out="deductionTotal">-</td></tr>
+        <tr class="total"><th>연 환산 실수령액</th><td data-out="netAnnual">-</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="notice">
+    소득세는 근로소득 간이세액표(소득세법 시행령 별표 2, 2026.2.27 개정)로 계산해요. 회사의 급여명세서와 같은 방식이지만,
+    회사별 비과세 항목과 4대보험 정산 시점에 따라 실제 금액과 다를 수 있어요.
+  </p>
+
+  <h2>{RATES.year}년 적용 요율</h2>
+  <div class="card">
+    <table>
+      <tbody>
+        <tr><th>국민연금</th><td>{pct(RATES.pension.rate)} (본인 {pct(RATES.pension.rate / 2)})</td></tr>
+        <tr><th>국민연금 기준소득월액</th><td>{man(RATES.pension.lower)} ~ {man(RATES.pension.upper)}</td></tr>
+        <tr><th>건강보험</th><td>{pct(RATES.health.rate)} (본인 {pct(RATES.health.rate / 2)})</td></tr>
+        <tr><th>장기요양보험</th><td>건강보험료의 {pct(RATES.longTermCare.rateOfHealthPremium)}</td></tr>
+        <tr><th>고용보험</th><td>본인 {pct(RATES.employment.employeeRate)}</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>계산 방법</h2>
+  <p>
+    4대보험은 비과세 금액(식대 등)을 뺀 월 보수를 기준으로 계산하고, 국민연금은 기준소득월액 상·하한 범위 안에서만 부과됩니다.
+    소득세는 비과세를 뺀 월급여와 공제대상가족 수(본인·배우자 포함)로 국세청 근로소득 간이세액표를 조회해 구하고,
+    8세 이상 20세 이하 자녀가 있으면 자녀 수에 따라 세액을 추가로 공제합니다. 지방소득세는 소득세의 10%입니다.
+  </p>
+
+  <h2>자주 묻는 질문</h2>
+  <details>
+    <summary>비과세 식대는 어떻게 입력하나요?</summary>
+    <p>급여명세서에 식대가 비과세로 표시되어 있다면 월 최대 20만원까지 입력하세요. 식대가 없으면 0을 입력합니다.</p>
+  </details>
+  <details>
+    <summary>실제 월급과 왜 차이가 나나요?</summary>
+    <p>회사마다 4대보험 정산 시점, 비과세 항목, 공제 항목, 연말정산 반영 방식이 달라 차이가 생길 수 있어요. 이 계산기는 참고용 예상치입니다.</p>
+  </details>
+
+  <script>
+    import { calcNetPay } from '../lib/netpay';
+
+    const num = (id: string) => Number((document.getElementById(id) as HTMLInputElement).value) || 0;
+    const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
+
+    function render() {
+      const result = calcNetPay({
+        annualSalary: num('salary') * 10_000,
+        nonTaxableMonthly: num('nontax'),
+        familyCount: num('family'),
+        children: num('children'),
+      }) as unknown as Record<string, number>;
+
+      document.querySelectorAll<HTMLElement>('[data-out]').forEach((el) => {
+        const key = el.dataset.out!;
+        el.textContent = won(result[key]);
+      });
+    }
+
+    document.getElementById('calc-form')!.addEventListener('input', render);
+    render();
+  </script>
+</Base>
