@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import SaveHistory from '../components/SaveHistory.astro';
 import { RATES } from '../rates/2026';
 import { legalConversionRate } from '../lib/rentConversion';
 
@@ -41,7 +42,7 @@ const pct = (n: number) => `${Number((n * 100).toFixed(2))}%`;
     </div>
   </form>
 
-  <div class="card">
+  <div class="card" data-history-results>
     <div class="result-main">
       <div class="label" id="out-main-label">월세</div>
       <div class="big" id="out-main">-</div>
@@ -50,6 +51,8 @@ const pct = (n: number) => `${Number((n * 100).toFixed(2))}%`;
       <tbody id="out-rows"></tbody>
     </table>
   </div>
+
+  <SaveHistory calc="rent-conversion" title="전월세전환" />
 
   <p class="notice">
     법정 전환율 상한은 계약 기간 중이나 갱신할 때 보증금을 월세로 바꾸는 경우에 적용돼요. 새로 맺는 계약에는 적용되지 않아 시장 전환율이 더 높을 수 있어요.

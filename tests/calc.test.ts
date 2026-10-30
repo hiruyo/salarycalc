@@ -6,6 +6,7 @@ import { calcWeeklyHolidayPay } from '../src/lib/weeklyHolidayPay.ts';
 import { calcSeverance } from '../src/lib/severance.ts';
 import { calcUnemployment } from '../src/lib/unemployment.ts';
 import { freelancerFromGross, freelancerFromNet } from '../src/lib/freelancer.ts';
+import { loadAll, listFor, save, remove, toCSV, MAX_PER_CALC, STORAGE_KEY, type StorageLike } from '../src/lib/history.ts';
 import { legalConversionRate, jeonseToWolse, wolseToJeonse, impliedConversionRate } from '../src/lib/rentConversion.ts';
 
 // ---- 간이세액표 (소득세법 시행령 별표 2, 2026.2.27 개정) 원본 값과 대조 ----
@@ -274,4 +275,62 @@ test('전월세: 실제 계약 전환율과 잘못된 입력', () => {
   assert.equal(impliedConversionRate(300_000_000, 100_000_000, 1_000_000), 0.06);
   assert.equal(impliedConversionRate(100_000_000, 100_000_000, 500_000), null);
   assert.equal(jeonseToWolse(100_000_000, 200_000_000, 0.05).valid, false);
+});
+
+// ---- 저장·이력 ----
+
+function memStore(initial?: string): StorageLike & { data: Map<string, string> } {
+  const data = new Map<string, string>();
+  if (initial !== undefined) data.set(STORAGE_KEY, initial);
+  return { data, getItem: (k) => data.get(k) ?? null, setItem: (k, v) => void data.set(k, v) };
+}
+
+const snapData = (calc: string, n: number) => ({
+  calc,
+  title: calc,
+  inputs: [['salary', '세전 연봉 (만원)', String(n)]] as [string, string, string][],
+  results: [['월 예상 실수령액', `${n}원`]] as [string, string][],
+});
+
+test('이력: 저장·조회·삭제, 계산기별 분리, 최신순', () => {
+  const st = memStore();
+  save(st, snapData('salary', 1), new Date('2026-10-01T00:00:00Z'));
+  save(st, snapData('salary', 2), new Date('2026-10-02T00:00:00Z'));
+  const other = save(st, snapData('severance-pay', 3), new Date('2026-10-03T00:00:00Z'))!;
+  const list = listFor(st, 'salary');
+  assert.deepEqual(list.map((s) => s.inputs[0][2]), ['2', '1']);
+  assert.equal(listFor(st, 'severance-pay').length, 1);
+  remove(st, other.id);
+  assert.equal(listFor(st, 'severance-pay').length, 0);
+  assert.equal(loadAll(st).length, 2);
+});
+
+test('이력: 계산기별 최대 개수 유지 (오래된 것부터 삭제)', () => {
+  const st = memStore();
+  for (let i = 0; i < MAX_PER_CALC + 5; i++) save(st, snapData('salary', i), new Date(Date.UTC(2026, 0, 1, 0, i)));
+  save(st, snapData('rent-conversion', 99));
+  const list = listFor(st, 'salary');
+  assert.equal(list.length, MAX_PER_CALC);
+  assert.equal(list[0].inputs[0][2], String(MAX_PER_CALC + 4));
+  assert.equal(listFor(st, 'rent-conversion').length, 1);
+});
+
+test('이력: 깨진 데이터와 저장 실패에 안전', () => {
+  assert.deepEqual(loadAll(memStore('not json')), []);
+  assert.deepEqual(loadAll(memStore('{"a":1}')), []);
+  assert.equal(loadAll(memStore('[{"id":1}]')).length, 0);
+  const full: StorageLike = { getItem: () => null, setItem: () => { throw new Error('QuotaExceeded'); } };
+  assert.equal(save(full, snapData('salary', 1)), null);
+});
+
+test('이력: CSV는 BOM·이스케이프·열 합치기', () => {
+  const st = memStore();
+  save(st, { calc: 'x', title: 'x', inputs: [['a', '메모', 'a,"b"']], results: [['결과', '1,000원']] }, new Date(2026, 9, 30, 9, 5));
+  save(st, { calc: 'x', title: 'x', inputs: [['b', '기타', 'z']], results: [['결과', '2원']] }, new Date(2026, 9, 30, 9, 6));
+  const csv = toCSV(listFor(st, 'x').reverse());
+  assert.ok(csv.startsWith('\uFEFF'));
+  const lines = csv.slice(1).split('\r\n');
+  assert.equal(lines[0], '저장일시,메모,기타,결과');
+  assert.equal(lines[1], '2026-10-30 09:05,"a,""b""",,"1,000원"');
+  assert.equal(lines[2], '2026-10-30 09:06,,z,2원');
 });

@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import SaveHistory from '../components/SaveHistory.astro';
 import { RATES } from '../rates/2026';
 import { GUIDES } from '../guides';
 
@@ -45,7 +46,7 @@ const relatedGuides = GUIDES.filter((g) => ['unemployment-benefit-guide'].includ
     <label class="check"><input id="disabled" type="checkbox" /> 장애인 (50세 이상 기준 적용)</label>
   </form>
 
-  <div class="card">
+  <div class="card" data-history-results>
     <div class="result-main">
       <div class="label">총 예상 실업급여</div>
       <div class="big" id="out-total">-</div>
@@ -60,6 +61,8 @@ const relatedGuides = GUIDES.filter((g) => ['unemployment-benefit-guide'].includ
       </tbody>
     </table>
   </div>
+
+  <SaveHistory calc="unemployment-benefit" title="실업급여" />
 
   <p class="notice">
     수급 자격(퇴사 전 18개월 동안 고용보험 가입일수 180일 이상, 권고사직·계약만료 등 비자발적 퇴사, 적극적인 구직활동)은

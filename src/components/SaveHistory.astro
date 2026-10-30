@@ -1,0 +1,50 @@
+---
+interface Props {
+  /** 계산기 식별자 (저장 데이터 구분용, 바꾸면 기존 이력이 안 보임) */
+  calc: string;
+  /** CSV 파일 이름 등에 쓰는 이름 */
+  title: string;
+}
+const { calc, title } = Astro.props;
+---
+
+<section class="card history" data-history data-calc={calc} data-title={title}>
+  <div class="history-head">
+    <h2>내 계산 기록</h2>
+    <div class="history-actions">
+      <button type="button" data-act="save">결과 저장</button>
+      <button type="button" class="ghost" data-act="csv">CSV 내보내기</button>
+    </div>
+  </div>
+  <p class="hint" data-msg aria-live="polite">로그인 없이 이 브라우저에만 저장돼요. 다른 기기에서는 보이지 않아요.</p>
+  <ul class="history-list" data-list></ul>
+</section>
+
+<script>
+  import { mountHistory } from '../lib/historyUi';
+  document.querySelectorAll<HTMLElement>('[data-history]').forEach((el) => mountHistory(el));
+</script>
+
+<style is:global>
+  .history-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .history-head h2 { margin: 0; font-size: 1.1rem; }
+  .history-actions { display: flex; gap: 8px; }
+  .history button {
+    font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+    border: 1px solid var(--accent); background: var(--accent); color: #fff;
+    border-radius: 8px; padding: 8px 12px;
+  }
+  .history button.ghost { background: #fff; color: var(--accent); }
+  .history button:disabled { opacity: 0.45; cursor: default; }
+  .history-list { list-style: none; padding: 0; margin: 12px 0 0; }
+  .history-list li {
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    padding: 12px 0; border-top: 1px solid var(--line);
+  }
+  .history-list li > div:first-child { display: flex; flex-direction: column; min-width: 0; }
+  .history-list .history-empty { color: var(--muted); font-size: 0.9rem; display: block; }
+  .history-date { color: var(--muted); font-size: 0.8rem; }
+  .history-sub { color: var(--muted); font-size: 0.82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .history-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .history-item-actions button { padding: 6px 10px; font-size: 0.82rem; }
+</style>

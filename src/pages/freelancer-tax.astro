@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import SaveHistory from '../components/SaveHistory.astro';
 import { RATES } from '../rates/2026';
 ---
 
@@ -22,7 +23,7 @@ import { RATES } from '../rates/2026';
     <div class="hint" id="amount-hint">계약서나 견적서에 적힌 금액을 입력하세요.</div>
   </form>
 
-  <div class="card">
+  <div class="card" data-history-results>
     <div class="result-main">
       <div class="label" id="out-main-label">실수령액</div>
       <div class="big" id="out-main">-</div>
@@ -37,6 +38,8 @@ import { RATES } from '../rates/2026';
       </tbody>
     </table>
   </div>
+
+  <SaveHistory calc="freelancer-tax" title="프리랜서3.3" />
 
   <p class="notice">
     3.3%는 미리 떼는 세금(원천징수)이에요. 실제 세금은 다음 해 5월 종합소득세 신고 때 확정되고, 소득과 경비에 따라 일부를 돌려받거나 더 낼 수 있어요.

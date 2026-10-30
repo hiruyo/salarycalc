@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import SaveHistory from '../components/SaveHistory.astro';
 import { RATES } from '../rates/2026';
 import { GUIDES } from '../guides';
 
@@ -31,7 +32,7 @@ const relatedGuides = GUIDES.filter((g) => ['salary-table-2026', 'social-insuran
     <input id="children" type="number" inputmode="numeric" min="0" step="1" value="0" />
   </form>
 
-  <div class="card">
+  <div class="card" data-history-results>
     <div class="result-main">
       <div class="label">월 예상 실수령액</div>
       <div class="big" data-out="netMonthly">-</div>
@@ -50,6 +51,8 @@ const relatedGuides = GUIDES.filter((g) => ['salary-table-2026', 'social-insuran
       </tbody>
     </table>
   </div>
+
+  <SaveHistory calc="salary" title="연봉실수령액" />
 
   <p class="notice">
     소득세는 근로소득 간이세액표(소득세법 시행령 별표 2, 2026.2.27 개정)로 계산해요. 회사의 급여명세서와 같은 방식이지만,

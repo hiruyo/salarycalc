@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import SaveHistory from '../components/SaveHistory.astro';
 import { RATES } from '../rates/2026';
 import { GUIDES } from '../guides';
 const relatedGuides = GUIDES.filter((g) => ['weekly-holiday-pay-guide', 'minimum-wage-2026'].includes(g.slug));
@@ -22,7 +23,7 @@ const relatedGuides = GUIDES.filter((g) => ['weekly-holiday-pay-guide', 'minimum
     <div class="hint">1주 개근한 경우를 기준으로 계산합니다.</div>
   </form>
 
-  <div class="card">
+  <div class="card" data-history-results>
     <div class="result-main">
       <div class="label">주휴수당 (1주)</div>
       <div class="big" id="out-weekly">-</div>
@@ -38,6 +39,8 @@ const relatedGuides = GUIDES.filter((g) => ['weekly-holiday-pay-guide', 'minimum
       </tbody>
     </table>
   </div>
+
+  <SaveHistory calc="weekly-holiday-pay" title="주휴수당" />
 
   <h2>계산 방법</h2>
   <p>

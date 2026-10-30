@@ -29,6 +29,9 @@ src/
   lib/unemployment.ts    실업급여(구직급여) 계산
   lib/freelancer.ts      프리랜서 3.3% 원천징수
   lib/rentConversion.ts  전월세 전환
+  lib/history.ts         계산 결과 저장·이력·CSV (저장소 교체 가능한 순수 로직)
+  lib/historyUi.ts       저장 UI (입력·결과 자동 수집, 불러오기)
+  components/SaveHistory.astro 계산기에 붙이는 '내 계산 기록' 영역
   pages/                 계산기 6종, about, privacy, terms, contact
   pages/guide/           가이드 글
 tests/calc.test.ts       계산 로직 테스트
@@ -66,6 +69,15 @@ tests/calc.test.ts       계산 로직 테스트
 - "가치가 별로 없는 콘텐츠": 글 수가 적거나, 계산기만 있고 설명이 부족할 때 → 가이드 글 보강
 - "사이트 다운 또는 사용할 수 없음": 도메인 연결·HTTPS 문제, 깨진 링크
 - 승인 전 다른 광고 네트워크 코드가 있거나, 복사한 글이 있을 때
+
+## 유료화 로드맵
+
+1. **지금 (무료)**: 로그인 없이 브라우저에 저장·이력·CSV 내보내기 (`SaveHistory` 컴포넌트, 계산기 6종에 적용)
+2. **수요 측정**: GA4를 붙이면 `history_save` / `history_load` / `history_export` 이벤트가 자동 전송됨 (`historyUi.ts`의 `track`)
+3. **유료 전환 판단**: 저장 사용자가 충분하면 로그인 + 클라우드 저장(기기 간 동기화), 무제한 이력, PDF 내보내기 등을 유료로
+   - `history.ts`의 `StorageLike`를 서버 저장소 구현으로 바꾸면 UI는 그대로 재사용 가능
+   - 국내 정기결제(토스페이먼츠 등)는 사업자등록과 결제사 심사가 필요
+4. 보류: 쿠팡 로켓그로스 정산 계산기 (공식 요금표 확보 후)
 
 ## 매년 갱신 체크리스트
 

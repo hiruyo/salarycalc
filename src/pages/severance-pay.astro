@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import SaveHistory from '../components/SaveHistory.astro';
 import { RATES } from '../rates/2026';
 import { GUIDES } from '../guides';
 const relatedGuides = GUIDES.filter((g) => ['severance-pay-guide'].includes(g.slug));
@@ -32,7 +33,7 @@ const relatedGuides = GUIDES.filter((g) => ['severance-pay-guide'].includes(g.sl
     <div class="hint">퇴직 전 1년간 받은 연차수당이에요. 3/12만 반영돼요.</div>
   </form>
 
-  <div class="card">
+  <div class="card" data-history-results>
     <div class="result-main">
       <div class="label">예상 퇴직금 (세전)</div>
       <div class="big" id="out-pay">-</div>
@@ -46,6 +47,8 @@ const relatedGuides = GUIDES.filter((g) => ['severance-pay-guide'].includes(g.sl
       </tbody>
     </table>
   </div>
+
+  <SaveHistory calc="severance-pay" title="퇴직금" />
 
   <p class="notice">
     퇴직소득세는 반영하지 않은 세전 금액이에요. 평균임금이 통상임금보다 낮은 경우(통상임금 적용)도 반영하지 않으니,
