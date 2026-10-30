@@ -45,7 +45,18 @@ function minusMonths(ts: number, months: number): number {
 }
 
 /**
- * 퇴직금 = 1일 평균임금 × 30일 × (재직일수 ÷ 365)
+ * 마지막 근무일 기준 "퇴직(이직) 전 3개월"의 달력 일수.
+ * (마지막 근무일 다음 날)에서 3개월 전까지. 날짜가 잘못되면 null.
+ */
+export function daysInLast3Months(endDate: string): number | null {
+  const end = parseDate(endDate);
+  if (end === null) return null;
+  const periodEnd = end + DAY;
+  return Math.round((periodEnd - minusMonths(periodEnd, 3)) / DAY);
+}
+
+/**
+ * 퇴직금 =1일 평균임금 × 30일 × (재직일수 ÷ 365)
  * 1일 평균임금 = (퇴직 전 3개월 임금 + 상여금×3/12 + 연차수당×3/12) ÷ 퇴직 전 3개월 총 일수
  *
  * 평균임금이 통상임금보다 낮은 경우(통상임금 적용)와 퇴직소득세는 반영하지 않습니다.
@@ -66,10 +77,7 @@ export function calcSeverance(input: SeveranceInput): SeveranceResult {
 
   const tenureDays = Math.round((end - start) / DAY) + 1;
 
-  // 퇴직 전 3개월: (마지막 근무일 다음 날)에서 3개월 전까지
-  const periodEnd = end + DAY;
-  const periodStart = minusMonths(periodEnd, 3);
-  const last3MonthsDays = Math.round((periodEnd - periodStart) / DAY);
+  const last3MonthsDays = daysInLast3Months(input.endDate)!;
 
   const pay = Math.max(0, input.last3MonthsPay);
   const bonus = Math.max(0, input.annualBonus ?? 0);

@@ -1,0 +1,152 @@
+---
+import Base from '../layouts/Base.astro';
+import { RATES } from '../rates/2026';
+
+const u = RATES.unemployment;
+const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
+const dailyMin8 = Math.floor(RATES.minWageHourly * u.minWageRatio * u.maxDailyHours);
+const periods = ['1년 미만', '1년 이상 3년 미만', '3년 이상 5년 미만', '5년 이상 10년 미만', '10년 이상'];
+---
+
+<Base
+  title={`${RATES.year}년 실업급여 계산기 (구직급여 상한 ${won(u.dailyMax)})`}
+  description={`${RATES.year}년 기준 실업급여(구직급여) 계산기. 1일 상한액 ${won(u.dailyMax)}, 하한액 ${won(dailyMin8)}, 나이와 고용보험 가입기간별 소정급여일수를 반영합니다.`}
+>
+  <h1>{RATES.year}년 실업급여 계산기</h1>
+  <p class="lead">최근 3개월 급여, 나이, 고용보험 가입기간으로 받을 수 있는 실업급여를 계산해요.</p>
+
+  <form id="calc-form" class="card" onsubmit="return false;">
+    <label for="end">마지막 근무일</label>
+    <input id="end" type="date" value="2026-09-30" />
+
+    <label for="pay3">퇴사 전 3개월 급여 총액 (원)</label>
+    <input id="pay3" type="number" inputmode="numeric" min="0" step="10000" value="9000000" />
+    <div class="hint">세전 금액으로, 기본급과 각종 수당을 모두 더한 3개월 합계예요.</div>
+
+    <label for="age">퇴사일 기준 만 나이</label>
+    <input id="age" type="number" inputmode="numeric" min="15" max="100" step="1" value="35" />
+
+    <label for="period">고용보험 가입기간</label>
+    <select id="period">
+      <option value="under1">1년 미만</option>
+      <option value="1to3" selected>1년 이상 3년 미만</option>
+      <option value="3to5">3년 이상 5년 미만</option>
+      <option value="5to10">5년 이상 10년 미만</option>
+      <option value="over10">10년 이상</option>
+    </select>
+    <div class="hint">여러 회사에서 가입한 기간을 합산할 수 있어요 (이전 실업급여 수급 전 기간은 제외).</div>
+
+    <label for="hours">1일 소정근로시간</label>
+    <input id="hours" type="number" inputmode="decimal" min="1" max="8" step="0.5" value="8" />
+    <div class="hint">단시간 근로자는 하한액이 근로시간에 비례해서 낮아져요. 8시간을 넘으면 8시간으로 계산해요.</div>
+
+    <label class="check"><input id="disabled" type="checkbox" /> 장애인 (50세 이상 기준 적용)</label>
+  </form>
+
+  <div class="card">
+    <div class="result-main">
+      <div class="label">총 예상 실업급여</div>
+      <div class="big" id="out-total">-</div>
+    </div>
+    <table>
+      <tbody>
+        <tr><th>1일 구직급여액</th><td id="out-daily">-</td></tr>
+        <tr><th>월 환산 (30일)</th><td id="out-monthly">-</td></tr>
+        <tr><th>받는 기간 (소정급여일수)</th><td id="out-days">-</td></tr>
+        <tr><th>1일 평균임금</th><td id="out-avg">-</td></tr>
+        <tr><th>상·하한 적용</th><td id="out-limit">-</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="notice">
+    수급 자격(퇴사 전 18개월 동안 고용보험 가입일수 180일 이상, 권고사직·계약만료 등 비자발적 퇴사, 적극적인 구직활동)은
+    판정하지 않아요. 실제 금액과 자격은 고용24 또는 관할 고용센터에서 확인하세요.
+  </p>
+
+  <h2>{RATES.year}년 실업급여 기준</h2>
+  <div class="card">
+    <table>
+      <tbody>
+        <tr><th>지급액</th><td>퇴사 전 평균임금의 {u.benefitRate * 100}%</td></tr>
+        <tr><th>1일 상한액</th><td>{won(u.dailyMax)}</td></tr>
+        <tr><th>1일 하한액 (8시간 기준)</th><td>{won(dailyMin8)}</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>받는 기간 (소정급여일수)</h2>
+  <div class="card">
+    <table>
+      <thead>
+        <tr><th>고용보험 가입기간</th><th>50세 미만</th><th>50세 이상·장애인</th></tr>
+      </thead>
+      <tbody>
+        {periods.map((p, i) => (
+          <tr><td>{p}</td><td>{u.benefitDays.under50[i]}일</td><td>{u.benefitDays.over50OrDisabled[i]}일</td></tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <h2>계산 방법</h2>
+  <p>
+    <strong>1일 구직급여액 = 퇴사 전 3개월 평균임금 × 60%</strong>예요. 평균임금은 퇴사 전 3개월 급여 총액을 그 기간의 달력 일수로 나눠 구해요.
+    결과가 상한액({won(u.dailyMax)})보다 많으면 상한액을, 하한액(최저시급 × 80% × 1일 소정근로시간)보다 적으면 하한액을 받아요.
+    총액은 1일 구직급여액에 소정급여일수를 곱한 금액이에요. 상한액과 하한액은 {RATES.year}년 1월 1일 이후 퇴사자 기준이에요.
+  </p>
+
+  <h2>자주 묻는 질문</h2>
+  <details>
+    <summary>자진 퇴사해도 실업급여를 받을 수 있나요?</summary>
+    <p>원칙적으로는 받을 수 없어요. 다만 임금 체불, 통근 곤란, 질병 등 법에서 정한 정당한 사유가 있으면 자진 퇴사도 인정될 수 있어요.</p>
+  </details>
+  <details>
+    <summary>월급이 높은데 왜 금액이 같나요?</summary>
+    <p>1일 상한액({won(u.dailyMax)})이 있어서, 평균임금이 약 {won(Math.ceil(u.dailyMax / u.benefitRate))} 이상이면 누구나 같은 금액을 받아요.</p>
+  </details>
+
+  <script>
+    import { calcUnemployment, type InsuredPeriod } from '../lib/unemployment';
+
+    const el = <T extends HTMLElement = HTMLInputElement>(id: string) => document.getElementById(id) as T;
+    const num = (id: string) => Number(el(id).value) || 0;
+    const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
+    const set = (id: string, text: string) => {
+      el<HTMLElement>(id).textContent = text;
+    };
+
+    function render() {
+      const r = calcUnemployment({
+        lastWorkDate: el('end').value,
+        last3MonthsPay: num('pay3'),
+        age: num('age'),
+        disabled: el('disabled').checked,
+        insuredPeriod: el<HTMLSelectElement>('period').value as InsuredPeriod,
+        dailyHours: num('hours') || 8,
+      });
+      if (!r.valid) {
+        ['out-total', 'out-daily', 'out-monthly', 'out-days', 'out-avg'].forEach((id) => set(id, '-'));
+        set('out-limit', '날짜를 확인해 주세요');
+        return;
+      }
+      set('out-total', won(r.totalBenefit));
+      set('out-daily', won(r.dailyBenefit));
+      set('out-monthly', won(r.monthlyBenefit));
+      set('out-days', `${r.benefitDays}일`);
+      set('out-avg', won(r.averageDailyWage));
+      set(
+        'out-limit',
+        r.limitApplied === 'max'
+          ? `상한액 적용 (계산값 ${won(r.rawDailyBenefit)})`
+          : r.limitApplied === 'min'
+            ? `하한액 적용 (계산값 ${won(r.rawDailyBenefit)})`
+            : '해당 없음',
+      );
+    }
+
+    el<HTMLFormElement>('calc-form').addEventListener('input', render);
+    el<HTMLFormElement>('calc-form').addEventListener('change', render);
+    render();
+  </script>
+</Base>

@@ -38,6 +38,23 @@ export const RATES = {
 
   minWageHourly: 10_320,
 
+  /**
+   * 실업급여(구직급여) — 2026.1.1 이후 이직자 기준
+   * 상한액: 고용보험법 시행령 개정 (66,000 → 68,100원)
+   * 하한액: 최저시급 × 80% × 1일 소정근로시간 (8시간이면 66,048원)
+   */
+  unemployment: {
+    benefitRate: 0.6, // 평균임금의 60%
+    dailyMax: 68_100,
+    minWageRatio: 0.8,
+    maxDailyHours: 8,
+    /** 소정급여일수 [피보험기간 1년 미만, 1~3년, 3~5년, 5~10년, 10년 이상] (고용보험법 별표 1) */
+    benefitDays: {
+      under50: [120, 150, 180, 210, 240],
+      over50OrDisabled: [120, 180, 210, 240, 270],
+    },
+  },
+
   // 소득세는 국세청 근로소득 간이세액표(withholding2026.ts)를 조회해 계산합니다.
   localIncomeTaxRate: 0.1, // 지방소득세 = 소득세의 10%
 

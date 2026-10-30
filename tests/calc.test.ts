@@ -4,6 +4,7 @@ import { calcNetPay } from '../src/lib/netpay.ts';
 import { monthlyIncomeTax, childDeduction } from '../src/lib/withholding.ts';
 import { calcWeeklyHolidayPay } from '../src/lib/weeklyHolidayPay.ts';
 import { calcSeverance } from '../src/lib/severance.ts';
+import { calcUnemployment } from '../src/lib/unemployment.ts';
 
 // ---- 간이세액표 (소득세법 시행령 별표 2, 2026.2.27 개정) 원본 값과 대조 ----
 
@@ -171,4 +172,50 @@ test('퇴직금: 월말 날짜 보정 및 잘못된 입력', () => {
   assert.equal(r.last3MonthsDays, 92);
   assert.equal(calcSeverance({ startDate: '', endDate: '2025-01-01', last3MonthsPay: 1 }).valid, false);
   assert.equal(calcSeverance({ startDate: '2025-02-01', endDate: '2025-01-01', last3MonthsPay: 1 }).valid, false);
+});
+
+// ---- 실업급여 ----
+
+test('실업급여: 하한액 = 10,320 × 80% × 8시간 = 66,048원', () => {
+  const r = calcUnemployment({ lastWorkDate: '2026-09-30', last3MonthsPay: 6_000_000, age: 30, insuredPeriod: '1to3' });
+  // 3개월(7/1~9/30) 92일, 평균임금 65,217 → 60% 39,130 → 하한 적용
+  assert.equal(r.dailyMin, 66_048);
+  assert.equal(r.limitApplied, 'min');
+  assert.equal(r.dailyBenefit, 66_048);
+  assert.equal(r.benefitDays, 150);
+  assert.equal(r.totalBenefit, 66_048 * 150);
+});
+
+test('실업급여: 상한액 68,100원', () => {
+  const r = calcUnemployment({ lastWorkDate: '2026-09-30', last3MonthsPay: 15_000_000, age: 40, insuredPeriod: '5to10' });
+  assert.equal(r.limitApplied, 'max');
+  assert.equal(r.dailyBenefit, 68_100);
+  assert.equal(r.benefitDays, 210);
+});
+
+test('실업급여: 상·하한 사이 구간은 평균임금 × 60%', () => {
+  // 92일 기준 평균임금 112,000원 → 60% = 67,200 (66,048 ~ 68,100 사이)
+  const r = calcUnemployment({ lastWorkDate: '2026-09-30', last3MonthsPay: 112_000 * 92, age: 35, insuredPeriod: '3to5' });
+  assert.equal(r.limitApplied, null);
+  assert.equal(r.dailyBenefit, 67_200);
+  assert.equal(r.monthlyBenefit, 67_200 * 30);
+});
+
+test('실업급여: 소정급여일수 (50세 이상·장애인 / 50세 미만)', () => {
+  const base = { lastWorkDate: '2026-09-30', last3MonthsPay: 9_000_000 } as const;
+  assert.equal(calcUnemployment({ ...base, age: 49, insuredPeriod: 'over10' }).benefitDays, 240);
+  assert.equal(calcUnemployment({ ...base, age: 50, insuredPeriod: 'over10' }).benefitDays, 270);
+  assert.equal(calcUnemployment({ ...base, age: 30, disabled: true, insuredPeriod: '1to3' }).benefitDays, 180);
+  assert.equal(calcUnemployment({ ...base, age: 60, insuredPeriod: 'under1' }).benefitDays, 120);
+});
+
+test('실업급여: 단시간 근로자 하한액은 소정근로시간 비례, 8시간 초과는 8시간', () => {
+  const base = { lastWorkDate: '2026-09-30', last3MonthsPay: 1_000_000, age: 30, insuredPeriod: '1to3' } as const;
+  assert.equal(calcUnemployment({ ...base, dailyHours: 4 }).dailyMin, 33_024);
+  assert.equal(calcUnemployment({ ...base, dailyHours: 10 }).dailyMin, 66_048);
+});
+
+test('실업급여: 잘못된 날짜', () => {
+  const r = calcUnemployment({ lastWorkDate: '', last3MonthsPay: 1, age: 30, insuredPeriod: '1to3' });
+  assert.equal(r.valid, false);
 });

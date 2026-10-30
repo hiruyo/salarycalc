@@ -5,7 +5,7 @@ import { RATES } from '../rates/2026';
 
 <Base
   title={`월급계산소 - ${RATES.year}년 연봉 실수령액·주휴수당 계산기`}
-  description={`${RATES.year}년 4대보험 요율을 반영한 연봉 실수령액 계산기, 주휴수당·퇴직금 계산기. 회원가입 없이 바로 계산하세요.`}
+  description={`${RATES.year}년 4대보험 요율을 반영한 연봉 실수령액 계산기, 주휴수당·퇴직금·실업급여 계산기. 회원가입 없이 바로 계산하세요.`}
 >
   <h1>월급계산소</h1>
   <p class="lead">{RATES.year}년 기준 요율로 바로 계산해 보세요. 입력한 값은 서버로 전송되지 않습니다.</p>
@@ -27,6 +27,12 @@ import { RATES } from '../rates/2026';
       <a href="/severance-pay">
         <strong>퇴직금 계산기</strong>
         <span>입사일·퇴사일·최근 3개월 급여로 예상 퇴직금 계산</span>
+      </a>
+    </li>
+    <li>
+      <a href="/unemployment-benefit">
+        <strong>실업급여 계산기</strong>
+        <span>최근 3개월 급여·나이·고용보험 가입기간으로 구직급여 계산</span>
       </a>
     </li>
   </ul>
