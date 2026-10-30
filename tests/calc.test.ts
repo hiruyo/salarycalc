@@ -5,6 +5,8 @@ import { monthlyIncomeTax, childDeduction } from '../src/lib/withholding.ts';
 import { calcWeeklyHolidayPay } from '../src/lib/weeklyHolidayPay.ts';
 import { calcSeverance } from '../src/lib/severance.ts';
 import { calcUnemployment } from '../src/lib/unemployment.ts';
+import { freelancerFromGross, freelancerFromNet } from '../src/lib/freelancer.ts';
+import { legalConversionRate, jeonseToWolse, wolseToJeonse, impliedConversionRate } from '../src/lib/rentConversion.ts';
 
 // ---- 간이세액표 (소득세법 시행령 별표 2, 2026.2.27 개정) 원본 값과 대조 ----
 
@@ -218,4 +220,58 @@ test('실업급여: 단시간 근로자 하한액은 소정근로시간 비례, 
 test('실업급여: 잘못된 날짜', () => {
   const r = calcUnemployment({ lastWorkDate: '', last3MonthsPay: 1, age: 30, insuredPeriod: '1to3' });
   assert.equal(r.valid, false);
+});
+
+// ---- 프리랜서 3.3% ----
+
+test('프리랜서: 100만원 → 소득세 30,000 + 지방세 3,000, 실수령 967,000', () => {
+  const r = freelancerFromGross(1_000_000);
+  assert.equal(r.incomeTax, 30_000);
+  assert.equal(r.localIncomeTax, 3_000);
+  assert.equal(r.taxTotal, 33_000);
+  assert.equal(r.net, 967_000);
+});
+
+test('프리랜서: 10원 미만 절사', () => {
+  const r = freelancerFromGross(123_456); // 3,703.68 → 3,700 / 370
+  assert.equal(r.incomeTax, 3_700);
+  assert.equal(r.localIncomeTax, 370);
+  assert.equal(r.net, 123_456 - 4_070);
+});
+
+test('프리랜서: 실수령액 → 세전 역산은 목표 이상인 최소 금액', () => {
+  for (const target of [967_000, 1_000_000, 2_500_000, 333_333, 50_000]) {
+    const r = freelancerFromNet(target);
+    assert.ok(r.net >= target, `${target}: net ${r.net}`);
+    assert.ok(freelancerFromGross(r.gross - 1).net < target, `${target}: gross ${r.gross} 최소 아님`);
+  }
+  // 999,980원: 소득세 29,990 + 지방세 2,990 → 실수령 967,000 (절사 때문에 100만원보다 적어도 됨)
+  assert.equal(freelancerFromNet(967_000).gross, 999_980);
+});
+
+// ---- 전월세 전환 ----
+
+test('전월세: 법정 전환율 = min(10%, 기준금리 3.0% + 2%) = 5%', () => {
+  assert.equal(legalConversionRate(), 0.05);
+  assert.equal(legalConversionRate(0.09), 0.1);
+});
+
+test('전월세: 전세 3억 → 보증금 1억 + 월세 (2억 × 5% ÷ 12)', () => {
+  const r = jeonseToWolse(300_000_000, 100_000_000, 0.05);
+  assert.equal(r.valid, true);
+  assert.equal(r.convertedDeposit, 200_000_000);
+  assert.equal(r.monthlyRent, 833_333);
+});
+
+test('전월세: 월세 → 전세 환산과 역변환 일관성', () => {
+  const r = wolseToJeonse(100_000_000, 833_333, 0.05);
+  assert.equal(r.depositFromRent, 199_999_920);
+  assert.equal(r.jeonseDeposit, 299_999_920);
+  assert.equal(wolseToJeonse(50_000_000, 1_000_000, 0.05).jeonseDeposit, 290_000_000);
+});
+
+test('전월세: 실제 계약 전환율과 잘못된 입력', () => {
+  assert.equal(impliedConversionRate(300_000_000, 100_000_000, 1_000_000), 0.06);
+  assert.equal(impliedConversionRate(100_000_000, 100_000_000, 500_000), null);
+  assert.equal(jeonseToWolse(100_000_000, 200_000_000, 0.05).valid, false);
 });

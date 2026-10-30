@@ -6,7 +6,7 @@ import { GUIDES } from '../guides';
 
 <Base
   title={`월급계산소 - ${RATES.year}년 연봉 실수령액·주휴수당 계산기`}
-  description={`${RATES.year}년 4대보험 요율을 반영한 연봉 실수령액 계산기, 주휴수당·퇴직금·실업급여 계산기. 회원가입 없이 바로 계산하세요.`}
+  description={`${RATES.year}년 4대보험 요율을 반영한 연봉 실수령액 계산기, 주휴수당·퇴직금·실업급여, 프리랜서 3.3%·전월세 전환 계산기. 회원가입 없이 바로 계산하세요.`}
 >
   <h1>월급계산소</h1>
   <p class="lead">{RATES.year}년 기준 요율로 바로 계산해 보세요. 입력한 값은 서버로 전송되지 않습니다.</p>
@@ -34,6 +34,18 @@ import { GUIDES } from '../guides';
       <a href="/unemployment-benefit">
         <strong>실업급여 계산기</strong>
         <span>최근 3개월 급여·나이·고용보험 가입기간으로 구직급여 계산</span>
+      </a>
+    </li>
+    <li>
+      <a href="/freelancer-tax">
+        <strong>프리랜서 3.3% 세금 계산기</strong>
+        <span>외주·프리랜서 대금의 실수령액과 청구할 세전 금액 계산</span>
+      </a>
+    </li>
+    <li>
+      <a href="/rent-conversion">
+        <strong>전월세 전환 계산기</strong>
+        <span>전세↔월세 환산 금액과 법정 전환율 상한 확인</span>
       </a>
     </li>
   </ul>

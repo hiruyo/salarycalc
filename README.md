@@ -1,6 +1,6 @@
 # 월급계산소 (salary-calc)
 
-Astro 기반 정적 사이트. 연봉 실수령액·주휴수당·퇴직금·실업급여 계산기가 들어 있습니다.
+Astro 기반 정적 사이트. 연봉 실수령액·주휴수당·퇴직금·실업급여·프리랜서 3.3%·전월세 전환 계산기가 들어 있습니다.
 계산은 모두 브라우저에서 실행되므로 서버 비용이 없습니다.
 
 ## 시작하기
@@ -27,7 +27,9 @@ src/
   layouts/Article.astro  가이드 글 레이아웃
   lib/severance.ts       퇴직금 계산
   lib/unemployment.ts    실업급여(구직급여) 계산
-  pages/                 계산기 4종, about, privacy, terms, contact
+  lib/freelancer.ts      프리랜서 3.3% 원천징수
+  lib/rentConversion.ts  전월세 전환
+  pages/                 계산기 6종, about, privacy, terms, contact
   pages/guide/           가이드 글
 tests/calc.test.ts       계산 로직 테스트
 ```
@@ -72,6 +74,7 @@ tests/calc.test.ts       계산 로직 테스트
    - 건강보험 요율, 장기요양 요율, 고용보험 요율
    - 최저시급 (실업급여 하한액도 자동으로 바뀜)
    - 실업급여 1일 상한액 (`unemployment.dailyMax`, 고용보험법 시행령)
+   - **기준금리** (`rentConversion.baseRate`): 연중 금통위 결정 때마다 갱신
 2. 간이세액표가 개정되면 새 PDF로 데이터 재생성 (시행령 별표 2)
    ```bash
    pdftotext -layout 간이세액표.pdf table.txt
