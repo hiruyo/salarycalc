@@ -40,7 +40,7 @@ tests/calc.test.ts       계산 로직 테스트
 - [ ] 4대보험 요율을 국민연금공단·건강보험공단 공식 고시로 재확인
 - [ ] 서치콘솔·네이버 서치어드바이저 등록, sitemap 제출
 - [x] 계산기마다 설명 글(예시, FAQ) 추가 → `src/pages/guide/` 7편
-- [ ] `src/site.ts`의 `contactEmail` 실제 이메일로 교체
+- [x] `src/site.ts`의 `contactEmail` 실제 이메일로 교체
 
 ## 애드센스 신청 체크리스트
 
