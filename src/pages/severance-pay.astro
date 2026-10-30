@@ -1,6 +1,8 @@
 ---
 import Base from '../layouts/Base.astro';
 import { RATES } from '../rates/2026';
+import { GUIDES } from '../guides';
+const relatedGuides = GUIDES.filter((g) => ['severance-pay-guide'].includes(g.slug));
 ---
 
 <Base
@@ -66,6 +68,19 @@ import { RATES } from '../rates/2026';
     <summary>3개월 급여에는 무엇을 넣나요?</summary>
     <p>세전 기본급, 연장·야간 수당 등 정기적으로 받은 임금을 모두 합산해요. 실비 변상 성격의 비용은 제외돼요.</p>
   </details>
+
+
+  <h2>관련 가이드</h2>
+  <ul class="links">
+    {relatedGuides.map((g) => (
+      <li>
+        <a href={`/guide/${g.slug}`}>
+          <strong>{g.title}</strong>
+          <span>{g.description}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
 
   <script>
     import { calcSeverance } from '../lib/severance';

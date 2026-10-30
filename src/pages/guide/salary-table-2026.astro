@@ -1,0 +1,128 @@
+---
+import Article from '../../layouts/Article.astro';
+import { RATES } from '../../rates/2026';
+import { calcNetPay } from '../../lib/netpay';
+
+const won = (n: number) => n.toLocaleString('ko-KR');
+const MEAL = 200_000;
+
+// 연봉 2,400만원 ~ 1억원, 200만원 간격 (식대 20만원 비과세, 공제대상가족 1명)
+const rows: { man: number; r: ReturnType<typeof calcNetPay> }[] = [];
+for (let man = 2400; man <= 10000; man += 200) {
+  rows.push({ man, r: calcNetPay({ annualSalary: man * 10_000, nonTaxableMonthly: MEAL, familyCount: 1 }) });
+}
+const pick = (man: number) => rows.find((x) => x.man === man)!.r;
+const r4000 = pick(4000);
+const r3000 = pick(3000);
+const fam4000 = calcNetPay({ annualSalary: 40_000_000, nonTaxableMonthly: MEAL, familyCount: 3, children: 1 });
+const deductionRate = (r: ReturnType<typeof calcNetPay>) => ((r.deductionTotal / r.grossMonthly) * 100).toFixed(1);
+---
+
+<Article slug="salary-table-2026">
+  <p>
+    연봉 협상이나 이직을 앞두고 가장 궁금한 건 "그래서 한 달에 얼마 받나"일 거예요.
+    이 글에서는 {RATES.year}년 4대보험 요율과 국세청 근로소득 간이세액표를 그대로 적용해서
+    연봉 2,400만원부터 1억원까지 월 실수령액을 표로 정리했습니다.
+  </p>
+
+  <h2>표를 보기 전에: 계산 조건</h2>
+  <ul>
+    <li>연봉은 퇴직금 별도 기준이며 12개월로 나눠 받는다고 가정했어요.</li>
+    <li>월 식대 {won(MEAL)}원을 비과세로 처리했어요. 대부분의 회사가 식대를 비과세로 지급합니다.</li>
+    <li>공제대상가족은 본인 1명, 8세 이상 20세 이하 자녀는 없는 경우예요.</li>
+    <li>4대보험: 국민연금 4.75%, 건강보험 3.595%, 장기요양보험(건강보험료의 13.14%의 절반), 고용보험 0.9% (근로자 부담분)</li>
+    <li>소득세는 근로소득 간이세액표 금액이고, 지방소득세는 소득세의 10%예요.</li>
+  </ul>
+
+  <h2>{RATES.year}년 연봉별 월 실수령액 표</h2>
+  <div class="card table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>연봉</th>
+          <th>월 급여</th>
+          <th>4대보험</th>
+          <th>소득세+지방세</th>
+          <th>월 실수령액</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map(({ man, r }) => (
+          <tr>
+            <td>{won(man)}만원</td>
+            <td>{won(r.grossMonthly)}</td>
+            <td>{won(r.insuranceTotal)}</td>
+            <td>{won(r.taxTotal)}</td>
+            <td><strong>{won(r.netMonthly)}</strong></td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <p class="hint">단위: 원. 식대 {won(MEAL)}원 비과세, 공제대상가족 1명 기준.</p>
+
+  <h2>연봉 4,000만원을 예로 공제 내역 살펴보기</h2>
+  <p>
+    연봉 4,000만원이면 월 급여는 {won(r4000.grossMonthly)}원이고, 이 중 식대 {won(MEAL)}원을 뺀
+    {won(r4000.taxableMonthly)}원이 4대보험과 소득세를 계산하는 기준이 됩니다.
+  </p>
+  <div class="card">
+    <table>
+      <tbody>
+        <tr><th>국민연금</th><td>{won(r4000.pension)}원</td></tr>
+        <tr><th>건강보험</th><td>{won(r4000.health)}원</td></tr>
+        <tr><th>장기요양보험</th><td>{won(r4000.longTermCare)}원</td></tr>
+        <tr><th>고용보험</th><td>{won(r4000.employment)}원</td></tr>
+        <tr><th>소득세</th><td>{won(r4000.incomeTax)}원</td></tr>
+        <tr><th>지방소득세</th><td>{won(r4000.localIncomeTax)}원</td></tr>
+        <tr class="total"><th>공제 합계</th><td>{won(r4000.deductionTotal)}원</td></tr>
+        <tr class="total"><th>월 실수령액</th><td>{won(r4000.netMonthly)}원</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    공제액 중 가장 큰 항목은 국민연금이고, 그다음이 건강보험입니다. 월 급여의 약 {deductionRate(r4000)}%가 빠지는 셈이에요.
+    연봉 3,000만원에서는 이 비율이 약 {deductionRate(r3000)}%인데, 연봉이 오를수록 소득세의 누진 구조 때문에 공제 비율도 함께 올라갑니다.
+  </p>
+
+  <h2>같은 연봉이라도 실수령액이 달라지는 이유</h2>
+  <h3>1. 부양가족 수</h3>
+  <p>
+    간이세액표는 공제대상가족이 많을수록 소득세가 줄어들도록 되어 있어요.
+    같은 연봉 4,000만원이라도 배우자와 자녀 1명(8세 이상)이 있어 공제대상가족 3명, 자녀 1명으로 계산하면
+    소득세가 {won(r4000.incomeTax)}원에서 {won(fam4000.incomeTax)}원으로 줄고, 실수령액은 {won(fam4000.netMonthly)}원이 됩니다.
+  </p>
+  <h3>2. 비과세 항목</h3>
+  <p>
+    식대, 자가운전보조금, 출산·보육수당 등 비과세 항목이 있으면 그만큼 4대보험과 소득세 계산 기준이 낮아져 실수령액이 늘어요.
+    회사마다 비과세 항목 구성이 달라서 같은 연봉이라도 수만 원씩 차이가 날 수 있습니다.
+  </p>
+  <h3>3. 국민연금 기준소득월액 상한</h3>
+  <p>
+    국민연금은 월 소득이 {won(RATES.pension.upper)}원을 넘어도 그 금액까지만 보험료를 매깁니다({RATES.year}년 7월~).
+    그래서 고연봉 구간에서는 국민연금 공제액이 더 이상 늘지 않아요.
+  </p>
+  <h3>4. 원천징수 비율 선택</h3>
+  <p>
+    근로자는 간이세액표 금액의 80%, 100%, 120% 중 하나를 골라 원천징수하도록 회사에 신청할 수 있어요.
+    80%를 고르면 매달 실수령액이 늘지만 연말정산 때 돌려받는 돈이 줄거나 더 내야 할 수 있습니다.
+    이 표는 100% 기준입니다.
+  </p>
+
+  <h2>연말정산과의 관계</h2>
+  <p>
+    매달 떼는 소득세는 1년 치 세금을 미리 나눠 내는 "예상치"예요. 다음 해 초 연말정산에서 실제 소득공제·세액공제(신용카드 사용액, 의료비, 교육비, 연금저축 등)를
+    반영해 최종 세금을 확정하고, 미리 낸 금액과의 차이를 돌려받거나 추가로 냅니다.
+    따라서 월 실수령액이 같아도 연말정산 결과까지 포함한 1년 총 실수령액은 사람마다 다를 수 있어요.
+  </p>
+
+  <h2>자주 묻는 질문</h2>
+  <details>
+    <summary>연봉에 퇴직금이 포함된 경우는 어떻게 보나요?</summary>
+    <p>퇴직금 포함 연봉이라면 연봉을 13으로 나눈 금액이 실제 월 급여예요. 예를 들어 퇴직금 포함 5,200만원이면 월 급여 기준 연봉은 4,800만원으로 보고 표를 찾으면 됩니다.</p>
+  </details>
+  <details>
+    <summary>입사 첫 달 월급이 표와 다른 이유는?</summary>
+    <p>입사 첫 달은 일할 계산되거나, 건강보험료가 다음 달부터 공제되는 등 정산 시점 차이 때문에 금액이 다를 수 있어요.</p>
+  </details>
+</Article>

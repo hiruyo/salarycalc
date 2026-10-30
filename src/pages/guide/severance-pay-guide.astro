@@ -1,0 +1,89 @@
+---
+import Article from '../../layouts/Article.astro';
+import { calcSeverance } from '../../lib/severance';
+
+const won = (n: number) => n.toLocaleString('ko-KR');
+const ex = calcSeverance({ startDate: '2023-03-02', endDate: '2026-09-30', last3MonthsPay: 10_500_000 });
+const exBonus = calcSeverance({
+  startDate: '2023-03-02',
+  endDate: '2026-09-30',
+  last3MonthsPay: 10_500_000,
+  annualBonus: 4_000_000,
+  annualLeavePay: 600_000,
+});
+---
+
+<Article slug="severance-pay-guide">
+  <p>
+    퇴직금은 1년 이상 일한 근로자가 회사를 떠날 때 받는 법정 급여예요.
+    "1년에 한 달 치 월급"이라고 흔히 말하지만, 실제로는 평균임금으로 계산해서 월급과 조금 다를 수 있어요.
+    지급 조건과 계산 방법을 예시와 함께 정리했습니다.
+  </p>
+
+  <h2>퇴직금 지급 조건</h2>
+  <ul>
+    <li><strong>계속근로기간 1년 이상</strong>: 입사일부터 마지막 근무일까지 1년(365일) 이상이어야 해요.</li>
+    <li><strong>4주 평균 1주 소정근로시간 15시간 이상</strong>: 아르바이트, 계약직도 조건을 채우면 받아요.</li>
+    <li>5인 미만 사업장도 적용되고, 자발적 퇴사든 권고사직이든 관계없이 지급돼요.</li>
+  </ul>
+
+  <h2>퇴직금 계산 공식</h2>
+  <div class="card">
+    <p style="margin:0"><strong>퇴직금 = 1일 평균임금 × 30일 × (재직일수 ÷ 365)</strong></p>
+  </div>
+  <h3>1일 평균임금 구하기</h3>
+  <p>평균임금은 퇴직 전 3개월 동안 받은 임금 총액을 그 기간의 총 일수로 나눈 값이에요.</p>
+  <ul>
+    <li><strong>3개월 임금 총액</strong>: 기본급, 각종 수당, 연장·야간 근로수당 등 세전 금액</li>
+    <li><strong>상여금</strong>: 퇴직 전 1년간 받은 상여금의 3/12을 더해요.</li>
+    <li><strong>연차수당</strong>: 퇴직 전 1년간 받은 연차수당의 3/12을 더해요.</li>
+    <li><strong>3개월 총 일수</strong>: 달력 기준 일수예요. 퇴직일에 따라 89~92일이 됩니다.</li>
+  </ul>
+  <p>계산한 평균임금이 통상임금보다 낮으면 통상임금을 평균임금으로 사용해요.</p>
+
+  <h2>계산 예시</h2>
+  <p>2023년 3월 2일 입사, 2026년 9월 30일까지 근무하고 퇴직 전 3개월 급여가 총 10,500,000원인 경우예요.</p>
+  <div class="card">
+    <table>
+      <tbody>
+        <tr><th>재직일수</th><td>{won(ex.tenureDays)}일</td></tr>
+        <tr><th>퇴직 전 3개월 일수</th><td>{ex.last3MonthsDays}일 (7/1 ~ 9/30)</td></tr>
+        <tr><th>1일 평균임금</th><td>10,500,000 ÷ {ex.last3MonthsDays} = {won(ex.averageDailyWage)}원</td></tr>
+        <tr class="total"><th>퇴직금</th><td>{won(ex.averageDailyWage)} × 30 × {won(ex.tenureDays)} ÷ 365 ≈ {won(ex.severancePay)}원</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    같은 조건에서 지난 1년간 상여금 400만원, 연차수당 60만원을 받았다면 각각 3/12이 평균임금에 더해져
+    퇴직금은 약 <strong>{won(exBonus.severancePay)}원</strong>으로 늘어나요.
+  </p>
+
+  <h2>지급 기한: 퇴직 후 14일 이내</h2>
+  <p>
+    회사는 근로자가 퇴직한 날부터 14일 이내에 퇴직금을 지급해야 해요. 특별한 사정이 있으면 당사자 합의로 기한을 연장할 수 있습니다.
+    정당한 이유 없이 지급하지 않으면 고용노동부에 진정을 낼 수 있고, 지연이자도 청구할 수 있어요.
+  </p>
+
+  <h2>퇴직연금(DB형·DC형)이라면</h2>
+  <ul>
+    <li><strong>DB형(확정급여형)</strong>: 받는 금액이 위의 퇴직금 계산과 같아요. 회사가 운용 책임을 집니다.</li>
+    <li><strong>DC형(확정기여형)</strong>: 회사가 매년 연간 임금총액의 1/12 이상을 근로자 계좌에 적립하고, 근로자가 직접 운용해요. 운용 수익률에 따라 받는 금액이 달라집니다.</li>
+  </ul>
+  <p>퇴직연금으로 받는 돈은 보통 개인형 퇴직연금(IRP) 계좌로 이전돼요.</p>
+
+  <h2>퇴직금에도 세금이 붙나요</h2>
+  <p>
+    퇴직금에는 퇴직소득세가 붙어요. 근속연수가 길수록 공제가 커져서 같은 금액이라도 세금이 줄어드는 구조입니다.
+    이 사이트의 계산기는 세전 퇴직금을 보여주며, IRP로 받아 연금으로 나눠 받으면 퇴직소득세를 일부 줄일 수 있어요.
+  </p>
+
+  <h2>자주 묻는 질문</h2>
+  <details>
+    <summary>퇴직 직전에 무급휴직이 있었다면?</summary>
+    <p>평균임금 산정 기간에 육아휴직, 업무상 부상·질병 휴업 등 법에서 정한 기간이 있으면 그 기간과 임금을 빼고 계산해요. 이 경우 계산기 결과와 달라질 수 있어요.</p>
+  </details>
+  <details>
+    <summary>1년에서 며칠 모자라면 못 받나요?</summary>
+    <p>네. 계속근로기간이 1년 미만이면 법정 퇴직금 대상이 아니에요. 다만 회사 규정으로 따로 지급하는 경우는 있어요.</p>
+  </details>
+</Article>

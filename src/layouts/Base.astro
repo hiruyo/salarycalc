@@ -1,11 +1,13 @@
 ---
 import { RATES } from '../rates/2026';
+import { SITE } from '../site';
 
 interface Props {
   title: string;
   description: string;
+  ogType?: 'website' | 'article';
 }
-const { title, description } = Astro.props;
+const { title, description, ogType = 'website' } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 ---
 
@@ -19,19 +21,30 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <link rel="canonical" href={canonical} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:url" content={canonical} />
     <meta name="theme-color" content="#1f6feb" />
-    <!-- 애드센스 승인 후 여기에 스크립트 추가 -->
+    {SITE.adsenseClient && (
+      <script
+        is:inline
+        async
+        src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${SITE.adsenseClient}`}
+        crossorigin="anonymous"
+      ></script>
+    )}
+    <slot name="head" />
   </head>
   <body>
     <header class="site-header">
       <div class="wrap">
-        <a class="brand" href="/">월급계산소</a>
+        <a class="brand" href="/">{SITE.name}</a>
         <nav>
           <a href="/salary">실수령액</a>
           <a href="/weekly-holiday-pay">주휴수당</a>
           <a href="/severance-pay">퇴직금</a>
           <a href="/unemployment-benefit">실업급여</a>
+          <a href="/guide">가이드</a>
         </nav>
       </div>
     </header>
@@ -42,10 +55,18 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 
     <footer class="site-footer">
       <div class="wrap">
+        <nav class="footer-links" aria-label="사이트 정보">
+          <a href="/about">소개</a>
+          <a href="/guide">가이드</a>
+          <a href="/privacy">개인정보처리방침</a>
+          <a href="/terms">이용약관</a>
+          <a href="/contact">문의</a>
+        </nav>
         <p>
           기준 연도: {RATES.year}년. 계산 결과는 참고용 예상치이며 실제 급여·세액과 다를 수 있습니다.
           정확한 금액은 회사 급여명세서와 국세청·4대보험 공단 자료를 확인하세요.
         </p>
+        <p>© {RATES.year} {SITE.name}</p>
       </div>
     </footer>
   </body>
@@ -108,6 +129,19 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
   ul.links a { display: block; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; text-decoration: none; color: var(--text); }
   ul.links a strong { display: block; color: var(--accent); }
   ul.links a span { color: var(--muted); font-size: 0.9rem; }
+  .site-footer .footer-links { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-bottom: 8px; overflow: visible; white-space: normal; }
+  .site-footer .footer-links a { margin: 0; color: var(--muted); }
+  .prose h2 { margin-top: 36px; }
+  .prose h3 { font-size: 1.05rem; margin: 24px 0 8px; }
+  .prose p, .prose li { font-size: 1rem; }
+  .prose ul, .prose ol { padding-left: 20px; }
+  .prose .table-scroll { overflow-x: auto; }
+  .prose table th, .prose table td { white-space: nowrap; }
+  .meta { color: var(--muted); font-size: 0.88rem; margin: 0 0 20px; }
+  .breadcrumb { font-size: 0.85rem; color: var(--muted); margin-bottom: 8px; }
+  .breadcrumb a { color: var(--muted); }
+  .cta { display: block; text-align: center; background: var(--accent); color: #fff; text-decoration: none; font-weight: 700; border-radius: 10px; padding: 14px; margin: 24px 0; }
+  .cta:hover { opacity: 0.92; }
   details { border-bottom: 1px solid var(--line); padding: 12px 0; }
   summary { cursor: pointer; font-weight: 600; }
 </style>

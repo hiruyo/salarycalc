@@ -1,0 +1,26 @@
+---
+import Base from '../../layouts/Base.astro';
+import { SITE } from '../../site';
+import { GUIDES } from '../../guides';
+
+const sorted = [...GUIDES].sort((a, b) => b.updated.localeCompare(a.updated));
+---
+
+<Base
+  title={`급여·세금 가이드 - ${SITE.name}`}
+  description="연봉 실수령액, 4대보험, 소득세, 주휴수당, 퇴직금, 실업급여 계산 방법을 쉽게 정리한 가이드 모음입니다."
+>
+  <h1>급여·세금 가이드</h1>
+  <p class="lead">계산기 결과가 어떻게 나오는지, 어떤 기준이 적용되는지 쉽게 풀어서 설명해요.</p>
+
+  <ul class="links">
+    {sorted.map((g) => (
+      <li>
+        <a href={`/guide/${g.slug}`}>
+          <strong>{g.title}</strong>
+          <span>{g.description}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</Base>

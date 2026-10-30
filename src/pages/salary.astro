@@ -1,9 +1,11 @@
 ---
 import Base from '../layouts/Base.astro';
 import { RATES } from '../rates/2026';
+import { GUIDES } from '../guides';
 
 const pct = (n: number) => `${Number((n * 100).toFixed(3))}%`;
 const man = (n: number) => `${(n / 10000).toLocaleString('ko-KR')}만원`;
+const relatedGuides = GUIDES.filter((g) => ['salary-table-2026', 'social-insurance-2026', 'withholding-tax'].includes(g.slug));
 ---
 
 <Base
@@ -83,6 +85,19 @@ const man = (n: number) => `${(n / 10000).toLocaleString('ko-KR')}만원`;
     <summary>실제 월급과 왜 차이가 나나요?</summary>
     <p>회사마다 4대보험 정산 시점, 비과세 항목, 공제 항목, 연말정산 반영 방식이 달라 차이가 생길 수 있어요. 이 계산기는 참고용 예상치입니다.</p>
   </details>
+
+
+  <h2>관련 가이드</h2>
+  <ul class="links">
+    {relatedGuides.map((g) => (
+      <li>
+        <a href={`/guide/${g.slug}`}>
+          <strong>{g.title}</strong>
+          <span>{g.description}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
 
   <script>
     import { calcNetPay } from '../lib/netpay';

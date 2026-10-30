@@ -1,6 +1,8 @@
 ---
 import Base from '../layouts/Base.astro';
 import { RATES } from '../rates/2026';
+import { GUIDES } from '../guides';
+const relatedGuides = GUIDES.filter((g) => ['weekly-holiday-pay-guide', 'minimum-wage-2026'].includes(g.slug));
 ---
 
 <Base
@@ -43,6 +45,19 @@ import { RATES } from '../rates/2026';
     <strong>주휴수당 = (1주 소정근로시간 ÷ 40) × 8시간 × 시급</strong>이며, 주 40시간을 넘어도 40시간까지만 계산합니다.
     월 환산은 4.345주(365일 ÷ 7일 ÷ 12개월)를 곱해 시간을 정수로 반올림합니다. 주 40시간이면 209시간입니다.
   </p>
+
+
+  <h2>관련 가이드</h2>
+  <ul class="links">
+    {relatedGuides.map((g) => (
+      <li>
+        <a href={`/guide/${g.slug}`}>
+          <strong>{g.title}</strong>
+          <span>{g.description}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
 
   <script>
     import { calcWeeklyHolidayPay } from '../lib/weeklyHolidayPay';

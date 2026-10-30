@@ -1,11 +1,13 @@
 ---
 import Base from '../layouts/Base.astro';
 import { RATES } from '../rates/2026';
+import { GUIDES } from '../guides';
 
 const u = RATES.unemployment;
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
 const dailyMin8 = Math.floor(RATES.minWageHourly * u.minWageRatio * u.maxDailyHours);
 const periods = ['1년 미만', '1년 이상 3년 미만', '3년 이상 5년 미만', '5년 이상 10년 미만', '10년 이상'];
+const relatedGuides = GUIDES.filter((g) => ['unemployment-benefit-guide'].includes(g.slug));
 ---
 
 <Base
@@ -105,6 +107,19 @@ const periods = ['1년 미만', '1년 이상 3년 미만', '3년 이상 5년 미
     <summary>월급이 높은데 왜 금액이 같나요?</summary>
     <p>1일 상한액({won(u.dailyMax)})이 있어서, 평균임금이 약 {won(Math.ceil(u.dailyMax / u.benefitRate))} 이상이면 누구나 같은 금액을 받아요.</p>
   </details>
+
+
+  <h2>관련 가이드</h2>
+  <ul class="links">
+    {relatedGuides.map((g) => (
+      <li>
+        <a href={`/guide/${g.slug}`}>
+          <strong>{g.title}</strong>
+          <span>{g.description}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
 
   <script>
     import { calcUnemployment, type InsuredPeriod } from '../lib/unemployment';

@@ -1,0 +1,35 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE } from '../site';
+---
+
+<Base title={`문의 - ${SITE.name}`} description={`${SITE.name}에 계산 오류 제보, 기능 제안, 기타 문의를 보내는 방법입니다.`}>
+  <article class="prose">
+    <h1>문의</h1>
+    <p class="lead">계산 오류 제보, 새로운 계산기 제안, 그 밖의 문의는 이메일로 보내주세요.</p>
+
+    <div class="card">
+      <p style="margin:0">
+        이메일: <a href={`mailto:${SITE.contactEmail}`}><strong>{SITE.contactEmail}</strong></a>
+      </p>
+    </div>
+
+    <h2>계산 오류를 제보할 때</h2>
+    <p>아래 내용을 함께 보내주시면 원인을 빠르게 찾을 수 있어요.</p>
+    <ul>
+      <li>사용한 계산기 (예: 연봉 실수령액 계산기)</li>
+      <li>입력한 값 (연봉, 비과세 금액, 가족 수 등)</li>
+      <li>사이트의 계산 결과와 실제 금액 (급여명세서 기준 등)</li>
+    </ul>
+    <p>
+      급여명세서 사진이나 개인을 식별할 수 있는 정보는 보내지 않으셔도 됩니다.
+      보내주신 이메일 주소와 내용은 답변에만 사용하고, 처리 후 삭제합니다. 자세한 내용은 <a href="/privacy">개인정보처리방침</a>을 참고하세요.
+    </p>
+
+    <h2>답변 안내</h2>
+    <p>
+      확인하는 대로 답변드립니다. 개인별 세무·노무 상담은 제공하기 어려우니,
+      구체적인 판단이 필요하면 국세청(126), 고용노동부 고객상담센터(1350)를 이용해 주세요.
+    </p>
+  </article>
+</Base>

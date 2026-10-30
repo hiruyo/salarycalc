@@ -1,0 +1,117 @@
+---
+import Article from '../../layouts/Article.astro';
+import { RATES } from '../../rates/2026';
+import { calcNetPay } from '../../lib/netpay';
+
+const won = (n: number) => n.toLocaleString('ko-KR');
+const pct = (n: number) => `${Number((n * 100).toFixed(4))}%`;
+const ex = calcNetPay({ annualSalary: 36_000_000 }); // 월 300만원, 비과세 없음
+const ltcEffective = RATES.health.rate * RATES.longTermCare.rateOfHealthPremium; // 보수월액 대비 장기요양 전체 요율
+---
+
+<Article slug="social-insurance-2026">
+  <p>
+    월급명세서에서 매달 빠지는 국민연금, 건강보험, 장기요양보험, 고용보험을 묶어 4대보험이라고 부릅니다
+    (산재보험은 회사가 전액 부담해서 월급에서는 빠지지 않아요).
+    {RATES.year}년에는 국민연금과 건강보험 요율이 함께 올라서, 월급이 같아도 작년보다 공제액이 조금 늘었습니다.
+  </p>
+
+  <h2>{RATES.year}년 4대보험 요율표</h2>
+  <div class="card table-scroll">
+    <table>
+      <thead>
+        <tr><th>구분</th><th>전체 요율</th><th>근로자 부담</th><th>계산 기준</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>국민연금</td>
+          <td>{pct(RATES.pension.rate)}</td>
+          <td>{pct(RATES.pension.rate * RATES.pension.employeeShare)}</td>
+          <td>기준소득월액</td>
+        </tr>
+        <tr>
+          <td>건강보험</td>
+          <td>{pct(RATES.health.rate)}</td>
+          <td>{pct(RATES.health.rate * RATES.health.employeeShare)}</td>
+          <td>보수월액</td>
+        </tr>
+        <tr>
+          <td>장기요양보험</td>
+          <td>건강보험료의 {pct(RATES.longTermCare.rateOfHealthPremium)}</td>
+          <td>그 절반</td>
+          <td>건강보험료</td>
+        </tr>
+        <tr>
+          <td>고용보험(실업급여)</td>
+          <td>1.8%</td>
+          <td>{pct(RATES.employment.employeeRate)}</td>
+          <td>보수월액</td>
+        </tr>
+        <tr>
+          <td>산재보험</td>
+          <td>업종별 상이</td>
+          <td>없음 (회사 전액)</td>
+          <td>보수월액</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>무엇이 달라졌나</h2>
+  <h3>국민연금 9% → 9.5%</h3>
+  <p>
+    연금개혁에 따라 국민연금 보험료율이 1998년 이후 처음으로 올랐어요. {RATES.year}년 9.5%를 시작으로 매년 0.5%포인트씩 올라
+    2033년 13%가 될 예정입니다. 근로자는 절반인 {pct(RATES.pension.rate / 2)}를 부담해요.
+  </p>
+  <h3>국민연금 기준소득월액 상·하한 조정 (7월)</h3>
+  <p>
+    국민연금은 월 소득 전체가 아니라 상한과 하한 사이의 "기준소득월액"에 보험료를 매깁니다.
+    {RATES.year}년 7월부터 2027년 6월까지는 하한 {won(RATES.pension.lower)}원, 상한 {won(RATES.pension.upper)}원이 적용돼요
+    (이전에는 400,000원 ~ 6,370,000원). 월급이 상한보다 많아도 국민연금은 상한액 기준으로만 냅니다.
+  </p>
+  <h3>건강보험 7.09% → 7.19%</h3>
+  <p>
+    건강보험료율도 올라 근로자 부담분이 {pct(RATES.health.rate / 2)}가 됐어요.
+    장기요양보험료는 건강보험료에 비례해서 매기기 때문에 건강보험료가 오르면 함께 오릅니다.
+  </p>
+  <h3>고용보험은 그대로</h3>
+  <p>고용보험 실업급여 보험료율은 1.8%로 유지되어 근로자 부담분은 {pct(RATES.employment.employeeRate)}입니다.</p>
+
+  <h2>월급 300만원일 때 4대보험 계산 예시</h2>
+  <p>비과세 항목이 없는 월급 3,000,000원을 예로 직접 계산해 볼게요. 각 보험료는 10원 미만을 버립니다.</p>
+  <div class="card">
+    <table>
+      <tbody>
+        <tr><th>국민연금</th><td>3,000,000 × 4.75% = {won(ex.pension)}원</td></tr>
+        <tr><th>건강보험</th><td>3,000,000 × 3.595% = {won(ex.health)}원</td></tr>
+        <tr><th>장기요양보험</th><td>건강보험료 전체(7.19%) × 13.14% ÷ 2 = {won(ex.longTermCare)}원</td></tr>
+        <tr><th>고용보험</th><td>3,000,000 × 0.9% = {won(ex.employment)}원</td></tr>
+        <tr class="total"><th>4대보험 합계</th><td>{won(ex.insuranceTotal)}원</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    월급의 약 {((ex.insuranceTotal / ex.grossMonthly) * 100).toFixed(1)}%가 4대보험으로 빠지는 셈이에요.
+    장기요양보험료를 보수월액 기준으로 환산하면 전체 약 {pct(Number(ltcEffective.toFixed(6)))}, 근로자 약 {pct(Number((ltcEffective / 2).toFixed(6)))}입니다.
+  </p>
+
+  <h2>4대보험 계산 기준이 되는 "보수월액"</h2>
+  <p>
+    4대보험은 비과세 소득을 뺀 금액을 기준으로 계산합니다. 월급 300만원 중 식대 20만원이 비과세라면
+    280만원을 기준으로 보험료를 매겨요. 그래서 비과세 항목이 있으면 보험료도 줄어듭니다.
+  </p>
+  <p>
+    회사는 보통 전년도 보수를 기준으로 보험료를 매달 공제하고, 다음 해 실제 보수와 비교해 정산합니다.
+    건강보험 연말정산으로 4월 급여에서 보험료가 추가로 빠지거나 돌려받는 경우가 이 때문이에요.
+  </p>
+
+  <h2>자주 묻는 질문</h2>
+  <details>
+    <summary>회사도 같은 금액을 내나요?</summary>
+    <p>국민연금, 건강보험, 장기요양보험은 회사와 근로자가 절반씩 냅니다. 고용보험은 회사가 실업급여분 외에 고용안정·직업능력개발 사업분을 추가로 내고, 산재보험은 회사가 전액 냅니다.</p>
+  </details>
+  <details>
+    <summary>4대보험료가 매달 조금씩 다른 이유는?</summary>
+    <p>성과급이나 수당이 달마다 다르거나, 보험료 정산·소급분이 반영되면 금액이 달라질 수 있어요.</p>
+  </details>
+</Article>
