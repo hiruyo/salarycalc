@@ -1,0 +1,206 @@
+---
+import Base from '../layouts/Base.astro';
+import SaveHistory from '../components/SaveHistory.astro';
+---
+
+<Base
+  title="날짜 계산기 (D-day·두 날짜 사이 일수·날짜 더하기·만 나이)"
+  description="두 날짜 사이의 일수와 D-day, 평일 수, 며칠 뒤 날짜, 만 나이를 한 번에 계산합니다. 윤년과 월말도 정확하게 반영해요."
+>
+  <h1>날짜 계산기</h1>
+  <p class="lead">D-day, 두 날짜 사이 일수, 며칠 뒤 날짜, 만 나이를 계산해요.</p>
+
+  <form id="calc-form" class="card" onsubmit="return false;">
+    <label>계산 종류</label>
+    <label class="check"><input type="radio" name="mode" value="period" checked /> 기간·D-day 계산</label>
+    <label class="check"><input type="radio" name="mode" value="add" /> 날짜 더하기·빼기</label>
+    <label class="check"><input type="radio" name="mode" value="age" /> 만 나이 계산</label>
+
+    <div id="fields-period">
+      <label for="start">시작일</label>
+      <input id="start" type="date" />
+      <label for="end">종료일</label>
+      <input id="end" type="date" />
+      <div class="hint">D-day를 구하려면 시작일을 오늘로, 종료일을 목표일로 두세요.</div>
+    </div>
+
+    <div id="fields-add" hidden>
+      <label for="base">기준일</label>
+      <input id="base" type="date" />
+      <label for="amount">더할 값 (빼려면 음수)</label>
+      <input id="amount" type="number" inputmode="numeric" step="1" value="100" />
+      <label for="unit">단위</label>
+      <select id="unit">
+        <option value="day" selected>일</option>
+        <option value="week">주</option>
+        <option value="month">개월</option>
+        <option value="year">년</option>
+      </select>
+    </div>
+
+    <div id="fields-age" hidden>
+      <label for="birth">생년월일</label>
+      <input id="birth" type="date" value="1995-06-15" />
+      <label for="ref">기준일</label>
+      <input id="ref" type="date" />
+    </div>
+
+    <div class="hint">
+      <button type="button" class="link-btn" id="set-today">날짜를 오늘로 맞추기</button>
+    </div>
+  </form>
+
+  <div class="card" data-history-results>
+    <div class="result-main">
+      <div class="label" id="out-main-label">-</div>
+      <div class="big" id="out-main">-</div>
+    </div>
+    <table>
+      <tbody id="out-rows"></tbody>
+    </table>
+  </div>
+
+  <SaveHistory calc="date-calculator" title="날짜계산" />
+
+  <h2>계산 방법</h2>
+  <h3>두 날짜 사이 일수</h3>
+  <p>
+    종료일에서 시작일을 뺀 값이 <strong>일수</strong>예요. 예를 들어 1월 1일부터 1월 31일까지는 30일 차이예요.
+    시작일과 종료일을 모두 세는 경우(예: 여행 기간, 근무일 수)는 1을 더한 <strong>포함 일수</strong>(31일)를 보세요.
+    평일 수는 토요일과 일요일만 빼고 센 값이며, 공휴일은 반영하지 않아요.
+  </p>
+  <h3>D-day</h3>
+  <p>
+    목표일까지 남은 일수예요. 오늘이 11월 5일이고 목표일이 11월 15일이면 D-10이에요. 목표일 당일은 D-day, 지난 날짜는 D+로 표시해요.
+  </p>
+  <h3>날짜 더하기·빼기</h3>
+  <p>
+    일·주 단위는 그대로 더하고, 개월·년 단위는 같은 날짜로 이동해요. 이동한 달에 그 날짜가 없으면 그 달의 마지막 날이 돼요.
+    예를 들어 1월 31일에 1개월을 더하면 2월 28일(윤년은 29일)이에요.
+  </p>
+  <h3>만 나이</h3>
+  <p>
+    2023년 6월부터 법령과 계약에서 나이는 원칙적으로 <strong>만 나이</strong>로 세요. 태어난 날 0살에서 시작해 생일이 지날 때마다 한 살씩 늘어요.
+    연 나이(올해 − 출생 연도)는 병역·청소년 보호 등 일부 법에서 여전히 쓰여요.
+  </p>
+
+  <h2>자주 묻는 질문</h2>
+  <details>
+    <summary>태어난 지 100일은 언제인가요?</summary>
+    <p>태어난 날을 1일째로 세기 때문에, 생일에 99일을 더한 날이 100일째예요. "날짜 더하기"에서 생일과 99일을 입력하면 돼요.</p>
+  </details>
+  <details>
+    <summary>계약 기간 1년의 마지막 날은요?</summary>
+    <p>시작일이 2026년 3월 2일이면 1년을 더한 2027년 3월 2일의 전날인 3월 1일이 보통 마지막 날이에요. 계약서에 적힌 기준을 우선 확인하세요.</p>
+  </details>
+
+  <script>
+    import { period, addToDate, age, type DateUnit } from '../lib/dateCalc';
+
+    const $ = <T extends HTMLElement = HTMLInputElement>(id: string) => document.getElementById(id) as T;
+    const comma = (n: number) => n.toLocaleString('ko-KR');
+
+    function todayYMD(): string {
+      const d = new Date();
+      const p = (n: number) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+    }
+
+    function fillToday(force = false) {
+      for (const id of ['start', 'base', 'ref']) {
+        const el = $(id);
+        if (force || !el.value) el.value = todayYMD();
+      }
+      const end = $('end');
+      if (!end.value) {
+        // 기본 종료일: 올해 12월 31일
+        end.value = `${new Date().getFullYear()}-12-31`;
+      }
+    }
+
+    function rows(items: [string, string][]) {
+      const tbody = $<HTMLElement>('out-rows');
+      tbody.innerHTML = '';
+      for (const [k, v] of items) {
+        const tr = document.createElement('tr');
+        const th = document.createElement('th');
+        const td = document.createElement('td');
+        th.textContent = k;
+        td.textContent = v;
+        tr.append(th, td);
+        tbody.append(tr);
+      }
+    }
+
+    function main(label: string, value: string) {
+      $<HTMLElement>('out-main-label').textContent = label;
+      $<HTMLElement>('out-main').textContent = value;
+    }
+
+    function render() {
+      const mode = (document.querySelector('input[name="mode"]:checked') as HTMLInputElement).value;
+      for (const m of ['period', 'add', 'age']) $<HTMLElement>(`fields-${m}`).hidden = m !== mode;
+
+      if (mode === 'period') {
+        const r = period($('start').value, $('end').value);
+        if (!r.valid) {
+          main('두 날짜 사이', '-');
+          rows([['확인', '날짜를 입력해 주세요']]);
+          return;
+        }
+        const dday = r.days > 0 ? `D-${comma(r.days)}` : r.days === 0 ? 'D-day' : `D+${comma(-r.days)}`;
+        main('두 날짜 사이', `${comma(Math.abs(r.days))}일`);
+        rows([
+          ['D-day (종료일 기준)', dday],
+          ['시작일·종료일 포함', `${comma(r.daysInclusive)}일`],
+          ['주 단위', `${comma(r.weeks)}주 ${r.weekRemainder}일`],
+          ['년·개월·일', `${r.years}년 ${r.months}개월 ${r.remainDays}일`],
+          ['평일 수 (주말 제외)', `${comma(r.weekdays)}일`],
+          ['요일', `${r.startWeekday}요일 → ${r.endWeekday}요일`],
+        ]);
+      } else if (mode === 'add') {
+        const amount = Number($('amount').value) || 0;
+        const unit = $<HTMLSelectElement>('unit').value as DateUnit;
+        const r = addToDate($('base').value, amount, unit);
+        if (!r.valid) {
+          main('결과 날짜', '-');
+          rows([['확인', '기준일을 입력해 주세요']]);
+          return;
+        }
+        const unitText = { day: '일', week: '주', month: '개월', year: '년' }[unit];
+        main('결과 날짜', `${r.date} (${r.weekday})`);
+        rows([['계산', `${$('base').value} ${amount >= 0 ? '+' : '−'} ${comma(Math.abs(Math.trunc(amount)))}${unitText}`]]);
+      } else {
+        const r = age($('birth').value, $('ref').value);
+        if (!r.valid) {
+          main('만 나이', '-');
+          rows([['확인', '생년월일이 기준일보다 앞서야 해요']]);
+          return;
+        }
+        main('만 나이', `${r.manAge}세`);
+        rows([
+          ['연 나이 (올해 − 출생 연도)', `${r.yearAge}세`],
+          ['세는 나이', `${r.koreanAge}세`],
+          ['다음 생일', `${r.nextBirthday} (${r.daysToBirthday === 0 ? '오늘' : `${comma(r.daysToBirthday)}일 남음`})`],
+          ['태어난 지', `${comma(r.daysSinceBirth)}일째`],
+        ]);
+      }
+    }
+
+    fillToday();
+    $('set-today').addEventListener('click', () => {
+      fillToday(true);
+      render();
+    });
+    $<HTMLFormElement>('calc-form').addEventListener('input', render);
+    $<HTMLFormElement>('calc-form').addEventListener('change', render);
+    render();
+  </script>
+</Base>
+
+<style>
+  .link-btn {
+    background: none; border: none; padding: 0; margin-top: 8px; font: inherit; font-size: 0.85rem;
+    color: var(--accent); text-decoration: underline; cursor: pointer;
+  }
+</style>

@@ -1,6 +1,6 @@
 # 월급계산소 (salary-calc)
 
-Astro 기반 정적 사이트. 연봉 실수령액·주휴수당·퇴직금·실업급여·프리랜서 3.3%·전월세 전환 계산기가 들어 있습니다.
+Astro 기반 정적 사이트. 연봉 실수령액·주휴수당·퇴직금·실업급여·프리랜서 3.3%·전월세 전환·날짜 계산기가 들어 있습니다.
 계산은 모두 브라우저에서 실행되므로 서버 비용이 없습니다.
 
 ## 시작하기
@@ -29,10 +29,11 @@ src/
   lib/unemployment.ts    실업급여(구직급여) 계산
   lib/freelancer.ts      프리랜서 3.3% 원천징수
   lib/rentConversion.ts  전월세 전환
+  lib/dateCalc.ts        날짜 계산 (기간·D-day, 더하기, 만 나이)
   lib/history.ts         계산 결과 저장·이력·CSV (저장소 교체 가능한 순수 로직)
   lib/historyUi.ts       저장 UI (입력·결과 자동 수집, 불러오기)
   components/SaveHistory.astro 계산기에 붙이는 '내 계산 기록' 영역
-  pages/                 계산기 6종, about, privacy, terms, contact
+  pages/                 계산기 7종, about, privacy, terms, contact
   pages/guide/           가이드 글
 tests/calc.test.ts       계산 로직 테스트
 ```
@@ -72,7 +73,7 @@ tests/calc.test.ts       계산 로직 테스트
 
 ## 유료화 로드맵
 
-1. **지금 (무료)**: 로그인 없이 브라우저에 저장·이력·CSV 내보내기 (`SaveHistory` 컴포넌트, 계산기 6종에 적용)
+1. **지금 (무료)**: 로그인 없이 브라우저에 저장·이력·CSV 내보내기 (`SaveHistory` 컴포넌트, 계산기 7종에 적용)
 2. **수요 측정**: GA4를 붙이면 `history_save` / `history_load` / `history_export` 이벤트가 자동 전송됨 (`historyUi.ts`의 `track`)
 3. **유료 전환 판단**: 저장 사용자가 충분하면 로그인 + 클라우드 저장(기기 간 동기화), 무제한 이력, PDF 내보내기 등을 유료로
    - `history.ts`의 `StorageLike`를 서버 저장소 구현으로 바꾸면 UI는 그대로 재사용 가능

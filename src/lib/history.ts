@@ -58,11 +58,13 @@ function writeAll(store: StorageLike, all: Snapshot[]): boolean {
   }
 }
 
-/** 최신순 */
+/** 최신순 (저장 시각이 같으면 나중에 저장한 것이 먼저) */
 export function listFor(store: StorageLike, calc: string): Snapshot[] {
   return loadAll(store)
-    .filter((s) => s.calc === calc)
-    .sort((a, b) => b.savedAt.localeCompare(a.savedAt));
+    .map((s, i) => [s, i] as const)
+    .filter(([s]) => s.calc === calc)
+    .sort(([a, ia], [b, ib]) => b.savedAt.localeCompare(a.savedAt) || ib - ia)
+    .map(([s]) => s);
 }
 
 /** 저장 후 저장된 스냅샷을 반환. 저장소를 쓸 수 없으면 null. 계산기별 최대 MAX_PER_CALC개 유지. */

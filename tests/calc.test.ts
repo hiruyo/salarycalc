@@ -7,6 +7,7 @@ import { calcSeverance } from '../src/lib/severance.ts';
 import { calcUnemployment } from '../src/lib/unemployment.ts';
 import { freelancerFromGross, freelancerFromNet } from '../src/lib/freelancer.ts';
 import { loadAll, listFor, save, remove, toCSV, MAX_PER_CALC, STORAGE_KEY, type StorageLike } from '../src/lib/history.ts';
+import { period, addToDate, age, parseYMD } from '../src/lib/dateCalc.ts';
 import { legalConversionRate, jeonseToWolse, wolseToJeonse, impliedConversionRate } from '../src/lib/rentConversion.ts';
 
 // ---- 간이세액표 (소득세법 시행령 별표 2, 2026.2.27 개정) 원본 값과 대조 ----
@@ -333,4 +334,79 @@ test('이력: CSV는 BOM·이스케이프·열 합치기', () => {
   assert.equal(lines[0], '저장일시,메모,기타,결과');
   assert.equal(lines[1], '2026-10-30 09:05,"a,""b""",,"1,000원"');
   assert.equal(lines[2], '2026-10-30 09:06,,z,2원');
+});
+
+// ---- 날짜 계산 ----
+
+test('날짜: 존재하지 않는 날짜는 거부', () => {
+  assert.equal(parseYMD('2026-02-29'), null);
+  assert.notEqual(parseYMD('2028-02-29'), null);
+  assert.equal(parseYMD('2026-13-01'), null);
+  assert.equal(period('2026-02-30', '2026-03-01').valid, false);
+});
+
+test('날짜: 기간 계산 (일수·포함 일수·주·년월일·요일)', () => {
+  const r = period('2026-01-01', '2026-12-31');
+  assert.equal(r.days, 364);
+  assert.equal(r.daysInclusive, 365);
+  assert.equal(r.weeks, 52);
+  assert.equal(r.weekRemainder, 0);
+  assert.equal(r.years, 0);
+  assert.equal(r.months, 11);
+  assert.equal(r.remainDays, 30);
+  assert.equal(r.startWeekday, '목');
+  assert.equal(r.endWeekday, '목');
+  // 윤년 포함
+  assert.equal(period('2028-01-01', '2029-01-01').days, 366);
+  assert.equal(period('2028-01-01', '2029-01-01').years, 1);
+});
+
+test('날짜: 종료일이 빠르면 음수, 년월일은 절대값 기준', () => {
+  const r = period('2026-11-05', '2026-10-05');
+  assert.equal(r.days, -31);
+  assert.equal(r.months, 1);
+  assert.equal(r.remainDays, 0);
+});
+
+test('날짜: 평일 수 (주말 제외, 양 끝 포함)', () => {
+  // 2026-11-02(월) ~ 2026-11-08(일): 평일 5일
+  assert.equal(period('2026-11-02', '2026-11-08').weekdays, 5);
+  // 2026-11-07(토) ~ 2026-11-08(일): 0일
+  assert.equal(period('2026-11-07', '2026-11-08').weekdays, 0);
+  // 같은 날(목)
+  assert.equal(period('2026-11-05', '2026-11-05').weekdays, 1);
+  // 4주 = 20일
+  assert.equal(period('2026-11-02', '2026-11-29').weekdays, 20);
+});
+
+test('날짜: 더하기·빼기 (월말 보정 포함)', () => {
+  assert.deepEqual(addToDate('2026-11-05', 100, 'day'), { valid: true, date: '2027-02-13', weekday: '토' });
+  assert.equal(addToDate('2026-11-05', -5, 'day').date, '2026-10-31');
+  assert.equal(addToDate('2026-11-05', 2, 'week').date, '2026-11-19');
+  assert.equal(addToDate('2026-01-31', 1, 'month').date, '2026-02-28');
+  assert.equal(addToDate('2028-01-31', 1, 'month').date, '2028-02-29');
+  assert.equal(addToDate('2028-02-29', 1, 'year').date, '2029-02-28');
+  assert.equal(addToDate('2026-03-31', -1, 'month').date, '2026-02-28');
+  assert.equal(addToDate('', 1, 'day').valid, false);
+});
+
+test('날짜: 만 나이·연 나이·세는 나이, 다음 생일', () => {
+  const r = age('1990-11-06', '2026-11-05');
+  assert.equal(r.manAge, 35);
+  assert.equal(r.yearAge, 36);
+  assert.equal(r.koreanAge, 37);
+  assert.equal(r.nextBirthday, '2026-11-06');
+  assert.equal(r.daysToBirthday, 1);
+  const today = age('1990-11-05', '2026-11-05');
+  assert.equal(today.manAge, 36);
+  assert.equal(today.daysToBirthday, 0);
+  assert.equal(age('2026-11-05', '2026-11-05').daysSinceBirth, 1);
+  assert.equal(age('2027-01-01', '2026-11-05').valid, false);
+});
+
+test('날짜: 2월 29일생은 평년에 3월 1일부터 나이 증가', () => {
+  assert.equal(age('2000-02-29', '2027-02-28').manAge, 26);
+  assert.equal(age('2000-02-29', '2027-03-01').manAge, 27);
+  assert.equal(age('2000-02-29', '2028-02-29').manAge, 28);
+  assert.equal(age('2000-02-29', '2026-11-05').nextBirthday, '2027-03-01');
 });
