@@ -8,5 +8,15 @@ export default defineConfig({
   // build.format 'file' → salary.html 생성, Cloudflare Pages가 /salary 로 제공
   trailingSlash: 'never',
   build: { format: 'file' },
-  integrations: [sitemap()],
+  integrations: [
+    sitemap({
+      // 사이트맵 주소도 끝 슬래시 없이 (홈 '/'는 유지)
+      serialize(item) {
+        const u = new URL(item.url);
+        if (u.pathname !== '/') u.pathname = u.pathname.replace(/\/+$/, '');
+        item.url = u.toString();
+        return item;
+      },
+    }),
+  ],
 });
