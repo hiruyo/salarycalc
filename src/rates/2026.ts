@@ -82,6 +82,26 @@ export const RATES = {
     cap: 0.1,
   },
 
+  /**
+   * 주식 (2026년 1월 1일 이후 양도분)
+   * - 증권거래세: 코스피 0.05% + 농어촌특별세 0.15%, 코스닥·K-OTC 0.20%, 코넥스 0.10%
+   * - 해외주식 양도소득세: (양도차익 − 연 250만원) × 20%, 지방소득세는 그 10%
+   *   원화 환산은 매수·매도 각각의 결제일 기준환율
+   * - 배당소득 원천징수: 소득세 14% + 지방소득세 1.4% (미국 주식은 현지 15%만 원천징수)
+   * - 금융소득(이자+배당) 연 2,000만원 초과 시 종합과세 대상
+   */
+  stock: {
+    markets: {
+      kospi: { name: '코스피', transactionTax: 0.0005, ruralTax: 0.0015 },
+      kosdaq: { name: '코스닥', transactionTax: 0.002, ruralTax: 0 },
+      konex: { name: '코넥스', transactionTax: 0.001, ruralTax: 0 },
+      kotc: { name: 'K-OTC', transactionTax: 0.002, ruralTax: 0 },
+    },
+    defaultFeeRate: 0.00015,
+    overseas: { basicDeduction: 2_500_000, taxRate: 0.2, defaultFeeRate: 0.0025 },
+    dividend: { domesticIncomeTaxRate: 0.14, usWithholdingRate: 0.15, comprehensiveThreshold: 20_000_000 },
+  },
+
   // 소득세는 국세청 근로소득 간이세액표(withholding2026.ts)를 조회해 계산합니다.
   localIncomeTaxRate: 0.1, // 지방소득세 = 소득세의 10%
 

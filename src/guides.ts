@@ -13,6 +13,22 @@ export interface GuideMeta {
 
 export const GUIDES: GuideMeta[] = [
   {
+    slug: 'stock-tax-guide',
+    title: '2026년 주식 세금 총정리: 증권거래세·배당소득세·양도소득세',
+    description: '국내 주식을 사고팔 때 붙는 증권거래세(코스피 0.05%+농특세 0.15%, 코스닥 0.20%), 배당소득세 15.4%, 대주주·해외주식 양도소득세를 한 번에 정리했습니다.',
+    published: '2026-11-07',
+    updated: '2026-11-07',
+    calculator: { href: '/stock-profit', label: '수수료·세금 뺀 수익 계산하기' },
+  },
+  {
+    slug: 'overseas-stock-tax-guide',
+    title: '해외주식 양도소득세 신고 방법: 250만원 공제, 환율, 5월 신고',
+    description: '미국 주식 등 해외주식 양도세 계산법(결제일 기준환율, 손익 합산, 250만원 공제 후 22%), 신고 기간과 절세 방법을 예시로 정리했습니다.',
+    published: '2026-11-07',
+    updated: '2026-11-07',
+    calculator: { href: '/overseas-stock-tax', label: '내 해외주식 양도세 계산하기' },
+  },
+  {
     slug: 'employer-insurance-guide',
     title: '직원 한 명 뽑으면 얼마 들까? 사업주 4대보험·인건비 정리',
     description: '월급 외에 회사가 내는 국민연금·건강·고용·산재보험과 퇴직금 적립을 예시로 계산하고, 알바 4대보험 기준까지 정리했습니다.',

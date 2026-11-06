@@ -1,0 +1,193 @@
+---
+import Base from '../layouts/Base.astro';
+import ResultActions from '../components/ResultActions.astro';
+import SaveHistory from '../components/SaveHistory.astro';
+import { GUIDES } from '../guides';
+import { RATES } from '../rates/2026';
+const relatedGuides = GUIDES.filter((g) => ['stock-tax-guide'].includes(g.slug));
+---
+
+<Base
+  title={`배당금 계산기 - 배당소득세 15.4% 뺀 세후 배당·월배당 투자금 (${RATES.year}년)`}
+  description="보유 수량과 주당 배당금, 또는 투자금과 배당수익률로 세후 배당금을 계산합니다. 국내 15.4%, 미국 15% 원천징수와 목표 월배당에 필요한 투자금도 알려드려요."
+>
+  <h1>배당금 계산기</h1>
+  <p class="lead">세금을 떼고 실제로 들어오는 배당금, 한 번에 받는 금액, 원하는 월배당을 만들 투자금을 계산해요.</p>
+
+  <div class="calc-layout">
+    <form id="calc-form" class="card" onsubmit="return false;">
+      <label>계산 기준</label>
+      <div class="segmented" role="radiogroup">
+        <label class="check"><input type="radio" name="basis" value="shares" checked /> 보유 수량 × 주당 배당금</label>
+        <label class="check"><input type="radio" name="basis" value="invest" /> 투자금 × 배당수익률</label>
+      </div>
+
+      <div id="fields-shares">
+        <div class="pair">
+          <div>
+            <label for="qty">보유 수량 (주)</label>
+            <input id="qty" type="number" inputmode="numeric" min="0" step="1" value="100" />
+          </div>
+          <div>
+            <label for="dps">주당 연간 배당금 (원)</label>
+            <input id="dps" type="number" inputmode="decimal" min="0" step="any" value="3000" />
+          </div>
+        </div>
+        <label for="price">현재 주가 (원, 선택)</label>
+        <input id="price" type="number" inputmode="decimal" min="0" step="any" value="60000" />
+        <div class="hint">넣으면 배당수익률과 목표 월배당 투자금을 계산해요. 미국 주식은 달러 금액에 환율을 곱해 넣으세요.</div>
+      </div>
+
+      <div id="fields-invest" hidden>
+        <label for="invest">투자금 (원)</label>
+        <input id="invest" type="number" inputmode="numeric" min="0" step="1000000" value="10000000" />
+        <label for="yield">연 배당수익률 (%, 세전)</label>
+        <input id="yield" type="number" inputmode="decimal" min="0" step="0.1" value="5" />
+      </div>
+
+      <label for="market">종목 구분</label>
+      <select id="market">
+        <option value="domestic" selected>국내 주식·ETF (15.4%)</option>
+        <option value="us">미국 주식 (현지 15%)</option>
+      </select>
+
+      <label for="payments">지급 주기</label>
+      <select id="payments">
+        <option value="1">연 1회</option>
+        <option value="2">반기 (연 2회)</option>
+        <option value="4" selected>분기 (연 4회)</option>
+        <option value="12">매월 (연 12회)</option>
+      </select>
+
+      <label for="target">목표 세후 월 배당 (원, 선택)</label>
+      <input id="target" type="number" inputmode="numeric" min="0" step="10000" value="1000000" />
+    </form>
+
+    <div class="receipt" data-history-results>
+      <div class="result-main">
+        <div class="label">연 세후 배당금</div>
+        <div class="big" id="out-net">-</div>
+      </div>
+      <table>
+        <tbody>
+          <tr><th>연 세전 배당금</th><td id="out-gross">-</td></tr>
+          <tr><th id="th-tax">배당소득세 (14%)</th><td id="out-tax">-</td></tr>
+          <tr id="row-local"><th>지방소득세 (1.4%)</th><td id="out-local">-</td></tr>
+          <tr class="total"><th>세금 합계</th><td id="out-tax-sum">-</td></tr>
+          <tr><th>1회 세후 지급액</th><td id="out-per">-</td></tr>
+          <tr class="total"><th>월 평균 세후</th><td id="out-month">-</td></tr>
+          <tr id="row-yield"><th>배당수익률 (세전)</th><td id="out-yield">-</td></tr>
+          <tr id="row-need" class="total"><th>목표 월배당 필요 투자금</th><td id="out-need">-</td></tr>
+        </tbody>
+      </table>
+      <p class="warn-box" id="warn" hidden>
+        연 배당이 2,000만원을 넘어요. 이자와 합친 금융소득이 2,000만원을 넘으면 다음 해 5월 종합소득세 신고 대상(금융소득 종합과세)이 돼요.
+      </p>
+      <ResultActions calc="dividend" />
+    </div>
+    <SaveHistory calc="dividend" title="배당금" />
+  </div>
+
+  <p class="notice">
+    배당금과 배당수익률은 회사 결정에 따라 바뀌어요. 세금은 1회 지급분마다 10원 미만을 절사해 계산했고, 실제 입금액과 몇십 원 차이가 날 수 있어요.
+  </p>
+
+  <h2>배당소득세는 얼마인가요</h2>
+  <ul>
+    <li><strong>국내 주식·ETF</strong>: 배당소득세 14% + 지방소득세 1.4% = <strong>15.4%</strong>를 떼고 입금돼요.</li>
+    <li><strong>미국 주식</strong>: 미국에서 15%를 원천징수해요. 국내 세율(14%)보다 높아서 국내에서 추가로 떼는 세금은 없어요.</li>
+    <li>국내 상장 해외 ETF는 분배금 중 과세 대상 부분에 15.4%가 붙어요.</li>
+  </ul>
+
+  <h2>금융소득 종합과세 (연 2,000만원)</h2>
+  <p>
+    이자와 배당을 합친 금융소득이 한 해 2,000만원을 넘으면, 넘는 부분을 다른 소득과 합쳐 다음 해 5월에 종합소득세로 신고해요.
+    소득이 많을수록 15.4%보다 높은 세율이 적용될 수 있고, 건강보험료(피부양자 자격·지역보험료)에도 영향을 줄 수 있어요.
+  </p>
+  <p>
+    {RATES.year}년부터는 요건을 갖춘 <strong>고배당 기업</strong>의 현금배당을 종합과세 대신 분리과세(2,000만원 이하 14%, 3억원 이하 20%, 50억원 이하 25%, 초과 30%)로 선택할 수 있는 특례가 3년간 시행돼요.
+    해당 여부와 유불리는 증권사·세무 전문가에게 확인하세요.
+  </p>
+
+  <h2>월배당 만들기</h2>
+  <p>
+    세후 월 100만원을 국내 배당주(배당수익률 5%)로 받으려면 1년 1,200만원 ÷ 0.846 ÷ 5% ≈ <strong>약 2억 8,369만원</strong>이 필요해요.
+    배당 주기가 다른 종목(1·4·7·10월, 2·5·8·11월 등)을 섞으면 매달 비슷하게 받을 수 있어요.
+  </p>
+
+  <h2>자주 묻는 질문</h2>
+  <details>
+    <summary>배당을 받으려면 언제까지 사야 하나요?</summary>
+    <p>배당기준일에 주주명부에 있어야 해요. 국내 주식은 결제까지 2영업일이 걸려서 기준일 2영업일 전까지 사야 해요. 회사마다 기준일이 다르니 공시를 확인하세요.</p>
+  </details>
+  <details>
+    <summary>ISA·연금계좌에서 받으면 다른가요?</summary>
+    <p>ISA는 일정 금액까지 비과세·분리과세 혜택이 있고, 연금저축·IRP는 배당을 받을 때 세금을 떼지 않고 나중에 연금으로 받을 때 연금소득세로 과세돼요. 이 계산기는 일반 계좌 기준이에요.</p>
+  </details>
+
+  <h2>관련 가이드</h2>
+  <ul class="links">
+    {relatedGuides.map((g) => (
+      <li>
+        <a href={`/guide/${g.slug}`}>
+          <strong>{g.title}</strong>
+          <span>{g.description}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+
+  <script>
+    import { calcDividend, investmentForMonthly, type DividendMarket } from '../lib/stock';
+
+    const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+    const num = (id: string) => Number($<HTMLInputElement>(id).value) || 0;
+    const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
+    const set = (id: string, text: string) => {
+      $(id).textContent = text;
+    };
+
+    function basis(): 'shares' | 'invest' {
+      return (document.querySelector('input[name="basis"]:checked') as HTMLInputElement).value as 'shares' | 'invest';
+    }
+
+    function render() {
+      const b = basis();
+      $('fields-shares').hidden = b !== 'shares';
+      $('fields-invest').hidden = b !== 'invest';
+      const market = $<HTMLSelectElement>('market').value as DividendMarket;
+      const payments = Number($<HTMLSelectElement>('payments').value);
+
+      let annual = 0;
+      let yieldRate = 0;
+      if (b === 'shares') {
+        annual = Math.floor(num('qty')) * num('dps');
+        yieldRate = num('price') > 0 ? num('dps') / num('price') : 0;
+      } else {
+        yieldRate = num('yield') / 100;
+        annual = num('invest') * yieldRate;
+      }
+      const r = calcDividend({ annualGross: annual, payments, market });
+
+      set('out-net', won(r.annualNet));
+      set('out-gross', won(r.annualGross));
+      set('th-tax', market === 'us' ? '미국 원천징수 (15%)' : '배당소득세 (14%)');
+      set('out-tax', won(r.annualIncomeTax));
+      $('row-local').hidden = market === 'us';
+      set('out-local', won(r.annualLocalTax));
+      set('out-tax-sum', won(r.annualTax));
+      set('out-per', `${won(r.perPaymentNet)} × ${payments}회`);
+      set('out-month', won(r.monthlyNet));
+      $('row-yield').hidden = !yieldRate;
+      set('out-yield', `${(yieldRate * 100).toFixed(2)}%`);
+      const need = investmentForMonthly(num('target'), yieldRate, market);
+      $('row-need').hidden = !need;
+      set('out-need', won(need));
+      $('warn').hidden = !r.overThreshold;
+    }
+
+    $('calc-form').addEventListener('input', render);
+    $('calc-form').addEventListener('change', render);
+    render();
+  </script>
+</Base>

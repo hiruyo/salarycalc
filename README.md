@@ -37,6 +37,7 @@ src/
   lib/annualLeave.ts     연차 (입사일 기준, 단시간 비례, 연차수당)
   lib/yearEndTax.ts      연말정산 환급 예상 (소득·세액공제, 표준세액공제 비교)
   lib/payroll.ts         사장님용 인건비 (회사 부담 4대보험·퇴직 적립)
+  lib/stock.ts           주식: 평단가·실현손익(거래세)·해외주식 양도세·배당
   lib/history.ts         계산 결과 저장·이력·CSV (저장소 교체 가능한 순수 로직)
   lib/historyUi.ts       저장 UI (입력·결과 자동 수집, 불러오기)
   components/SaveHistory.astro 계산기에 붙이는 '내 계산 기록' 영역
@@ -45,7 +46,7 @@ src/
   components/ResultActions.astro 결과 영역 하단 버튼
   lib/search.ts          사이트 검색 (계산기 keywords + 가이드 제목·설명)
   lib/siteUi.ts          공통 UI: 검색창(/, Ctrl+K), 맨 위로, 최근 본·즐겨찾기(localStorage)
-  pages/                 계산기 10종, 404, about, privacy, terms, contact
+  pages/                 계산기 14종, 404, about, privacy, terms, contact
   pages/guide/           가이드 글
 tests/calc.test.ts       계산 로직 테스트
 wrangler.jsonc           Cloudflare 정적 배포 설정 (없는 주소 → 404.html)
@@ -88,7 +89,7 @@ wrangler.jsonc           Cloudflare 정적 배포 설정 (없는 주소 → 404.
 
 ## 유료화 로드맵
 
-1. **지금 (무료)**: 로그인 없이 브라우저에 저장·이력·CSV 내보내기 (`SaveHistory` 컴포넌트, 계산기 10종에 적용)
+1. **지금 (무료)**: 로그인 없이 브라우저에 저장·이력·CSV 내보내기 (`SaveHistory` 컴포넌트, 계산기 14종에 적용)
 2. **수요 측정**: GA4를 붙이면 `history_save` / `history_load` / `history_export` 이벤트가 자동 전송됨 (`historyUi.ts`의 `track`)
 3. **유료 전환 판단**: 저장 사용자가 충분하면 로그인 + 클라우드 저장(기기 간 동기화), 무제한 이력, PDF 내보내기 등을 유료로
    - `history.ts`의 `StorageLike`를 서버 저장소 구현으로 바꾸면 UI는 그대로 재사용 가능

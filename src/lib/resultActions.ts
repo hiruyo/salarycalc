@@ -25,7 +25,8 @@ function collectState(form: HTMLFormElement): FormState {
       if (el.type === 'checkbox') {
         if (el.checked !== el.defaultChecked) state[el.id] = el.checked ? '1' : '0';
       } else if (el.value !== el.defaultValue || el.type === 'date') {
-        if (el.value !== '') state[el.id] = el.value;
+        // 기본값이 있는 칸을 비운 경우도 빈 값으로 전달 (받는 쪽에서 기본값이 되살아나지 않도록)
+        if (el.value !== '' || el.defaultValue !== '') state[el.id] = el.value;
       }
     } else if (el instanceof HTMLSelectElement && el.id) {
       const def = Array.from(el.options).find((o) => o.defaultSelected)?.value ?? el.options[0]?.value;
@@ -75,7 +76,8 @@ function readReceipt(receipt: HTMLElement) {
   const label = receipt.querySelector('.result-main .label')?.textContent?.trim() ?? '';
   const value = receipt.querySelector('.result-main .big')?.textContent?.trim() ?? '';
   const rows: Row[] = [];
-  receipt.querySelectorAll('table tr').forEach((tr) => {
+  receipt.querySelectorAll<HTMLTableRowElement>('table tr').forEach((tr) => {
+    if (tr.hidden) return;
     const th = tr.querySelector('th')?.textContent?.trim();
     const td = tr.querySelector('td')?.textContent?.trim();
     if (th && td) rows.push({ label: th, value: td, total: tr.classList.contains('total') });

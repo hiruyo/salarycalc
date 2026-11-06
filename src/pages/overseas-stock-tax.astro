@@ -1,0 +1,198 @@
+---
+import Base from '../layouts/Base.astro';
+import ResultActions from '../components/ResultActions.astro';
+import SaveHistory from '../components/SaveHistory.astro';
+import { GUIDES } from '../guides';
+import { RATES } from '../rates/2026';
+const O = RATES.stock.overseas;
+const relatedGuides = GUIDES.filter((g) => ['overseas-stock-tax-guide', 'stock-tax-guide'].includes(g.slug));
+const defaults = [
+  { buy: '150', sell: '210', qty: '50', br: '1320', sr: '1400' },
+  { buy: '', sell: '', qty: '', br: '', sr: '' },
+  { buy: '', sell: '', qty: '', br: '', sr: '' },
+];
+---
+
+<Base
+  title={`해외주식 양도소득세 계산기 - 250만원 공제·22%·환율 반영 (${RATES.year}년)`}
+  description="미국 등 해외주식을 판 차익에 붙는 양도소득세를 계산합니다. 종목별 매수·매도가와 결제일 환율, 수수료를 넣으면 연 250만원 기본공제 후 22%(지방소득세 포함) 세금이 나와요."
+>
+  <h1>해외주식 양도소득세 계산기</h1>
+  <p class="lead">올해 판 해외주식의 손익을 모두 합쳐 250만원을 빼고 22%를 계산해요. 다음 해 5월에 신고할 세금을 미리 확인하세요.</p>
+
+  <div class="calc-layout">
+    <form id="calc-form" class="card" onsubmit="return false;">
+      {defaults.map((d, i) => (
+        <fieldset class="trade">
+          <p class="subhead">종목 {i + 1} <small>{i > 0 ? '(선택)' : ''}</small></p>
+          <div class="pair">
+            <div>
+              <label for={`t${i + 1}-buy`}>매수 단가 ($)</label>
+              <input id={`t${i + 1}-buy`} type="number" inputmode="decimal" min="0" step="any" value={d.buy} />
+            </div>
+            <div>
+              <label for={`t${i + 1}-sell`}>매도 단가 ($)</label>
+              <input id={`t${i + 1}-sell`} type="number" inputmode="decimal" min="0" step="any" value={d.sell} />
+            </div>
+          </div>
+          <label for={`t${i + 1}-qty`}>판 수량 (주)</label>
+          <input id={`t${i + 1}-qty`} type="number" inputmode="decimal" min="0" step="any" value={d.qty} />
+          <div class="pair">
+            <div>
+              <label for={`t${i + 1}-br`}>매수 환율 (원/$)</label>
+              <input id={`t${i + 1}-br`} type="number" inputmode="decimal" min="0" step="any" value={d.br} />
+            </div>
+            <div>
+              <label for={`t${i + 1}-sr`}>매도 환율 (원/$)</label>
+              <input id={`t${i + 1}-sr`} type="number" inputmode="decimal" min="0" step="any" value={d.sr} />
+            </div>
+          </div>
+        </fieldset>
+      ))}
+      <div class="hint">환율은 매수·매도 각각의 <strong>결제일 기준환율</strong>이에요. 증권사 '양도소득세 계산 내역'에서 확인할 수 있어요.</div>
+
+      <p class="subhead">그 밖에</p>
+      <label for="fee">거래 수수료율 (%)</label>
+      <input id="fee" type="number" inputmode="decimal" min="0" step="0.01" value={+(O.defaultFeeRate * 100).toFixed(4)} />
+      <div class="hint">매수·매도 각각에 적용해 필요경비로 빼요. 증권사마다 0.07~0.25% 정도예요.</div>
+
+      <label for="other">다른 종목의 올해 손익 합계 (원)</label>
+      <input id="other" type="number" inputmode="numeric" step="1" value="" placeholder="손실은 -로 입력" />
+      <div class="hint">위에 넣지 않은 종목의 원화 손익을 합쳐서 넣으세요. 같은 해 해외주식 손실과 이익은 서로 합산돼요.</div>
+    </form>
+
+    <div class="receipt" data-history-results>
+      <div class="result-main">
+        <div class="label">내야 할 양도소득세 (지방세 포함)</div>
+        <div class="big" id="out-total">-</div>
+      </div>
+      <table>
+        <tbody>
+          {[1, 2, 3].map((n) => (
+            <tr id={`row-t${n}`}><th>종목 {n} 손익</th><td id={`out-t${n}`}>-</td></tr>
+          ))}
+          <tr id="row-other"><th>다른 종목 손익</th><td id="out-other">-</td></tr>
+          <tr class="total"><th>양도차익 합계</th><td id="out-gain">-</td></tr>
+          <tr><th>기본공제</th><td id="out-deduct">-</td></tr>
+          <tr><th>과세표준</th><td id="out-base">-</td></tr>
+          <tr><th>양도소득세 (20%)</th><td id="out-tax">-</td></tr>
+          <tr><th>지방소득세 (2%)</th><td id="out-local">-</td></tr>
+          <tr class="total"><th>세금 합계</th><td id="out-sum">-</td></tr>
+        </tbody>
+      </table>
+      <p class="hint" id="out-tip"></p>
+      <ResultActions calc="overseas-stock-tax" />
+    </div>
+    <SaveHistory calc="overseas-stock-tax" title="해외주식양도세" />
+  </div>
+
+  <p class="notice">
+    매도일이 아니라 결제일(미국 주식은 보통 매도 다음 영업일)이 속한 연도로 손익이 묶여요. 연말 매도는 결제일이 해를 넘기지 않는지 꼭 확인하세요.
+    국내시장 복귀계좌(RIA) 감면, 해외 상장 국내 중소기업 주식 등 특례는 반영하지 않았어요.
+  </p>
+
+  <h2>계산 방법</h2>
+  <ol>
+    <li>종목별 양도차익 = 매도금액×매도 환율 − 매수금액×매수 환율 − 수수료</li>
+    <li>올해(1월 1일~12월 31일 결제분) 해외주식 손익을 모두 합산</li>
+    <li>과세표준 = 합산 양도차익 − 기본공제 {(O.basicDeduction / 10000).toLocaleString('ko-KR')}만원</li>
+    <li>세금 = 과세표준 × 20% + 지방소득세(그 10%) = <strong>22%</strong></li>
+  </ol>
+  <p>
+    예를 들어 150달러(환율 1,320원)에 산 주식 50주를 210달러(환율 1,400원)에 팔면, 수수료 0.25%를 빼고 양도차익은 약 474만원이에요.
+    250만원을 공제한 약 224만원에 22%를 매겨 세금은 약 49만원이에요.
+  </p>
+
+  <h2>신고·납부</h2>
+  <ul>
+    <li>올해 판 해외주식은 <strong>다음 해 5월 1일~31일</strong>에 양도소득세를 확정신고하고 납부해요.</li>
+    <li>홈택스에서 직접 하거나, 많은 증권사가 해외주식 양도세 무료 신고 대행 서비스를 제공해요.</li>
+    <li>양도차익이 250만원 이하면 낼 세금은 없지만, 손익이 있었다면 신고해 두는 게 안전해요.</li>
+    <li>신고하지 않으면 무신고 가산세(20%)와 납부지연 가산세가 붙을 수 있어요.</li>
+  </ul>
+
+  <h2>세금을 줄이는 방법</h2>
+  <ul>
+    <li><strong>손실 종목 정리</strong>: 같은 해에 손실이 난 종목을 팔면 이익과 합산돼 세금이 줄어요.</li>
+    <li><strong>공제 나눠 쓰기</strong>: 250만원 공제는 매년 새로 생겨요. 이익이 크면 여러 해에 나눠 팔면 공제를 여러 번 받을 수 있어요.</li>
+    <li><strong>가족 증여</strong>: 배우자·자녀에게 증여한 주식을 받은 사람이 1년 넘게 보유한 뒤 팔면 증여 당시 가액이 취득가액이 돼요. 1년 안에 팔면 원래 산 가격으로 계산돼요. 증여세 공제 한도와 함께 확인하세요.</li>
+  </ul>
+
+  <h2>자주 묻는 질문</h2>
+  <details>
+    <summary>국내 주식 손실과도 합칠 수 있나요?</summary>
+    <p>국내 상장주식 소액주주의 매매 손익은 양도세 대상이 아니라 해외주식과 합산되지 않아요. 해외주식끼리(여러 나라 포함)는 합산돼요.</p>
+  </details>
+  <details>
+    <summary>배당금도 여기에 포함되나요?</summary>
+    <p>아니요. 배당금은 배당소득이라 따로 과세돼요. 미국 주식 배당은 현지에서 15%가 원천징수돼요 (<a href="/dividend-calculator">배당금 계산기</a>).</p>
+  </details>
+  <details>
+    <summary>환차익도 세금이 붙나요?</summary>
+    <p>네. 주가가 그대로여도 매수 때보다 매도 때 환율이 높으면 원화 기준 차익이 생겨 과세 대상에 포함돼요.</p>
+  </details>
+
+  <h2>관련 가이드</h2>
+  <ul class="links">
+    {relatedGuides.map((g) => (
+      <li>
+        <a href={`/guide/${g.slug}`}>
+          <strong>{g.title}</strong>
+          <span>{g.description}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+
+  <script>
+    import { overseasTrade, calcOverseasTax } from '../lib/stock';
+
+    const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+    const num = (id: string) => Number($<HTMLInputElement>(id).value) || 0;
+    const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
+    const signed = (n: number) => `${n > 0 ? '+' : ''}${won(n)}`;
+    const set = (id: string, text: string) => {
+      $(id).textContent = text;
+    };
+
+    function render() {
+      const fee = num('fee') / 100;
+      const trades = [1, 2, 3].map((n) => ({
+        buyPrice: num(`t${n}-buy`),
+        sellPrice: num(`t${n}-sell`),
+        qty: num(`t${n}-qty`),
+        buyRate: num(`t${n}-br`),
+        sellRate: num(`t${n}-sr`),
+      }));
+      trades.forEach((t, i) => {
+        const r = overseasTrade(t, fee);
+        $(`row-t${i + 1}`).hidden = !r;
+        if (r) set(`out-t${i + 1}`, signed(r.gain));
+      });
+      const other = Math.round(num('other'));
+      $('row-other').hidden = !other;
+      set('out-other', signed(other));
+
+      const r = calcOverseasTax(trades, fee, other);
+      set('out-total', won(r.totalTax));
+      set('out-gain', signed(r.totalGain));
+      set('out-deduct', won(r.basicDeduction));
+      set('out-base', won(r.taxBase));
+      set('out-tax', won(r.incomeTax));
+      set('out-local', won(r.localTax));
+      set('out-sum', won(r.totalTax));
+      set(
+        'out-tip',
+        r.totalTax > 0
+          ? `올해 안에 손실 ${won(r.lossToZero)}을 확정하면 세금이 0원이 돼요.`
+          : r.totalGain > 0
+            ? `기본공제가 ${won(2_500_000 - r.basicDeduction)} 남았어요.`
+            : '',
+      );
+    }
+
+    $('calc-form').addEventListener('input', render);
+    $('calc-form').addEventListener('change', render);
+    render();
+  </script>
+</Base>

@@ -1,0 +1,157 @@
+---
+import Base from '../layouts/Base.astro';
+import ResultActions from '../components/ResultActions.astro';
+import SaveHistory from '../components/SaveHistory.astro';
+import { GUIDES } from '../guides';
+import { RATES } from '../rates/2026';
+const M = RATES.stock.markets;
+const pctText = (r: number) => `${+(r * 100).toFixed(2)}%`;
+const relatedGuides = GUIDES.filter((g) => ['stock-tax-guide'].includes(g.slug));
+---
+
+<Base
+  title={`주식 수익률 계산기 - 수수료·증권거래세 뺀 실현손익 (${RATES.year}년)`}
+  description={`매수가·매도가·수량을 넣으면 증권사 수수료와 ${RATES.year}년 증권거래세(코스피 0.05%+농특세 0.15%, 코스닥 0.20%)를 뺀 실제 손익, 수익률, 본전 매도가를 계산합니다.`}
+>
+  <h1>주식 수익률 계산기</h1>
+  <p class="lead">팔았을 때 수수료와 세금을 빼고 실제로 남는 돈, 수익률, 본전이 되는 매도가를 계산해요.</p>
+
+  <div class="calc-layout">
+    <form id="calc-form" class="card" onsubmit="return false;">
+      <label for="market">시장</label>
+      <select id="market">
+        <option value="kospi" selected>코스피 (세금 {pctText(M.kospi.transactionTax + M.kospi.ruralTax)})</option>
+        <option value="kosdaq">코스닥 (세금 {pctText(M.kosdaq.transactionTax)})</option>
+        <option value="konex">코넥스 (세금 {pctText(M.konex.transactionTax)})</option>
+        <option value="kotc">K-OTC (세금 {pctText(M.kotc.transactionTax)})</option>
+      </select>
+      <div class="hint">ETF는 매도할 때 증권거래세가 없어요. 해외주식은 <a href="/overseas-stock-tax">해외주식 양도세 계산기</a>를 쓰세요.</div>
+
+      <div class="pair">
+        <div>
+          <label for="buy">매수가 (원)</label>
+          <input id="buy" type="number" inputmode="decimal" min="0" step="any" value="50000" />
+        </div>
+        <div>
+          <label for="sell">매도가 (원)</label>
+          <input id="sell" type="number" inputmode="decimal" min="0" step="any" value="55000" />
+        </div>
+      </div>
+
+      <label for="qty">수량 (주)</label>
+      <input id="qty" type="number" inputmode="numeric" min="0" step="1" value="100" />
+
+      <label for="fee">증권사 수수료율 (%, 매수·매도 각각)</label>
+      <input id="fee" type="number" inputmode="decimal" min="0" step="0.001" value={+(RATES.stock.defaultFeeRate * 100).toFixed(4)} />
+      <div class="hint">증권사·계좌마다 달라요. 보통 0.004%~0.015% 사이이고, 이벤트로 0%인 곳도 있어요.</div>
+    </form>
+
+    <div class="receipt" data-history-results>
+      <div class="result-main">
+        <div class="label">실현손익 (수수료·세금 차감)</div>
+        <div class="big" id="out-profit">-</div>
+      </div>
+      <table>
+        <tbody>
+          <tr><th>매수 금액</th><td id="out-buy">-</td></tr>
+          <tr><th>매도 금액</th><td id="out-sell">-</td></tr>
+          <tr><th>매수 수수료</th><td id="out-buy-fee">-</td></tr>
+          <tr><th>매도 수수료</th><td id="out-sell-fee">-</td></tr>
+          <tr><th>증권거래세</th><td id="out-tax">-</td></tr>
+          <tr id="row-rural"><th>농어촌특별세</th><td id="out-rural">-</td></tr>
+          <tr class="total"><th>수수료·세금 합계</th><td id="out-costs">-</td></tr>
+          <tr class="total"><th>수익률</th><td id="out-rate">-</td></tr>
+          <tr><th>본전 매도가</th><td id="out-be">-</td></tr>
+        </tbody>
+      </table>
+      <ResultActions calc="stock-profit" />
+    </div>
+    <SaveHistory calc="stock-profit" title="주식수익률" />
+  </div>
+
+  <p class="notice">
+    국내 상장주식은 대주주가 아니면 팔아서 생긴 차익에 양도소득세가 없어요. 이 계산기는 소액주주 기준이며, 본전 매도가는 호가 단위를 고려하지 않은 값이에요.
+  </p>
+
+  <h2>{RATES.year}년 증권거래세율</h2>
+  <div class="card table-scroll"><table>
+    <thead><tr><th>시장</th><th>증권거래세</th><th>농어촌특별세</th><th>합계</th></tr></thead>
+    <tbody>
+      <tr><td>코스피</td><td>{pctText(M.kospi.transactionTax)}</td><td>{pctText(M.kospi.ruralTax)}</td><td>{pctText(M.kospi.transactionTax + M.kospi.ruralTax)}</td></tr>
+      <tr><td>코스닥</td><td>{pctText(M.kosdaq.transactionTax)}</td><td>없음</td><td>{pctText(M.kosdaq.transactionTax)}</td></tr>
+      <tr><td>K-OTC</td><td>{pctText(M.kotc.transactionTax)}</td><td>없음</td><td>{pctText(M.kotc.transactionTax)}</td></tr>
+      <tr><td>코넥스</td><td>{pctText(M.konex.transactionTax)}</td><td>없음</td><td>{pctText(M.konex.transactionTax)}</td></tr>
+    </tbody>
+  </table></div>
+  <p>
+    {RATES.year}년 1월 1일 이후 매도분부터 적용돼요. 세금은 <strong>팔 때만</strong> 매도 금액에 붙고, 살 때는 수수료만 내요.
+  </p>
+
+  <h2>계산 방법</h2>
+  <ul>
+    <li>실현손익 = 매도 금액 − 매수 금액 − 매수·매도 수수료 − 증권거래세(·농특세)</li>
+    <li>수익률 = 실현손익 ÷ (매수 금액 + 매수 수수료)</li>
+    <li>본전 매도가 = 매수가 × (1 + 수수료율) ÷ (1 − 수수료율 − 세율)</li>
+  </ul>
+  <p>
+    예를 들어 코스피 종목을 50,000원에 100주 사서 55,000원에 팔면(수수료 0.015%) 수수료 1,575원과 세금 11,000원을 빼고 <strong>487,425원</strong>이 남아요.
+    수수료와 세금을 감안하면 50,116원 이상에 팔아야 본전이에요.
+  </p>
+
+  <h2>자주 묻는 질문</h2>
+  <details>
+    <summary>주식으로 번 돈에 세금이 또 붙나요?</summary>
+    <p>국내 상장주식을 장내에서 사고판 소액주주는 양도소득세가 없어요. 종목별 보유액이 대주주 기준 이상이면 양도소득세 신고 대상이 되니 따로 확인하세요. 배당금은 15.4%가 원천징수돼요 (<a href="/dividend-calculator">배당금 계산기</a>).</p>
+  </details>
+  <details>
+    <summary>유관기관 수수료도 포함되나요?</summary>
+    <p>거래소·예탁원 등 유관기관 제비용은 대부분 증권사 수수료에 포함되어 안내돼요. 정확한 금액은 증권사 앱의 체결 내역에서 확인하세요.</p>
+  </details>
+
+  <h2>관련 가이드</h2>
+  <ul class="links">
+    {relatedGuides.map((g) => (
+      <li>
+        <a href={`/guide/${g.slug}`}>
+          <strong>{g.title}</strong>
+          <span>{g.description}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+
+  <script>
+    import { calcTrade, type Market } from '../lib/stock';
+
+    const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+    const num = (id: string) => Number($<HTMLInputElement>(id).value) || 0;
+    const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
+    const signed = (n: number) => `${n > 0 ? '+' : ''}${won(n)}`;
+    const set = (id: string, text: string) => {
+      $(id).textContent = text;
+    };
+
+    function render() {
+      const market = $<HTMLSelectElement>('market').value as Market;
+      const r = calcTrade({ market, buyPrice: num('buy'), sellPrice: num('sell'), qty: num('qty'), feeRate: num('fee') / 100 });
+      const ok = r.buyAmount > 0;
+      set('out-profit', ok ? signed(r.profit) : '-');
+      set('out-buy', won(r.buyAmount));
+      set('out-sell', won(r.sellAmount));
+      set('out-buy-fee', won(r.buyFee));
+      set('out-sell-fee', won(r.sellFee));
+      set('out-tax', won(r.transactionTax));
+      set('out-rural', won(r.ruralTax));
+      $('row-rural').hidden = market !== 'kospi';
+      set('out-costs', won(r.costs));
+      set('out-rate', ok ? `${r.profitRate > 0 ? '+' : ''}${(r.profitRate * 100).toFixed(2)}%` : '-');
+      set('out-be', r.breakEven ? won(r.breakEven) : '-');
+      const big = $('out-profit');
+      big.classList.toggle('neg', ok && r.profit < 0);
+    }
+
+    $('calc-form').addEventListener('input', render);
+    $('calc-form').addEventListener('change', render);
+    render();
+  </script>
+</Base>

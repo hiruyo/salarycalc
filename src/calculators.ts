@@ -1,5 +1,5 @@
 /** 계산기 목록 (메뉴·홈·소개 페이지에서 공통 사용). 새 계산기를 만들면 여기에 추가하세요. */
-export type CalcIcon = 'banknote' | 'receipt' | 'clock' | 'briefcase' | 'sun' | 'umbrella' | 'percent' | 'house' | 'calendar' | 'store';
+export type CalcIcon = 'banknote' | 'receipt' | 'clock' | 'briefcase' | 'sun' | 'umbrella' | 'percent' | 'house' | 'calendar' | 'store' | 'trend' | 'layers' | 'globe' | 'coins';
 
 export interface CalcMeta {
   href: string;
@@ -25,6 +25,15 @@ export const CALC_GROUPS: CalcGroup[] = [
       { href: '/freelancer-tax', name: '프리랜서 3.3%', desc: '원천징수 후 실수령액·청구 금액', icon: 'percent', keywords: '3.3 프리랜서 원천징수 사업소득 외주 세후 종합소득세' },
       { href: '/weekly-holiday-pay', name: '주휴수당', desc: '시급·근무시간으로 주휴수당과 월급', icon: 'clock', keywords: '주휴 알바 아르바이트 시급 최저시급 월급환산 최저임금' },
       { href: '/payroll', name: '인건비 (사장님용)', desc: '회사 4대보험·퇴직 적립 포함 총 인건비', icon: 'store', keywords: '인건비 사장님 사업주 4대보험 회사부담 급여대장 직원 알바 고용' },
+    ],
+  },
+  {
+    name: '주식과 투자',
+    items: [
+      { href: '/stock-average', name: '물타기·평단가', desc: '추가 매수 후 평균단가와 목표 평단 수량', icon: 'layers', keywords: '물타기 불타기 평단 평균단가 평단가계산기 추가매수 주식 본전' },
+      { href: '/stock-profit', name: '주식 수익률', desc: '수수료·거래세 뺀 실현손익과 본전 매도가', icon: 'trend', keywords: '주식수익률 수익률계산기 실현손익 증권거래세 거래세 수수료 매도 손익분기 코스피 코스닥' },
+      { href: '/overseas-stock-tax', name: '해외주식 양도세', desc: '250만원 공제 후 22%, 환율 반영', icon: 'globe', keywords: '해외주식 미국주식 양도소득세 양도세 서학개미 250만원 22% 5월신고 환율 손익통산' },
+      { href: '/dividend-calculator', name: '배당금', desc: '세후 배당금과 월배당에 필요한 투자금', icon: 'coins', keywords: '배당 배당금계산기 배당소득세 15.4% 월배당 배당수익률 금융소득종합과세 미국배당' },
     ],
   },
   {

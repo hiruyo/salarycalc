@@ -68,7 +68,8 @@ function collectResults(root: HTMLElement): ResultEntry[] {
   const mainLabel = root.querySelector('.result-main .label')?.textContent?.trim();
   const mainValue = root.querySelector('.result-main .big')?.textContent?.trim();
   if (mainLabel && mainValue) out.push([mainLabel, mainValue]);
-  root.querySelectorAll('tr').forEach((tr) => {
+  root.querySelectorAll<HTMLTableRowElement>('tr').forEach((tr) => {
+    if (tr.hidden) return;
     const th = tr.querySelector('th')?.textContent?.trim();
     const td = tr.querySelector('td')?.textContent?.trim();
     if (th && td && !out.some(([l]) => l === th)) out.push([th, td]);

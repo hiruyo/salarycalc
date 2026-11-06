@@ -289,3 +289,18 @@ details[open] > summary { margin-bottom: 8px; }
 .footer-links a { color: var(--ink); text-decoration: none; }
 .footer-links a:hover { text-decoration: underline; }
 .site-footer p { max-width: 680px; margin: 0 0 6px; }
+
+/* 입력 두 칸 나란히 (주식 계산기 등) */
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+.pair > div { min-width: 0; }
+.subhead { margin: 26px 0 0; padding-top: 16px; border-top: 1px dashed var(--line); font-size: 0.95rem; font-weight: 700; color: var(--ink); }
+.card > .subhead:first-child, .card > fieldset:first-child > .subhead:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+.subhead small { font-weight: 400; color: var(--muted); }
+tr.minus td { color: var(--seal); }
+tr.plus td { color: var(--blue); }
+.warn-box { margin-top: 14px; padding: 12px 14px; border-radius: 10px; background: #fff4e5; color: #7a4a00; font-size: 0.9rem; }
+.warn-box[hidden] { display: none; }
+@media (prefers-color-scheme: dark) { .warn-box { background: #3a2a10; color: #ffd28a; } }
+.receipt tr[hidden] { display: none; }
+.receipt .big.neg { color: var(--seal); }
+fieldset.trade { border: 0; padding: 0; margin: 0; min-width: 0; }

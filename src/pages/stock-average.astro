@@ -1,0 +1,187 @@
+---
+import Base from '../layouts/Base.astro';
+import ResultActions from '../components/ResultActions.astro';
+import SaveHistory from '../components/SaveHistory.astro';
+import { GUIDES } from '../guides';
+const relatedGuides = GUIDES.filter((g) => ['stock-tax-guide', 'overseas-stock-tax-guide'].includes(g.slug));
+---
+
+<Base
+  title="물타기 계산기 - 주식 평단가·추가 매수 평균단가 계산"
+  description="보유 수량과 평균단가, 추가 매수 가격·수량을 넣으면 새 평균단가와 평가손익을 계산합니다. 목표 평단가를 만들려면 몇 주를 사야 하는지도 알려드려요."
+>
+  <h1>물타기·평단가 계산기</h1>
+  <p class="lead">추가로 사면 평균단가가 얼마가 되는지, 목표 평단을 만들려면 몇 주가 필요한지 바로 계산해요.</p>
+
+  <div class="calc-layout">
+    <form id="calc-form" class="card" onsubmit="return false;">
+      <p class="subhead">지금 보유</p>
+      <div class="pair">
+        <div>
+          <label for="held-price">평균단가 (원)</label>
+          <input id="held-price" type="number" inputmode="decimal" min="0" step="any" value="50000" />
+        </div>
+        <div>
+          <label for="held-qty">보유 수량 (주)</label>
+          <input id="held-qty" type="number" inputmode="numeric" min="0" step="1" value="10" />
+        </div>
+      </div>
+
+      <p class="subhead">추가 매수 <small>(쓰지 않는 칸은 비워 두세요)</small></p>
+      {[1, 2, 3].map((n) => (
+        <div class="pair">
+          <div>
+            <label for={`buy${n}-price`}>{n}차 매수가 (원)</label>
+            <input id={`buy${n}-price`} type="number" inputmode="decimal" min="0" step="any" value={n === 1 ? '40000' : ''} />
+          </div>
+          <div>
+            <label for={`buy${n}-qty`}>{n}차 수량 (주)</label>
+            <input id={`buy${n}-qty`} type="number" inputmode="numeric" min="0" step="1" value={n === 1 ? '10' : ''} />
+          </div>
+        </div>
+      ))}
+
+      <label for="current">현재가 (원, 선택)</label>
+      <input id="current" type="number" inputmode="decimal" min="0" step="any" value="42000" />
+      <div class="hint">넣으면 평가손익과 수익률을 함께 보여드려요.</div>
+
+      <p class="subhead">목표 평단 만들기 <small>(선택)</small></p>
+      <div class="pair">
+        <div>
+          <label for="target">목표 평단가 (원)</label>
+          <input id="target" type="number" inputmode="decimal" min="0" step="any" value="45000" />
+        </div>
+        <div>
+          <label for="target-buy">살 가격 (원)</label>
+          <input id="target-buy" type="number" inputmode="decimal" min="0" step="any" value="40000" />
+        </div>
+      </div>
+      <div class="hint">지금 보유분만 기준으로, 살 가격에 몇 주를 더 사야 목표 평단이 되는지 계산해요.</div>
+    </form>
+
+    <div class="receipt" data-history-results>
+      <div class="result-main">
+        <div class="label">새 평균단가</div>
+        <div class="big" id="out-avg">-</div>
+      </div>
+      <table>
+        <tbody>
+          <tr><th>총 보유 수량</th><td id="out-qty">-</td></tr>
+          <tr><th>총 매수 금액</th><td id="out-cost">-</td></tr>
+          <tr><th>추가 매수 금액</th><td id="out-add">-</td></tr>
+          <tr><th>평단 변화</th><td id="out-change">-</td></tr>
+          <tr id="row-value"><th>평가 금액 (현재가)</th><td id="out-value">-</td></tr>
+          <tr id="row-profit" class="total"><th>평가손익</th><td id="out-profit">-</td></tr>
+          <tr id="row-rate"><th>수익률</th><td id="out-rate">-</td></tr>
+          <tr id="row-target" class="total"><th>목표 평단에 필요한 수량</th><td id="out-target">-</td></tr>
+          <tr id="row-target-cost"><th>필요 금액</th><td id="out-target-cost">-</td></tr>
+        </tbody>
+      </table>
+      <ResultActions calc="stock-average" />
+    </div>
+    <SaveHistory calc="stock-average" title="평단가" />
+  </div>
+
+  <p class="notice">
+    평균단가는 수수료·세금을 뺀 순수 매수가 기준이에요. 증권사 앱의 평단은 수수료 포함 여부에 따라 조금 다를 수 있어요.
+  </p>
+
+  <h2>평균단가 계산 방법</h2>
+  <p>
+    평균단가 = (기존 평단 × 기존 수량 + 추가 매수가 × 추가 수량) ÷ 전체 수량이에요.
+    예를 들어 50,000원에 10주를 가진 상태에서 40,000원에 10주를 더 사면 (500,000 + 400,000) ÷ 20 = <strong>45,000원</strong>이 돼요.
+  </p>
+
+  <h2>목표 평단가에 필요한 수량</h2>
+  <p>
+    필요 수량 = 보유 수량 × (기존 평단 − 목표 평단) ÷ (목표 평단 − 살 가격)이에요. 목표 평단이 기존 평단과 살 가격 <strong>사이</strong>에 있어야 가능하고,
+    살 가격이 목표에 가까울수록 필요한 수량이 급격히 늘어나요. 위 예시에서 평단을 42,000원까지 낮추려면 40,000원에 40주(160만원)가 필요해요.
+  </p>
+
+  <h2>물타기 전에 생각할 점</h2>
+  <ul>
+    <li>평단이 낮아져도 손실 금액 자체는 그대로예요. 투자 금액만 커져 주가가 더 내리면 손실도 커져요.</li>
+    <li>떨어진 이유가 일시적인지, 회사 가치가 바뀐 것인지 먼저 확인하세요.</li>
+    <li>한 종목 비중이 너무 커지지 않도록 미리 한도를 정해 두면 좋아요.</li>
+  </ul>
+
+  <h2>자주 묻는 질문</h2>
+  <details>
+    <summary>불타기도 계산되나요?</summary>
+    <p>네. 평단보다 높은 가격에 추가 매수(불타기)해도 같은 방식으로 새 평단을 계산해요. 목표 평단도 기존 평단보다 높게, 살 가격보다 낮게 넣으면 필요한 수량이 나와요.</p>
+  </details>
+  <details>
+    <summary>일부를 팔면 평단이 바뀌나요?</summary>
+    <p>일반적인 평균단가 방식에서는 일부를 팔아도 남은 주식의 평단은 그대로예요. 실현손익은 <a href="/stock-profit">주식 수익률 계산기</a>로 확인하세요.</p>
+  </details>
+
+  <h2>관련 가이드</h2>
+  <ul class="links">
+    {relatedGuides.map((g) => (
+      <li>
+        <a href={`/guide/${g.slug}`}>
+          <strong>{g.title}</strong>
+          <span>{g.description}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+
+  <script>
+    import { calcAverage, sharesForTarget } from '../lib/stock';
+
+    const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+    const num = (id: string) => Number($<HTMLInputElement>(id).value) || 0;
+    const won = (n: number) => `${Math.round(n).toLocaleString('ko-KR')}원`;
+    const wonDec = (n: number) => `${n.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}원`;
+    const pct = (r: number) => `${r > 0 ? '+' : ''}${(r * 100).toFixed(2)}%`;
+    const set = (id: string, text: string) => {
+      $(id).textContent = text;
+    };
+    const show = (id: string, on: boolean) => {
+      $(id).hidden = !on;
+    };
+    const sign = (id: string, v: number) => {
+      const tr = $(id).closest('tr')!;
+      tr.classList.toggle('minus', v < 0);
+      tr.classList.toggle('plus', v > 0);
+    };
+
+    function render() {
+      const held = { price: num('held-price'), qty: num('held-qty') };
+      const buys = [1, 2, 3].map((n) => ({ price: num(`buy${n}-price`), qty: num(`buy${n}-qty`) }));
+      const r = calcAverage(held, buys, num('current'));
+
+      set('out-avg', r.totalQty ? wonDec(r.average) : '-');
+      set('out-qty', `${r.totalQty.toLocaleString('ko-KR')}주`);
+      set('out-cost', won(r.totalCost));
+      set('out-add', won(r.addCost));
+      set('out-change', r.changeRate ? pct(r.changeRate) : '-');
+
+      const hasValue = r.value !== null;
+      show('row-value', hasValue);
+      show('row-profit', hasValue);
+      show('row-rate', hasValue);
+      if (hasValue) {
+        set('out-value', won(r.value!));
+        set('out-profit', `${r.profit! > 0 ? '+' : ''}${won(r.profit!)}`);
+        set('out-rate', pct(r.profitRate!));
+        sign('out-profit', r.profit!);
+        sign('out-rate', r.profit!);
+      }
+
+      const hasTarget = num('target') > 0 && num('target-buy') > 0;
+      show('row-target', hasTarget);
+      const t = hasTarget ? sharesForTarget(held.qty, held.price, num('target-buy'), num('target')) : null;
+      show('row-target-cost', !!t);
+      if (hasTarget) {
+        set('out-target', t ? `${t.qty.toLocaleString('ko-KR')}주` : '불가능 (목표가 범위 밖)');
+        if (t) set('out-target-cost', won(t.cost));
+      }
+    }
+
+    $('calc-form').addEventListener('input', render);
+    $('calc-form').addEventListener('change', render);
+    render();
+  </script>
+</Base>

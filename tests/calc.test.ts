@@ -16,6 +16,7 @@ import { search, normalize } from '../src/lib/search.ts';
 import { ALL_CALCS } from '../src/calculators.ts';
 import { GUIDES } from '../src/guides.ts';
 import { legalConversionRate, jeonseToWolse, wolseToJeonse, impliedConversionRate } from '../src/lib/rentConversion.ts';
+import { calcAverage, sharesForTarget, calcTrade, calcOverseasTax, calcDividend, investmentForMonthly, dividendTax } from '../src/lib/stock.ts';
 
 // ---- 간이세액표 (소득세법 시행령 별표 2, 2026.2.27 개정) 원본 값과 대조 ----
 
@@ -690,4 +691,73 @@ test('검색: 빈 검색어·없는 단어', () => {
   assert.deepEqual(search(SEARCH_ITEMS, '   '), []);
   assert.deepEqual(search(SEARCH_ITEMS, '비트코인 시세'), []);
   assert.equal(normalize(' 3.3% 세금 '), '33세금');
+});
+
+/* ───── 주식 ───── */
+test('평단가: 10주@5만 + 10주@4만 → 평단 4.5만, -10%', () => {
+  const r = calcAverage({ price: 50_000, qty: 10 }, [{ price: 40_000, qty: 10 }, { price: 0, qty: 0 }], 42_000);
+  assert.equal(r.totalQty, 20);
+  assert.equal(r.average, 45_000);
+  assert.ok(Math.abs(r.changeRate + 0.1) < 1e-9);
+  assert.equal(r.addCost, 400_000);
+  assert.equal(r.profit, -60_000);
+});
+
+test('목표 평단에 필요한 수량', () => {
+  assert.equal(sharesForTarget(10, 50_000, 40_000, 45_000)?.qty, 10);
+  assert.equal(sharesForTarget(10, 50_000, 40_000, 42_000)?.qty, 40);
+  // 불타기(평단보다 높은 가격에 추가 매수)
+  assert.equal(sharesForTarget(10, 40_000, 50_000, 45_000)?.qty, 10);
+  // 목표가 범위 밖이면 불가능
+  assert.equal(sharesForTarget(10, 50_000, 40_000, 39_000), null);
+  // 올림: 결과 평단이 목표 이하
+  const r = sharesForTarget(7, 53_300, 41_200, 47_000)!;
+  assert.ok(r.average <= 47_000);
+});
+
+test('코스피 실현손익: 거래세 0.05% + 농특세 0.15%, 수수료 0.015%', () => {
+  const r = calcTrade({ market: 'kospi', buyPrice: 50_000, sellPrice: 55_000, qty: 100, feeRate: 0.00015 });
+  assert.equal(r.buyFee, 750);
+  assert.equal(r.sellFee, 825);
+  assert.equal(r.transactionTax, 2_750);
+  assert.equal(r.ruralTax, 8_250);
+  assert.equal(r.profit, 487_425);
+  assert.equal(r.breakEven, 50_116);
+  const k = calcTrade({ market: 'kosdaq', buyPrice: 50_000, sellPrice: 55_000, qty: 100, feeRate: 0 });
+  assert.equal(k.transactionTax, 11_000);
+  assert.equal(k.ruralTax, 0);
+});
+
+test('해외주식 양도세: 250만원 공제 후 22%', () => {
+  const small = calcOverseasTax([{ buyPrice: 100, sellPrice: 150, qty: 10, buyRate: 1300, sellRate: 1400 }], 0.0025);
+  assert.equal(small.trades[0].fees, 8_500);
+  assert.equal(small.totalGain, 791_500);
+  assert.equal(small.totalTax, 0);
+  const big = calcOverseasTax([{ buyPrice: 100, sellPrice: 150, qty: 100, buyRate: 1300, sellRate: 1400 }], 0);
+  assert.equal(big.totalGain, 8_000_000);
+  assert.equal(big.taxBase, 5_500_000);
+  assert.equal(big.incomeTax, 1_100_000);
+  assert.equal(big.localTax, 110_000);
+  // 손실 종목과 합산
+  const net = calcOverseasTax([{ buyPrice: 100, sellPrice: 150, qty: 100, buyRate: 1300, sellRate: 1400 }], 0, -6_000_000);
+  assert.equal(net.totalGain, 2_000_000);
+  assert.equal(net.totalTax, 0);
+  // 전체 손실이면 공제·세금 0
+  const loss = calcOverseasTax([], 0, -1_000_000);
+  assert.equal(loss.basicDeduction, 0);
+  assert.equal(loss.totalTax, 0);
+});
+
+test('배당금: 국내 15.4%(10원 미만 절사), 미국 15%', () => {
+  const d = calcDividend({ annualGross: 1_000_000, payments: 4, market: 'domestic' });
+  assert.equal(d.perPaymentGross, 250_000);
+  assert.equal(d.perPaymentTax, 38_500);
+  assert.equal(d.annualNet, 846_000);
+  assert.equal(d.monthlyNet, 70_500);
+  assert.equal(d.overThreshold, false);
+  assert.deepEqual(dividendTax(12_345, 'domestic'), { incomeTax: 1_720, localTax: 170 });
+  const u = calcDividend({ annualGross: 1_000_000, payments: 4, market: 'us' });
+  assert.equal(u.perPaymentTax, 37_500);
+  assert.equal(calcDividend({ annualGross: 20_000_001, payments: 1, market: 'domestic' }).overThreshold, true);
+  assert.equal(investmentForMonthly(1_000_000, 0.05, 'domestic'), 283_690_000);
 });
