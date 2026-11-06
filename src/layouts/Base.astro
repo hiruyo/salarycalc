@@ -25,6 +25,8 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta property="og:site_name" content={SITE.name} />
     <meta property="og:url" content={canonical} />
     <meta name="theme-color" content="#1f6feb" />
+    {SITE.naverSiteVerification && <meta name="naver-site-verification" content={SITE.naverSiteVerification} />}
+    {SITE.googleSiteVerification && <meta name="google-site-verification" content={SITE.googleSiteVerification} />}
     {SITE.adsenseClient && (
       <script
         is:inline

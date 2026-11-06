@@ -14,4 +14,8 @@ export const SITE = {
   adsenseClient: '',
   /** 개인정보처리방침·이용약관 시행일 */
   policyEffectiveDate: '2026-11-01',
+  /** 네이버 서치어드바이저 사이트 소유 확인 (HTML 태그 content 값) */
+  naverSiteVerification: '138612baa4fe510cc66fb605dfd28cab9cdb9efb',
+  /** 구글 서치콘솔 HTML 태그 인증을 쓸 경우 content 값 (도메인 TXT 인증이면 비워둠) */
+  googleSiteVerification: '',
 } as const;
