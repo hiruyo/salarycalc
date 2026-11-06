@@ -2,14 +2,18 @@
 import Base from '../layouts/Base.astro';
 import { RATES } from '../rates/2026';
 import { GUIDES } from '../guides';
+import { SITE } from '../site';
 ---
 
 <Base
-  title={`월급계산소 - ${RATES.year}년 연봉 실수령액·주휴수당 계산기`}
-  description={`${RATES.year}년 4대보험 요율을 반영한 연봉 실수령액 계산기, 주휴수당·퇴직금·연차·실업급여, 프리랜서 3.3%·전월세 전환·날짜 계산기. 회원가입 없이 바로 계산하세요.`}
+  title={`${SITE.name} - 연봉 실수령액·연차·퇴직금·실업급여 생활 계산기 (${RATES.year}년)`}
+  description={`${RATES.year}년 기준을 반영한 생활 계산기 모음. 연봉 실수령액, 주휴수당, 퇴직금, 연차, 실업급여, 프리랜서 3.3%, 전월세 전환, 날짜 계산을 회원가입 없이 바로 하고 결과를 저장하세요.`}
 >
-  <h1>월급계산소</h1>
-  <p class="lead">{RATES.year}년 기준 요율로 바로 계산해 보세요. 입력한 값은 서버로 전송되지 않습니다.</p>
+  <h1>{SITE.name}</h1>
+  <p class="lead">
+    돈과 날짜 계산을 대신해 드려요. {RATES.year}년 기준으로 바로 계산하고, 결과는 저장해 두고 다시 볼 수 있어요.
+    입력한 값은 서버로 전송되지 않습니다.
+  </p>
 
   <ul class="links">
     <li>

@@ -2,7 +2,9 @@
  * 사이트 전역 설정. 배포 전에 TODO 항목을 채우세요.
  */
 export const SITE = {
-  name: '월급계산소',
+  name: '셈비서',
+  /** 사이트 주소 (astro.config.mjs의 site와 같게 유지) */
+  url: 'https://sembiseo.com',
   /** 문의 받을 이메일 주소 (문의 페이지·개인정보처리방침에 표시됨) */
   contactEmail: 'xowhd8091@gmail.com',
   /**

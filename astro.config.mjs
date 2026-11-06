@@ -1,8 +1,8 @@
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 
-// TODO: 실제 도메인으로 교체하세요 (sitemap, canonical에 사용됨)
+// 사이트 주소 (sitemap, canonical에 사용됨). 바꾸면 src/site.ts의 url과 public/robots.txt도 함께 수정
 export default defineConfig({
-  site: 'https://example.com',
+  site: 'https://sembiseo.com',
   integrations: [sitemap()],
 });
