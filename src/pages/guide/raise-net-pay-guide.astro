@@ -1,0 +1,74 @@
+---
+import Article from '../../layouts/Article.astro';
+import { calcNetPay } from '../../lib/netpay';
+
+const won = (n: number) => n.toLocaleString('ko-KR');
+const net = (man: number) => calcNetPay({ annualSalary: Math.round(man * 10_000), nonTaxableMonthly: 200_000, familyCount: 1 }).netMonthly;
+const bases = [3000, 4000, 5000, 6000, 8000];
+const rows = bases.map((b) => {
+  const n0 = net(b);
+  const n5 = net(b * 1.05);
+  const n10 = net(b * 1.1);
+  return { b, n0, d5: n5 - n0, d10: n10 - n0, r10: ((n10 - n0) / n0) * 100 };
+});
+const ex = rows.find((r) => r.b === 5000)!;
+const grossDiff10 = Math.round((5000 * 0.1 * 10_000) / 12);
+---
+
+<Article slug="raise-net-pay-guide">
+  <p>
+    연봉이 10% 오르면 통장에 들어오는 돈도 10% 늘까요? 실제로는 그보다 조금 덜 늘어요. 늘어난 급여에도 4대보험과 소득세가 붙고,
+    소득세는 많이 벌수록 세율이 올라가는 누진 구조이기 때문이에요. 연봉별로 얼마나 차이가 나는지 표로 비교해 봤어요.
+  </p>
+
+  <h2>연봉 인상률별 월 실수령액 증가분</h2>
+  <div class="card table-scroll">
+    <table>
+      <thead><tr><th>현재 연봉</th><th>현재 월 실수령</th><th>5% 인상 시</th><th>10% 인상 시</th><th>10% 인상 시 증가율</th></tr></thead>
+      <tbody>
+        {rows.map((r) => (
+          <tr>
+            <td>{won(r.b)}만원</td>
+            <td>{won(r.n0)}원</td>
+            <td>+{won(r.d5)}원</td>
+            <td>+{won(r.d10)}원</td>
+            <td>{r.r10.toFixed(1)}%</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <p class="hint">식대 20만원 비과세, 공제대상가족 1명, 2026년 4대보험 요율과 근로소득 간이세액표 기준이에요.</p>
+
+  <h2>왜 인상분보다 덜 늘어날까</h2>
+  <p>
+    연봉 5,000만원이 10% 오르면 세전 월급은 약 {won(grossDiff10)}원 늘어요. 그런데 월 실수령액은 <strong>{won(ex.d10)}원</strong> 늘어나요.
+    늘어난 금액에서 다음이 빠지기 때문이에요.
+  </p>
+  <ul>
+    <li><strong>4대보험</strong>: 국민연금·건강보험·장기요양·고용보험을 합쳐 월급의 약 9.4%가 늘어난 만큼 함께 늘어요.</li>
+    <li><strong>소득세</strong>: 소득세는 구간이 올라갈수록 세율이 높아져서(6% → 15% → 24% …), 늘어난 부분에는 기존 평균보다 높은 세율이 붙어요.</li>
+    <li><strong>지방소득세</strong>: 소득세의 10%가 함께 붙어요.</li>
+  </ul>
+  <p>
+    다만 국민연금은 월 소득이 상한(659만원)을 넘으면 더 늘지 않아서, 고연봉 구간에서는 4대보험 증가분이 줄어드는 대신 소득세 비중이 커져요.
+  </p>
+
+  <h2>연봉 협상 때 체크할 것</h2>
+  <ol>
+    <li><strong>퇴직금 포함 여부</strong>: "퇴직금 포함 연봉"이면 13으로 나눈 금액이 실제 월급 기준이에요.</li>
+    <li><strong>비과세 항목</strong>: 식대 같은 비과세 수당이 있으면 같은 연봉이라도 실수령액이 더 많아요.</li>
+    <li><strong>성과급</strong>: 성과급은 받는 달에 소득세가 크게 떼일 수 있지만, 연말정산에서 1년 소득으로 다시 계산되니 실제 세금은 같아요.</li>
+    <li><strong>월 실수령액으로 비교</strong>: 이직 제안을 받았다면 연봉보다 월 실수령액과 복지(식대·교통비 등)를 함께 비교하세요.</li>
+  </ol>
+
+  <h2>자주 묻는 질문</h2>
+  <details>
+    <summary>연봉이 오르면 오히려 실수령액이 줄 수도 있나요?</summary>
+    <p>월급 기준으로는 그런 일이 없어요. 세율이 올라가는 건 구간을 넘는 부분에만 적용되기 때문에, 연봉이 오르면 실수령액도 반드시 늘어요.</p>
+  </details>
+  <details>
+    <summary>인상된 첫 달 월급이 생각보다 적어요.</summary>
+    <p>건강보험료는 전년도 보수를 기준으로 떼다가 다음 해 4월에 정산하는 경우가 많고, 인상분이 소급 지급되면 그달 세금이 많이 떼일 수 있어요. 몇 달 지나면 안정돼요.</p>
+  </details>
+</Article>

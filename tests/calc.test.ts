@@ -10,6 +10,7 @@ import { loadAll, listFor, save, remove, toCSV, MAX_PER_CALC, STORAGE_KEY, type 
 import { period, addToDate, age, parseYMD } from '../src/lib/dateCalc.ts';
 import { calcAnnualLeave, leaveDaysForYear, leaveHours } from '../src/lib/annualLeave.ts';
 import { calcYearEnd, cardDeduction, earnedTaxCredit, childTaxCredit, earnedIncomeDeduction as yeEarnedDeduction } from '../src/lib/yearEndTax.ts';
+import { calcEmployee, calcPayroll } from '../src/lib/payroll.ts';
 import { legalConversionRate, jeonseToWolse, wolseToJeonse, impliedConversionRate } from '../src/lib/rentConversion.ts';
 
 // ---- 간이세액표 (소득세법 시행령 별표 2, 2026.2.27 개정) 원본 값과 대조 ----
@@ -573,4 +574,66 @@ test('연말정산: 기부금은 근로소득금액 30%까지, 장애인 자녀�
   assert.equal(itemized.credits.donation, Math.floor(6_075_000 * 0.15));
   const disabledAdult = calcYearEnd({ salary: 60_000_000, childrenUnder20: 0, children9plus: 1 });
   assert.equal(disabledAdult.credits.child, 250_000);
+});
+
+// ---- 인건비 (사업주) ----
+
+test('인건비: 월급 300만원(식대 20만), 150인 미만, 산재 1.47%', () => {
+  const opt = { companySize: 'u150' as const, industrialRate: 0.0147 };
+  const r = calcEmployee({ payType: 'monthly', monthlyPay: 3_000_000, nonTaxable: 200_000 }, opt);
+  // 기준 보수 280만원
+  assert.equal(r.taxable, 2_800_000);
+  assert.equal(r.employer.pension, Math.floor((2_800_000 * 0.0475) / 10) * 10); // 133,000
+  assert.equal(r.employer.health, Math.floor((2_800_000 * 0.03595) / 10) * 10); // 100,660
+  assert.equal(r.employer.employment, Math.floor((2_800_000 * 0.0115) / 10) * 10); // 0.9% + 0.25%
+  assert.equal(r.employer.industrial, Math.floor((2_800_000 * 0.0147) / 10) * 10);
+  assert.equal(r.severanceReserve, 250_000);
+  assert.equal(r.totalCost, 3_000_000 + r.employer.total + 250_000);
+  // 근로자 실수령액은 실수령액 계산기와 같아야 함
+  const np = calcNetPay({ annualSalary: 36_000_000, nonTaxableMonthly: 200_000 });
+  assert.equal(r.net, np.netMonthly);
+});
+
+test('인건비: 회사 규모별 고용보험 사업주 부담', () => {
+  const base = { payType: 'monthly' as const, monthlyPay: 4_000_000 };
+  const rate = (size: 'u150' | 'p150' | 'm1000' | 'o1000') => calcEmployee(base, { companySize: size, industrialRate: 0 }).employer.employment;
+  assert.equal(rate('u150'), 46_000); // 1.15%
+  assert.equal(rate('p150'), 54_000); // 1.35%
+  assert.equal(rate('m1000'), 62_000); // 1.55%
+  assert.equal(rate('o1000'), 70_000); // 1.75%
+});
+
+test('인건비: 시급제는 주휴수당 포함 월급, 주 15시간 미만은 산재만', () => {
+  const opt = { companySize: 'u150' as const, industrialRate: 0.0147 };
+  const full = calcEmployee({ payType: 'hourly', hourlyWage: 10_320, weeklyHours: 40 }, opt);
+  assert.equal(full.gross, 2_156_880);
+  assert.equal(full.insured, true);
+  const short = calcEmployee({ payType: 'hourly', hourlyWage: 12_000, weeklyHours: 14 }, opt);
+  assert.equal(short.insured, false);
+  assert.equal(short.employer.pension + short.employer.health + short.employer.employment, 0);
+  assert.ok(short.employer.industrial > 0);
+});
+
+test('인건비: 여러 명 합계', () => {
+  const opt = { companySize: 'u150' as const, industrialRate: 0.0147 };
+  const list = [
+    { payType: 'monthly' as const, monthlyPay: 3_000_000, nonTaxable: 200_000 },
+    { payType: 'hourly' as const, hourlyWage: 11_000, weeklyHours: 20 },
+  ];
+  const r = calcPayroll(list, opt);
+  assert.equal(r.employees.length, 2);
+  assert.equal(r.gross, r.employees[0].gross + r.employees[1].gross);
+  assert.equal(r.totalCost, r.gross + r.employer.total + r.severanceReserve);
+  assert.ok(r.extraRatio > 0.15 && r.extraRatio < 0.25, `ratio ${r.extraRatio}`);
+  assert.equal(calcPayroll([], opt).totalCost, 0);
+});
+
+test('반올림: 부동소수점 오차로 10원이 덜 나오지 않음', () => {
+  // 1,340,000 × 0.9% = 12,060 (오차로 12059.999… → 12,050이 되면 안 됨)
+  const r = calcNetPay({ annualSalary: 1_340_000 * 12 });
+  assert.equal(r.employment, 12_060);
+  for (let m = 1_000_000; m <= 10_000_000; m += 10_000) {
+    const e = calcNetPay({ annualSalary: m * 12 }).employment;
+    assert.equal(e, Math.floor(Math.round(m * 9) / 10000) * 10, `${m}`);
+  }
 });

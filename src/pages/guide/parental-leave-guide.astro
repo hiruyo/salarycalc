@@ -1,0 +1,92 @@
+---
+import Article from '../../layouts/Article.astro';
+
+const won = (n: number) => n.toLocaleString('ko-KR');
+// 육아휴직 급여 (2025년 1월 이후 시작분, 일반 기준): 1~3개월 100% 상한 250만 / 4~6개월 100% 상한 200만 / 7개월~ 80% 상한 160만, 하한 70만
+const monthly = (wage: number, month: number) => {
+  const raw = month <= 6 ? wage : wage * 0.8;
+  const cap = month <= 3 ? 2_500_000 : month <= 6 ? 2_000_000 : 1_600_000;
+  return Math.max(700_000, Math.min(raw, cap));
+};
+const total = (wage: number) => Array.from({ length: 12 }, (_, i) => monthly(wage, i + 1)).reduce((a, b) => a + b, 0);
+const wages = [2_000_000, 2_500_000, 3_000_000, 4_000_000];
+const sixSixCaps = [2_500_000, 2_500_000, 3_000_000, 3_500_000, 4_000_000, 4_500_000];
+---
+
+<Article slug="parental-leave-guide">
+  <p>
+    2025년부터 육아휴직 급여가 크게 늘었어요. 첫 3개월은 월 최대 250만원을 받고, 예전처럼 일부를 복직 후로 미뤄 두지 않고 매달 전액을 받아요.
+    부모가 함께 쓰면 기간도 1년 6개월까지 늘어나요. 2026년에도 같은 기준이 적용돼요.
+  </p>
+
+  <h2>누가, 얼마나 쓸 수 있나요</h2>
+  <ul>
+    <li><strong>대상</strong>: 만 8세 이하 또는 초등학교 2학년 이하 자녀를 둔 근로자예요.</li>
+    <li><strong>기간</strong>: 자녀 1명당 1년이에요. 부모가 각각 3개월 이상 쓰면 각자 6개월씩 늘어나 최대 1년 6개월이에요(한부모, 중증장애아동 부모도 연장).</li>
+    <li><strong>급여 조건</strong>: 육아휴직 시작 전까지 고용보험 가입 기간(피보험단위기간)이 180일 이상이어야 해요.</li>
+  </ul>
+
+  <h2>월 급여 (일반 기준)</h2>
+  <div class="card table-scroll">
+    <table>
+      <thead><tr><th>기간</th><th>지급률</th><th>월 상한</th></tr></thead>
+      <tbody>
+        <tr><td>1~3개월</td><td>통상임금 100%</td><td>250만원</td></tr>
+        <tr><td>4~6개월</td><td>통상임금 100%</td><td>200만원</td></tr>
+        <tr><td>7개월부터</td><td>통상임금 80%</td><td>160만원</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>월 하한은 70만원이에요. 한부모 근로자는 첫 3개월 상한이 300만원이에요.</p>
+
+  <h3>월급별 1년 육아휴직 급여 예시</h3>
+  <div class="card table-scroll">
+    <table>
+      <thead><tr><th>월 통상임금</th><th>1~3개월</th><th>4~6개월</th><th>7~12개월</th><th>1년 합계</th></tr></thead>
+      <tbody>
+        {wages.map((w) => (
+          <tr>
+            <td>{won(w)}원</td>
+            <td>{won(monthly(w, 1))}</td>
+            <td>{won(monthly(w, 4))}</td>
+            <td>{won(monthly(w, 7))}</td>
+            <td><strong>{won(total(w))}원</strong></td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <p class="hint">통상임금은 기본급과 고정 수당을 합친 금액이에요. 성과급처럼 매달 달라지는 금액은 빠져요.</p>
+
+  <h2>6+6 부모육아휴직제</h2>
+  <p>
+    자녀가 생후 18개월이 되기 전에 부모가 모두 육아휴직을 쓰면(동시 또는 차례로), 각자 첫 6개월은 통상임금 100%를 받고 상한이 매달 올라가요.
+  </p>
+  <div class="card table-scroll">
+    <table>
+      <thead><tr><th>개월</th>{sixSixCaps.map((_, i) => <th>{i + 1}개월</th>)}</tr></thead>
+      <tbody>
+        <tr><td>월 상한 (부모 각각)</td>{sixSixCaps.map((c) => <td>{c / 10_000}만원</td>)}</tr>
+      </tbody>
+    </table>
+  </div>
+  <p>7개월째부터는 일반 기준(80%, 상한 160만원)으로 돌아가요.</p>
+
+  <h2>신청 방법</h2>
+  <ol>
+    <li>회사에 육아휴직을 신청해요(시작 30일 전까지가 원칙).</li>
+    <li>휴직을 시작한 지 1개월이 지나면 고용24(work24.go.kr)에서 매달 급여를 신청해요. 몇 달 치를 모아서 한 번에 신청할 수도 있어요.</li>
+    <li>회사가 고용센터에 '육아휴직 확인서'를 내야 심사가 진행돼요.</li>
+    <li>휴직이 끝난 뒤 12개월이 지나면 신청할 수 없으니 기한을 놓치지 마세요.</li>
+  </ol>
+
+  <h2>자주 묻는 질문</h2>
+  <details>
+    <summary>예전처럼 복직해야 나머지를 받나요?</summary>
+    <p>아니요. 2025년부터 '사후지급금'(급여의 25%를 복직 6개월 뒤에 주던 제도)이 없어져서 휴직 중에 매달 전액을 받아요.</p>
+  </details>
+  <details>
+    <summary>육아휴직 중에도 4대보험료를 내나요?</summary>
+    <p>고용보험·산재보험은 내지 않고, 국민연금은 납부 예외를 신청할 수 있어요. 건강보험료는 휴직 기간에 감면되거나 복직 후 정산되는 방식이 있어 회사 담당자에게 확인하세요.</p>
+  </details>
+</Article>

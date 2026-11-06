@@ -36,10 +36,11 @@ src/
   lib/dateCalc.ts        날짜 계산 (기간·D-day, 더하기, 만 나이)
   lib/annualLeave.ts     연차 (입사일 기준, 단시간 비례, 연차수당)
   lib/yearEndTax.ts      연말정산 환급 예상 (소득·세액공제, 표준세액공제 비교)
+  lib/payroll.ts         사장님용 인건비 (회사 부담 4대보험·퇴직 적립)
   lib/history.ts         계산 결과 저장·이력·CSV (저장소 교체 가능한 순수 로직)
   lib/historyUi.ts       저장 UI (입력·결과 자동 수집, 불러오기)
   components/SaveHistory.astro 계산기에 붙이는 '내 계산 기록' 영역
-  pages/                 계산기 9종, about, privacy, terms, contact
+  pages/                 계산기 10종, about, privacy, terms, contact
   pages/guide/           가이드 글
 tests/calc.test.ts       계산 로직 테스트
 ```
@@ -79,7 +80,7 @@ tests/calc.test.ts       계산 로직 테스트
 
 ## 유료화 로드맵
 
-1. **지금 (무료)**: 로그인 없이 브라우저에 저장·이력·CSV 내보내기 (`SaveHistory` 컴포넌트, 계산기 9종에 적용)
+1. **지금 (무료)**: 로그인 없이 브라우저에 저장·이력·CSV 내보내기 (`SaveHistory` 컴포넌트, 계산기 10종에 적용)
 2. **수요 측정**: GA4를 붙이면 `history_save` / `history_load` / `history_export` 이벤트가 자동 전송됨 (`historyUi.ts`의 `track`)
 3. **유료 전환 판단**: 저장 사용자가 충분하면 로그인 + 클라우드 저장(기기 간 동기화), 무제한 이력, PDF 내보내기 등을 유료로
    - `history.ts`의 `StorageLike`를 서버 저장소 구현으로 바꾸면 UI는 그대로 재사용 가능
@@ -94,6 +95,7 @@ tests/calc.test.ts       계산 로직 테스트
    - 최저시급 (실업급여 하한액도 자동으로 바뀜)
    - 실업급여 1일 상한액 (`unemployment.dailyMax`, 고용보험법 시행령)
    - **기준금리** (`rentConversion.baseRate`): 연중 금통위 결정 때마다 갱신
+   - 고용보험 사업주 요율(`employment.stabilityRates`), 산재보험 평균 요율(`industrialAccidentAvgRate`, 매년 12월 고시)
 2. 간이세액표가 개정되면 새 PDF로 데이터 재생성 (시행령 별표 2)
    ```bash
    pdftotext -layout 간이세액표.pdf table.txt

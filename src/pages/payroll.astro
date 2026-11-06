@@ -1,0 +1,340 @@
+---
+import Base from '../layouts/Base.astro';
+import { RATES } from '../rates/2026';
+import { GUIDES } from '../guides';
+
+const relatedGuides = GUIDES.filter((g) => ['employer-insurance-guide', 'part-time-pay-guide', 'social-insurance-2026'].includes(g.slug));
+const pct = (n: number) => `${Number((n * 100).toFixed(3))}%`;
+const s = RATES.employment.stabilityRates;
+---
+
+<Base
+  title={`${RATES.year}년 인건비 계산기 (사장님용 4대보험 회사 부담·퇴직금 적립)`}
+  description="직원 월급이나 시급을 넣으면 회사가 내는 4대보험(국민연금·건강·장기요양·고용·산재)과 퇴직금 적립까지 더한 실제 인건비를 계산합니다. 직원 여러 명도 한 번에."
+>
+  <h1>사장님용 인건비 계산기</h1>
+  <p class="lead">직원을 한 명 쓰면 월급 말고도 회사가 내는 돈이 있어요. 4대보험 회사 부담분과 퇴직금 적립까지 더한 실제 인건비를 계산해요.</p>
+
+  <div class="calc-layout">
+    <form id="calc-form" class="card" onsubmit="return false;">
+      <h2 class="form-h">사업장 정보</h2>
+      <label for="size">상시 근로자 수</label>
+      <select id="size">
+        <option value="u150" selected>150명 미만</option>
+        <option value="p150">150명 이상 (우선지원대상기업)</option>
+        <option value="m1000">150명 이상 1,000명 미만</option>
+        <option value="o1000">1,000명 이상</option>
+      </select>
+      <div class="hint">고용보험 회사 부담분(고용안정·직업능력개발) 요율이 규모에 따라 달라요.</div>
+
+      <label for="industrial">산재보험료율 (%)</label>
+      <input id="industrial" type="number" inputmode="decimal" min="0" max="20" step="0.01" value={Number((RATES.industrialAccidentAvgRate * 100).toFixed(2))} />
+      <div class="hint">기본값은 {RATES.year}년 평균 {pct(RATES.industrialAccidentAvgRate)}예요. 업종마다 다르니 근로복지공단 고지서의 요율을 넣으면 정확해요.</div>
+
+      <h2 class="form-h staff-h">직원</h2>
+      <div id="staff"></div>
+      <button type="button" class="add-btn" id="add">직원 추가</button>
+      <p class="hint" id="save-msg">입력한 직원 목록은 이 브라우저에 자동으로 저장돼요.</p>
+    </form>
+
+    <div class="receipt" data-history-results>
+      <div class="result-main">
+        <div class="label" id="out-main-label">월 총 인건비</div>
+        <div class="big" id="out-main">-</div>
+      </div>
+      <table>
+        <tbody id="out-rows"></tbody>
+      </table>
+      <p class="hint" id="out-tip"></p>
+    </div>
+
+    <section class="history payroll-ledger">
+      <div class="history-head">
+        <h2>직원별 급여대장</h2>
+        <div class="history-actions">
+          <button type="button" class="ghost" id="csv">급여대장 CSV</button>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table class="ledger">
+          <thead>
+            <tr><th>직원</th><th>세전 급여</th><th>회사 4대보험</th><th>퇴직 적립</th><th>총 인건비</th><th>직원 실수령</th></tr>
+          </thead>
+          <tbody id="ledger"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <p class="notice">
+    국민연금 60세 이상 미가입, 두루누리 사회보험료 지원 같은 정부 지원, 업종별 산재 요율 차이는 반영하지 않은 예상치예요.
+    4대보험 금액은 매년 정산 결과에 따라 달라질 수 있어요.
+  </p>
+
+  <h2>회사가 내는 돈은 무엇인가요</h2>
+  <div class="card table-scroll">
+    <table>
+      <thead><tr><th>항목</th><th>회사 부담 (보수 대비)</th></tr></thead>
+      <tbody>
+        <tr><td>국민연금</td><td>{pct(RATES.pension.rate / 2)} (직원과 같음)</td></tr>
+        <tr><td>건강보험</td><td>{pct(RATES.health.rate / 2)} (직원과 같음)</td></tr>
+        <tr><td>장기요양보험</td><td>건강보험료의 {pct(RATES.longTermCare.rateOfHealthPremium)}의 절반 (직원과 같음)</td></tr>
+        <tr><td>고용보험</td><td>실업급여 {pct(RATES.employment.employerRate)} + 고용안정 {pct(s.u150)}~{pct(s.o1000)}</td></tr>
+        <tr><td>산재보험</td><td>업종별 (평균 {pct(RATES.industrialAccidentAvgRate)}), 전액 회사 부담</td></tr>
+        <tr><td>퇴직금 적립</td><td>월 급여의 1/12 (1년 이상 근무 시 지급)</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    4대보험은 비과세(식대 등)를 뺀 보수를 기준으로 계산하고, 국민연금은 기준소득월액 상·하한 안에서만 매겨요.
+    주 15시간 미만(월 60시간 미만)으로 일하는 직원은 국민연금·건강보험·고용보험 가입 대상이 아니어서 산재보험만 계산해요.
+  </p>
+
+  <h2>자주 묻는 질문</h2>
+  <details>
+    <summary>퇴직금 적립은 꼭 해야 하나요?</summary>
+    <p>매달 따로 떼어 둘 의무는 없지만(퇴직연금 가입 시 제외), 1년 이상 일한 직원이 퇴사하면 한 번에 지급해야 해요. 미리 월 급여의 1/12씩 모아 두면 부담이 덜해요.</p>
+  </details>
+  <details>
+    <summary>아르바이트도 4대보험에 가입해야 하나요?</summary>
+    <p>주 15시간 이상(월 60시간 이상) 일하면 국민연금·건강보험·고용보험 가입 대상이에요. 산재보험은 근무 시간과 관계없이 모든 근로자에게 적용돼요.</p>
+  </details>
+
+  <h2>관련 가이드</h2>
+  <ul class="links">
+    {relatedGuides.map((g) => (
+      <li>
+        <a href={`/guide/${g.slug}`}>
+          <strong>{g.title}</strong>
+          <span>{g.description}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+
+  <template id="staff-tpl">
+    <fieldset class="staff">
+      <div class="staff-top">
+        <input class="s-name" type="text" maxlength="20" placeholder="직원 이름 (선택)" aria-label="직원 이름" />
+        <button type="button" class="s-remove" aria-label="이 직원 삭제">삭제</button>
+      </div>
+      <div class="s-type" role="radiogroup" aria-label="급여 형태">
+        <label class="check"><input type="radio" value="monthly" checked /> 월급제</label>
+        <label class="check"><input type="radio" value="hourly" /> 시급제</label>
+      </div>
+      <div class="s-monthly">
+        <label>세전 월급 (원)<input class="s-pay" type="number" inputmode="numeric" min="0" step="10000" value="2500000" /></label>
+        <label>그중 비과세 식대 등 (원)<input class="s-nontax" type="number" inputmode="numeric" min="0" step="10000" value="200000" /></label>
+      </div>
+      <div class="s-hourly" hidden>
+        <label>시급 (원)<input class="s-wage" type="number" inputmode="numeric" min="0" step="10" value={RATES.minWageHourly} /></label>
+        <label>주 근로시간<input class="s-hours" type="number" inputmode="decimal" min="0" max="52" step="0.5" value="20" /></label>
+      </div>
+    </fieldset>
+  </template>
+
+  <script>
+    import { calcPayroll, type Employee, type CompanySize } from '../lib/payroll';
+
+    const KEY = 'barogyesanso:payroll:v1';
+    const $ = <T extends HTMLElement = HTMLInputElement>(id: string) => document.getElementById(id) as T;
+    const won = (n: number) => `${Math.round(n).toLocaleString('ko-KR')}원`;
+    const staffBox = $<HTMLElement>('staff');
+    const tpl = $<HTMLTemplateElement>('staff-tpl');
+    let seq = 0;
+
+    function track(event: string, params: Record<string, string | number>) {
+      try {
+        (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.('event', event, params);
+      } catch {
+        /* 무시 */
+      }
+    }
+
+    function addStaff(data?: Partial<Employee>) {
+      const node = tpl.content.firstElementChild!.cloneNode(true) as HTMLFieldSetElement;
+      const id = ++seq;
+      node.querySelectorAll<HTMLInputElement>('.s-type input').forEach((r) => (r.name = `type-${id}`));
+      if (data) {
+        (node.querySelector('.s-name') as HTMLInputElement).value = data.name ?? '';
+        const type = data.payType === 'hourly' ? 'hourly' : 'monthly';
+        node.querySelectorAll<HTMLInputElement>('.s-type input').forEach((r) => (r.checked = r.value === type));
+        if (data.monthlyPay !== undefined) (node.querySelector('.s-pay') as HTMLInputElement).value = String(data.monthlyPay);
+        if (data.nonTaxable !== undefined) (node.querySelector('.s-nontax') as HTMLInputElement).value = String(data.nonTaxable);
+        if (data.hourlyWage !== undefined) (node.querySelector('.s-wage') as HTMLInputElement).value = String(data.hourlyWage);
+        if (data.weeklyHours !== undefined) (node.querySelector('.s-hours') as HTMLInputElement).value = String(data.weeklyHours);
+      }
+      node.querySelector('.s-remove')!.addEventListener('click', () => {
+        node.remove();
+        render();
+      });
+      staffBox.append(node);
+    }
+
+    function readStaff(): Employee[] {
+      return Array.from(staffBox.querySelectorAll<HTMLFieldSetElement>('.staff')).map((f) => {
+        const hourly = (f.querySelector('.s-type input:checked') as HTMLInputElement)?.value === 'hourly';
+        (f.querySelector('.s-monthly') as HTMLElement).hidden = hourly;
+        (f.querySelector('.s-hourly') as HTMLElement).hidden = !hourly;
+        const num = (sel: string) => Number((f.querySelector(sel) as HTMLInputElement).value) || 0;
+        return {
+          name: (f.querySelector('.s-name') as HTMLInputElement).value,
+          payType: hourly ? 'hourly' : 'monthly',
+          monthlyPay: num('.s-pay'),
+          nonTaxable: num('.s-nontax'),
+          hourlyWage: num('.s-wage'),
+          weeklyHours: num('.s-hours'),
+        };
+      });
+    }
+
+    function save(staff: Employee[]) {
+      try {
+        localStorage.setItem(KEY, JSON.stringify({ size: $<HTMLSelectElement>('size').value, industrial: $('industrial').value, staff }));
+      } catch {
+        $<HTMLElement>('save-msg').textContent = '이 브라우저에서는 자동 저장을 쓸 수 없어요 (개인정보 보호 모드 등).';
+      }
+    }
+
+    function load(): boolean {
+      try {
+        const raw = localStorage.getItem(KEY);
+        if (!raw) return false;
+        const d = JSON.parse(raw);
+        if (!Array.isArray(d.staff)) return false;
+        if (d.size) $<HTMLSelectElement>('size').value = d.size;
+        if (d.industrial !== undefined) $('industrial').value = d.industrial;
+        d.staff.forEach((e: Partial<Employee>) => addStaff(e));
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    function rows(items: [string, string, boolean?][]) {
+      const tbody = $<HTMLElement>('out-rows');
+      tbody.innerHTML = '';
+      for (const [k, v, total] of items) {
+        const tr = document.createElement('tr');
+        if (total) tr.className = 'total';
+        const th = document.createElement('th');
+        const td = document.createElement('td');
+        th.textContent = k;
+        td.textContent = v;
+        tr.append(th, td);
+        tbody.append(tr);
+      }
+    }
+
+    let lastResult: ReturnType<typeof calcPayroll> | null = null;
+
+    function render() {
+      const staff = readStaff();
+      const r = calcPayroll(staff, {
+        companySize: $<HTMLSelectElement>('size').value as CompanySize,
+        industrialRate: (Number($('industrial').value) || 0) / 100,
+      });
+      lastResult = r;
+      save(staff);
+
+      $<HTMLElement>('out-main').textContent = staff.length ? won(r.totalCost) : '-';
+      rows(
+        staff.length
+          ? [
+              ['직원 수', `${staff.length}명`],
+              ['세전 급여 합계', won(r.gross)],
+              ['국민연금 (회사)', won(r.employer.pension)],
+              ['건강보험 (회사)', won(r.employer.health)],
+              ['장기요양 (회사)', won(r.employer.longTermCare)],
+              ['고용보험 (회사)', won(r.employer.employment)],
+              ['산재보험', won(r.employer.industrial)],
+              ['회사 4대보험 합계', won(r.employer.total), true],
+              ['퇴직금 적립 (1/12)', won(r.severanceReserve)],
+              ['연간 총 인건비', won(r.totalCost * 12), true],
+            ]
+          : [['직원', '직원을 추가해 주세요']],
+      );
+      $<HTMLElement>('out-tip').textContent = staff.length
+        ? `급여 외에 급여의 약 ${(r.extraRatio * 100).toFixed(1)}%가 더 들어요(회사 4대보험 + 퇴직금 적립).`
+        : '';
+
+      const ledger = $<HTMLElement>('ledger');
+      ledger.innerHTML = '';
+      r.employees.forEach((e, i) => {
+        const tr = document.createElement('tr');
+        const cells = [
+          e.name || `직원 ${i + 1}`,
+          won(e.gross),
+          won(e.employer.total) + (e.insured ? '' : ' (산재만)'),
+          won(e.severanceReserve),
+          won(e.totalCost),
+          won(e.net),
+        ];
+        cells.forEach((c) => {
+          const td = document.createElement('td');
+          td.textContent = c;
+          tr.append(td);
+        });
+        ledger.append(tr);
+      });
+      ($<HTMLButtonElement>('csv')).disabled = staff.length === 0;
+    }
+
+    $('add').addEventListener('click', () => {
+      addStaff();
+      render();
+      track('payroll_add', { count: staffBox.children.length });
+      (staffBox.lastElementChild?.querySelector('.s-name') as HTMLInputElement | null)?.focus();
+    });
+
+    $('csv').addEventListener('click', () => {
+      if (!lastResult) return;
+      const head = ['직원', '세전 급여', '국민연금(회사)', '건강보험(회사)', '장기요양(회사)', '고용보험(회사)', '산재보험', '회사 4대보험 합계', '퇴직 적립', '총 인건비', '직원 공제', '직원 실수령'];
+      const lines = [head.join(',')];
+      lastResult.employees.forEach((e, i) => {
+        const name = (e.name || `직원 ${i + 1}`).replace(/"/g, '""');
+        lines.push([`"${name}"`, e.gross, e.employer.pension, e.employer.health, e.employer.longTermCare, e.employer.employment, e.employer.industrial, e.employer.total, e.severanceReserve, e.totalCost, e.employeeDeduction, e.net].join(','));
+      });
+      const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+      const a = document.createElement('a');
+      const d = new Date();
+      a.href = URL.createObjectURL(blob);
+      a.download = `barogyesanso-payroll-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}.csv`;
+      document.body.append(a);
+      a.click();
+      a.remove();
+      track('payroll_export', { count: lastResult.employees.length });
+    });
+
+    $<HTMLFormElement>('calc-form').addEventListener('input', render);
+    $<HTMLFormElement>('calc-form').addEventListener('change', render);
+    if (!load()) addStaff();
+    render();
+  </script>
+</Base>
+
+<style>
+  .staff-h { margin-top: 26px; padding-top: 18px; border-top: 1px solid var(--line); }
+  .staff { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px 16px; margin: 0 0 12px; }
+  .staff-top { display: flex; gap: 8px; align-items: center; }
+  .staff-top .s-name {
+    flex: 1; height: 42px; padding: 0 12px; font: inherit; color: var(--ink); background: var(--surface);
+    border: 1px solid var(--line); border-radius: 8px;
+  }
+  .s-remove { height: 42px; padding: 0 12px; font: inherit; font-size: 0.88rem; color: var(--muted); background: none; border: 1px solid var(--line); border-radius: 8px; cursor: pointer; }
+  .s-remove:hover { color: var(--seal); border-color: var(--seal); }
+  .s-type { display: flex; gap: 18px; margin: 10px 0 2px; }
+  .s-monthly, .s-hourly { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+  .s-monthly[hidden], .s-hourly[hidden] { display: none; }
+  .staff label:not(.check) { font-size: 0.88rem; margin: 12px 0 0; }
+  .staff label:not(.check) input { margin-top: 6px; height: 44px; font-size: 1rem; }
+  @media (max-width: 480px) { .s-monthly, .s-hourly { grid-template-columns: 1fr; } }
+  .add-btn {
+    width: 100%; min-height: 46px; font: inherit; font-weight: 500; color: var(--blue); background: var(--blue-soft);
+    border: 1px dashed var(--blue); border-radius: 10px; cursor: pointer;
+  }
+  .ledger { width: 100%; border-collapse: collapse; margin-top: 12px; }
+  .ledger th, .ledger td { padding: 9px 6px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+  .ledger th { color: var(--muted); font-weight: 500; font-size: 0.82rem; }
+  .ledger th:first-child, .ledger td:first-child { text-align: left; }
+</style>

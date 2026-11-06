@@ -1,0 +1,95 @@
+---
+import Article from '../../layouts/Article.astro';
+import { RATES } from '../../rates/2026';
+import { calcEmployee } from '../../lib/payroll';
+
+const won = (n: number) => n.toLocaleString('ko-KR');
+const pct = (n: number) => `${Number((n * 100).toFixed(3))}%`;
+const opt = { companySize: 'u150' as const, industrialRate: RATES.industrialAccidentAvgRate };
+const fullTime = calcEmployee({ payType: 'monthly', monthlyPay: 2_500_000, nonTaxable: 200_000 }, opt);
+const partTime = calcEmployee({ payType: 'hourly', hourlyWage: RATES.minWageHourly, weeklyHours: 20 }, opt);
+const shortTime = calcEmployee({ payType: 'hourly', hourlyWage: RATES.minWageHourly, weeklyHours: 14 }, opt);
+const ratio = (r: typeof fullTime) => (((r.employer.total + r.severanceReserve) / r.gross) * 100).toFixed(1);
+---
+
+<Article slug="employer-insurance-guide">
+  <p>
+    직원 월급이 250만원이면 회사가 쓰는 돈도 250만원일까요? 아니에요. 회사는 4대보험 중 절반가량과 산재보험 전액을 내고,
+    1년 이상 일하면 줄 퇴직금도 준비해야 해요. 실제로 드는 돈을 예시로 계산해 볼게요.
+  </p>
+
+  <h2>회사가 내는 4대보험 ({RATES.year}년)</h2>
+  <div class="card table-scroll">
+    <table>
+      <thead><tr><th>항목</th><th>회사 부담</th><th>직원 부담</th></tr></thead>
+      <tbody>
+        <tr><td>국민연금</td><td>{pct(RATES.pension.rate / 2)}</td><td>{pct(RATES.pension.rate / 2)}</td></tr>
+        <tr><td>건강보험</td><td>{pct(RATES.health.rate / 2)}</td><td>{pct(RATES.health.rate / 2)}</td></tr>
+        <tr><td>장기요양보험</td><td>회사 건강보험료의 {pct(RATES.longTermCare.rateOfHealthPremium)}</td><td>직원 건강보험료의 {pct(RATES.longTermCare.rateOfHealthPremium)}</td></tr>
+        <tr><td>고용보험</td><td>{pct(RATES.employment.employerRate)} + 고용안정 {pct(RATES.employment.stabilityRates.u150)} (150인 미만)</td><td>{pct(RATES.employment.employeeRate)}</td></tr>
+        <tr><td>산재보험</td><td>업종별 (평균 {pct(RATES.industrialAccidentAvgRate)})</td><td>없음</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    고용안정·직업능력개발 부담분은 회사 규모에 따라 0.25%(150인 미만)에서 0.85%(1,000인 이상)까지 달라요.
+    산재보험은 업종 위험도에 따라 요율이 크게 다르니 근로복지공단에서 받은 고지서의 요율을 확인하세요.
+  </p>
+
+  <h2>예시 1: 월급 250만원 직원 (식대 20만원 비과세)</h2>
+  <div class="card">
+    <table>
+      <tbody>
+        <tr><th>세전 월급</th><td>{won(fullTime.gross)}원</td></tr>
+        <tr><th>국민연금 (회사)</th><td>{won(fullTime.employer.pension)}원</td></tr>
+        <tr><th>건강보험 (회사)</th><td>{won(fullTime.employer.health)}원</td></tr>
+        <tr><th>장기요양 (회사)</th><td>{won(fullTime.employer.longTermCare)}원</td></tr>
+        <tr><th>고용보험 (회사)</th><td>{won(fullTime.employer.employment)}원</td></tr>
+        <tr><th>산재보험 (평균 요율)</th><td>{won(fullTime.employer.industrial)}원</td></tr>
+        <tr><th>퇴직금 적립 (1/12)</th><td>{won(fullTime.severanceReserve)}원</td></tr>
+        <tr class="total"><th>회사가 쓰는 돈 (월)</th><td>{won(fullTime.totalCost)}원</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    월급 외에 월급의 약 <strong>{ratio(fullTime)}%</strong>가 더 들어요. 1년이면 약 {won(fullTime.totalCost * 12)}원이에요.
+    직원이 실제로 받는 돈은 4대보험과 소득세를 뺀 {won(fullTime.net)}원이에요.
+  </p>
+
+  <h2>예시 2: 아르바이트 (최저시급, 주 20시간)</h2>
+  <p>
+    시급 {won(RATES.minWageHourly)}원으로 주 20시간 일하면 주휴수당을 포함한 월급은 {won(partTime.gross)}원이에요.
+    주 15시간 이상이라 4대보험에 가입해야 하고, 회사 부담 4대보험 {won(partTime.employer.total)}원과 퇴직금 적립 {won(partTime.severanceReserve)}원을 더해
+    월 <strong>{won(partTime.totalCost)}원</strong>이 들어요.
+  </p>
+  <p>
+    주 14시간이면 국민연금·건강보험·고용보험 대상이 아니어서 산재보험({won(shortTime.employer.industrial)}원)만 내요.
+    다만 주휴수당과 퇴직금도 주 15시간 미만이면 생기지 않기 때문에 시간을 쪼개 계약하는 경우가 있는데,
+    실제 근무가 15시간을 넘으면 모두 다시 적용되니 계약과 실제 근무를 맞춰 두세요.
+  </p>
+
+  <h2>알바도 4대보험 가입해야 하나요</h2>
+  <ul>
+    <li><strong>산재보험</strong>: 하루만 일해도 모든 근로자가 대상이에요.</li>
+    <li><strong>국민연금·건강보험·고용보험</strong>: 월 60시간 이상(주 15시간 이상) 일하면 대상이에요.</li>
+    <li><strong>국민연금</strong>: 만 60세 이상은 가입 대상이 아니에요.</li>
+    <li>가입 신고는 입사한 날이 속한 달의 다음 달 15일까지 해야 해요(4대사회보험 정보연계센터에서 한 번에 신고 가능).</li>
+  </ul>
+
+  <h2>인건비 부담을 줄이는 방법</h2>
+  <ul>
+    <li><strong>비과세 항목 활용</strong>: 식대(월 20만원), 자가운전보조금, 6세 이하 자녀 보육수당 등은 4대보험 기준 보수에서 빠져요. 실제로 지급하는 항목만 비과세로 처리할 수 있어요.</li>
+    <li><strong>두루누리 사회보험료 지원</strong>: 근로자 10명 미만 사업장의 저임금 근로자는 국민연금·고용보험료 일부를 지원받을 수 있어요. 요건은 해마다 바뀌니 근로복지공단에서 확인하세요.</li>
+    <li><strong>고용 지원금</strong>: 청년·장년 채용 등 정부 지원금은 고용24에서 확인할 수 있어요.</li>
+  </ul>
+
+  <h2>자주 묻는 질문</h2>
+  <details>
+    <summary>직원이 4대보험을 빼 달라고 하면요?</summary>
+    <p>가입 요건을 갖춘 직원은 본인이 원하지 않아도 가입시켜야 해요. 나중에 미가입이 확인되면 최대 3년치 보험료와 연체금을 한꺼번에 낼 수 있어요.</p>
+  </details>
+  <details>
+    <summary>3.3%로 처리하면 4대보험을 안 내도 되나요?</summary>
+    <p>실제로 정해진 시간에 지시를 받으며 일하는 직원이라면 이름만 프리랜서로 해도 근로자로 인정될 수 있어요. 그러면 4대보험, 주휴수당, 퇴직금이 모두 소급 적용돼요.</p>
+  </details>
+</Article>

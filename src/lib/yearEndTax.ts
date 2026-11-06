@@ -113,7 +113,7 @@ export interface YearEndResult {
 }
 
 const n0 = (v: number | undefined) => (Number.isFinite(v) && (v as number) > 0 ? (v as number) : 0);
-const floor10 = (v: number) => Math.floor(v / 10) * 10;
+const floor10 = (v: number) => Math.floor(v / 10 + 1e-6) * 10;
 
 export function earnedIncomeDeduction(salary: number): number {
   const { tiers, cap } = Y.earnedIncomeDeduction;

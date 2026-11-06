@@ -5,7 +5,7 @@ import { WITHHOLDING_ROWS, WITHHOLDING_AT_10M } from '../rates/withholding2026.t
  * 급여명세서의 소득세와 같은 방식으로 계산합니다.
  */
 
-const floor10 = (n: number) => Math.floor(n / 10) * 10;
+const floor10 = (n: number) => Math.floor(n / 10 + 1e-6) * 10;
 
 /** 8세 이상 20세 이하 자녀 수별 세액 공제액 (표 주석 3) */
 export function childDeduction(children: number): number {

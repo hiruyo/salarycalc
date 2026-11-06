@@ -60,7 +60,7 @@ export function calcUnemployment(input: UnemploymentInput): UnemploymentResult {
   const u = RATES.unemployment;
   const days3 = daysInLast3Months(input.lastWorkDate);
   const hours = Math.min(Math.max(input.dailyHours ?? u.maxDailyHours, 1), u.maxDailyHours);
-  const dailyMin = Math.floor(RATES.minWageHourly * u.minWageRatio * hours);
+  const dailyMin = Math.floor(RATES.minWageHourly * u.minWageRatio * hours + 1e-6);
 
   if (days3 === null) {
     return {
@@ -78,7 +78,7 @@ export function calcUnemployment(input: UnemploymentInput): UnemploymentResult {
   }
 
   const averageDailyWage = Math.max(0, input.last3MonthsPay) / days3;
-  const rawDailyBenefit = Math.floor(averageDailyWage * u.benefitRate);
+  const rawDailyBenefit = Math.floor(averageDailyWage * u.benefitRate + 1e-6);
 
   let dailyBenefit = rawDailyBenefit;
   let limitApplied: UnemploymentResult['limitApplied'] = null;

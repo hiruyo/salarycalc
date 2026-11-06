@@ -1,5 +1,5 @@
 /** 계산기 목록 (메뉴·홈·소개 페이지에서 공통 사용). 새 계산기를 만들면 여기에 추가하세요. */
-export type CalcIcon = 'banknote' | 'receipt' | 'clock' | 'briefcase' | 'sun' | 'umbrella' | 'percent' | 'house' | 'calendar';
+export type CalcIcon = 'banknote' | 'receipt' | 'clock' | 'briefcase' | 'sun' | 'umbrella' | 'percent' | 'house' | 'calendar' | 'store';
 
 export interface CalcMeta {
   href: string;
@@ -22,6 +22,7 @@ export const CALC_GROUPS: CalcGroup[] = [
       { href: '/year-end-tax', name: '연말정산 환급', desc: '2026년 귀속 환급액 미리 계산', icon: 'receipt' },
       { href: '/freelancer-tax', name: '프리랜서 3.3%', desc: '원천징수 후 실수령액·청구 금액', icon: 'percent' },
       { href: '/weekly-holiday-pay', name: '주휴수당', desc: '시급·근무시간으로 주휴수당과 월급', icon: 'clock' },
+      { href: '/payroll', name: '인건비 (사장님용)', desc: '회사 4대보험·퇴직 적립 포함 총 인건비', icon: 'store' },
     ],
   },
   {

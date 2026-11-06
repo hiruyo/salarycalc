@@ -13,7 +13,8 @@ export interface FreelancerResult {
   net: number;
 }
 
-const floor10 = (n: number) => Math.floor(n / 10) * 10;
+// 1e-6: 부동소수점 오차(예: 12059.999…) 보정
+const floor10 = (n: number) => Math.floor(n / 10 + 1e-6) * 10;
 
 /** 세전 금액 → 3.3% 원천징수 후 실수령액. 세액은 10원 미만 절사. */
 export function freelancerFromGross(gross: number): FreelancerResult {

@@ -13,6 +13,38 @@ export interface GuideMeta {
 
 export const GUIDES: GuideMeta[] = [
   {
+    slug: 'employer-insurance-guide',
+    title: '직원 한 명 뽑으면 얼마 들까? 사업주 4대보험·인건비 정리',
+    description: '월급 외에 회사가 내는 국민연금·건강·고용·산재보험과 퇴직금 적립을 예시로 계산하고, 알바 4대보험 기준까지 정리했습니다.',
+    published: '2026-11-07',
+    updated: '2026-11-07',
+    calculator: { href: '/payroll', label: '우리 가게 인건비 계산하기' },
+  },
+  {
+    slug: 'parental-leave-guide',
+    title: '2026년 육아휴직 급여 총정리: 월 최대 250만원, 6+6 부모육아휴직',
+    description: '육아휴직 기간과 급여(1~3개월 250만원, 4~6개월 200만원, 이후 160만원 상한), 6+6 특례, 신청 방법을 정리했습니다.',
+    published: '2026-11-07',
+    updated: '2026-11-07',
+    calculator: { href: '/salary', label: '복직 후 실수령액 계산하기' },
+  },
+  {
+    slug: 'part-time-pay-guide',
+    title: '알바 급여 계산법: 주휴수당·야간·연장·휴일 수당까지',
+    description: '아르바이트 급여를 시급, 주휴수당, 야간·연장·휴일 가산수당으로 나눠 예시와 함께 계산하는 방법을 정리했습니다.',
+    published: '2026-11-07',
+    updated: '2026-11-07',
+    calculator: { href: '/weekly-holiday-pay', label: '주휴수당 계산하기' },
+  },
+  {
+    slug: 'raise-net-pay-guide',
+    title: '연봉 5%·10% 오르면 실수령액은 얼마나 늘까',
+    description: '연봉 인상률별로 월 실수령액이 실제로 얼마나 늘어나는지 표로 비교하고, 인상분보다 덜 늘어나는 이유를 설명합니다.',
+    published: '2026-11-07',
+    updated: '2026-11-07',
+    calculator: { href: '/salary', label: '내 연봉으로 계산하기' },
+  },
+  {
     slug: 'year-end-tax-guide',
     title: '2026년 귀속 연말정산 총정리: 달라진 점과 환급 늘리는 법',
     description: '2027년 1월 연말정산 일정, 신용카드 자녀별 한도 상향·자녀세액공제 9세 등 달라진 점, 연말까지 환급을 늘리는 방법을 정리했습니다.',

@@ -29,7 +29,8 @@ export interface NetPayResult {
   netAnnual: number;
 }
 
-const floor10 = (n: number) => Math.floor(n / 10) * 10;
+// 1e-6: 부동소수점 오차(예: 1,340,000 × 0.009 = 12059.999…) 보정
+const floor10 = (n: number) => Math.floor(n / 10 + 1e-6) * 10;
 const clamp = (n: number, min: number, max: number) => Math.min(Math.max(n, min), max);
 
 export function calcNetPay(input: NetPayInput): NetPayResult {
