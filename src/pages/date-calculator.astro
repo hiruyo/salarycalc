@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import ResultActions from '../components/ResultActions.astro';
 import SaveHistory from '../components/SaveHistory.astro';
 import { GUIDES } from '../guides';
 const relatedGuides = GUIDES.filter((g) => ['age-and-date-guide', 'annual-leave-guide'].includes(g.slug));
@@ -61,6 +62,7 @@ const relatedGuides = GUIDES.filter((g) => ['age-and-date-guide', 'annual-leave-
       <table>
         <tbody id="out-rows"></tbody>
       </table>
+      <ResultActions calc="date-calculator" />
     </div>
     <SaveHistory calc="date-calculator" title="날짜계산" />
   </div>

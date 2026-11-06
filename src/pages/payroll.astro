@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import ResultActions from '../components/ResultActions.astro';
 import { RATES } from '../rates/2026';
 import { GUIDES } from '../guides';
 
@@ -46,6 +47,7 @@ const s = RATES.employment.stabilityRates;
         <tbody id="out-rows"></tbody>
       </table>
       <p class="hint" id="out-tip"></p>
+      <ResultActions calc="payroll" share={false} />
     </div>
 
     <section class="history payroll-ledger">

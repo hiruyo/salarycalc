@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import ResultActions from '../components/ResultActions.astro';
 import SaveHistory from '../components/SaveHistory.astro';
 import { GUIDES } from '../guides';
 import { leaveDaysForYear } from '../lib/annualLeave';
@@ -48,6 +49,7 @@ const relatedGuides = GUIDES.filter((g) => ['annual-leave-guide'].includes(g.slu
       <table>
         <tbody id="out-rows"></tbody>
       </table>
+      <ResultActions calc="annual-leave" />
     </div>
     <SaveHistory calc="annual-leave" title="연차" />
   </div>

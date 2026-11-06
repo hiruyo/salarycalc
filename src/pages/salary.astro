@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import ResultActions from '../components/ResultActions.astro';
 import SaveHistory from '../components/SaveHistory.astro';
 import { RATES } from '../rates/2026';
 import { GUIDES } from '../guides';
@@ -51,6 +52,7 @@ const relatedGuides = GUIDES.filter((g) => ['salary-table-2026', 'social-insuran
           <tr class="total"><th>연 환산 실수령액</th><td data-out="netAnnual">-</td></tr>
         </tbody>
       </table>
+      <ResultActions calc="salary" />
     </div>
     <SaveHistory calc="salary" title="연봉실수령액" />
   </div>
@@ -124,9 +126,6 @@ const relatedGuides = GUIDES.filter((g) => ['salary-table-2026', 'social-insuran
       });
     }
 
-    // 홈 빠른 계산에서 넘어온 연봉 값 (?salary=4000)
-    const fromQuery = Number(new URLSearchParams(location.search).get('salary'));
-    if (fromQuery > 0) (document.getElementById('salary') as HTMLInputElement).value = String(fromQuery);
 
     document.getElementById('calc-form')!.addEventListener('input', render);
     render();

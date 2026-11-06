@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import ResultActions from '../components/ResultActions.astro';
 import SaveHistory from '../components/SaveHistory.astro';
 import { GUIDES } from '../guides';
 import { RATES } from '../rates/2026';
@@ -53,6 +54,7 @@ const relatedGuides = GUIDES.filter((g) => ['rent-conversion-guide', 'year-end-t
       <table>
         <tbody id="out-rows"></tbody>
       </table>
+      <ResultActions calc="rent-conversion" />
     </div>
     <SaveHistory calc="rent-conversion" title="전월세전환" />
   </div>

@@ -39,7 +39,7 @@ const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
         </tbody>
       </table>
       <p class="hint">식대 20만원 비과세, 1인 가구 기준이에요.</p>
-      <a class="quick-more" id="quick-more" href="/salary?salary=4000">공제 내역 자세히 보기</a>
+      <a class="quick-more" id="quick-more" href="/salary#salary=4000">공제 내역 자세히 보기</a>
     </form>
   </section>
 
@@ -92,7 +92,7 @@ const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
       set('quick-net', man > 0 ? won(r.netMonthly) : '-');
       set('quick-ins', man > 0 ? won(r.insuranceTotal) : '-');
       set('quick-tax', man > 0 ? won(r.taxTotal) : '-');
-      (document.getElementById('quick-more') as HTMLAnchorElement).href = `/salary?salary=${encodeURIComponent(String(man || 4000))}`;
+      (document.getElementById('quick-more') as HTMLAnchorElement).href = `/salary#salary=${encodeURIComponent(String(man || 4000))}`;
     }
     input.addEventListener('input', render);
     render();

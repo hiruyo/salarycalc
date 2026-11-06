@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import ResultActions from '../components/ResultActions.astro';
 import SaveHistory from '../components/SaveHistory.astro';
 import { RATES } from '../rates/2026';
 import { GUIDES } from '../guides';
@@ -39,6 +40,7 @@ const relatedGuides = GUIDES.filter((g) => ['weekly-holiday-pay-guide', 'minimum
           <tr><th>최저시급 충족</th><td id="out-minwage">-</td></tr>
         </tbody>
       </table>
+      <ResultActions calc="weekly-holiday-pay" />
     </div>
     <SaveHistory calc="weekly-holiday-pay" title="주휴수당" />
   </div>

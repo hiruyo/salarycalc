@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import ResultActions from '../components/ResultActions.astro';
 import SaveHistory from '../components/SaveHistory.astro';
 import { GUIDES } from '../guides';
 import { RATES } from '../rates/2026';
@@ -40,6 +41,7 @@ const relatedGuides = GUIDES.filter((g) => ['freelancer-tax-guide', 'year-end-ta
           <tr class="total"><th>실수령액</th><td id="out-net">-</td></tr>
         </tbody>
       </table>
+      <ResultActions calc="freelancer-tax" />
     </div>
     <SaveHistory calc="freelancer-tax" title="프리랜서3.3" />
   </div>

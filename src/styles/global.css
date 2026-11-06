@@ -158,6 +158,19 @@ label.check input { width: 20px; height: 20px; accent-color: var(--blue); margin
 .receipt tr.total td { font-weight: 700; }
 .receipt .hint { margin-top: 12px; }
 
+/* 명세서 아래 공유·이미지 버튼 */
+.result-actions { margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--line); }
+.ra-buttons { display: flex; gap: 8px; }
+.ra-buttons button {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 42px;
+  font: inherit; font-size: 0.9rem; font-weight: 500; color: var(--blue); background: var(--blue-soft);
+  border: 1px solid transparent; border-radius: 8px; cursor: pointer;
+}
+.ra-buttons button:hover { border-color: var(--blue); }
+.ra-buttons button:disabled { opacity: 0.5; cursor: wait; }
+.ra-msg { font-size: 0.84rem; color: var(--muted); margin: 8px 0 0; min-height: 1em; }
+.ra-msg:empty { display: none; }
+
 /* 일반 표 (글 속 표) */
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 20px; margin: 0 0 16px; }
 .table-scroll { overflow-x: auto; }

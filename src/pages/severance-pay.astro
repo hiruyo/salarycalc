@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import ResultActions from '../components/ResultActions.astro';
 import SaveHistory from '../components/SaveHistory.astro';
 import { RATES } from '../rates/2026';
 import { GUIDES } from '../guides';
@@ -47,6 +48,7 @@ const relatedGuides = GUIDES.filter((g) => ['severance-pay-guide'].includes(g.sl
           <tr><th>1일 평균임금</th><td id="out-avg">-</td></tr>
         </tbody>
       </table>
+      <ResultActions calc="severance-pay" />
     </div>
     <SaveHistory calc="severance-pay" title="퇴직금" />
   </div>

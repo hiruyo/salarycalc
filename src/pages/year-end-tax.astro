@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import ResultActions from '../components/ResultActions.astro';
 import SaveHistory from '../components/SaveHistory.astro';
 import { YEAR_END as Y } from '../rates/yearEnd2026';
 import { GUIDES } from '../guides';
@@ -110,6 +111,7 @@ const man = (n: number) => `${(n / 10_000).toLocaleString('ko-KR')}만원`;
         <tbody id="out-rows"></tbody>
       </table>
       <p class="hint" id="out-tip"></p>
+      <ResultActions calc="year-end-tax" />
     </div>
     <SaveHistory calc="year-end-tax" title="연말정산" />
   </div>

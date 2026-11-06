@@ -11,6 +11,7 @@ import { period, addToDate, age, parseYMD } from '../src/lib/dateCalc.ts';
 import { calcAnnualLeave, leaveDaysForYear, leaveHours } from '../src/lib/annualLeave.ts';
 import { calcYearEnd, cardDeduction, earnedTaxCredit, childTaxCredit, earnedIncomeDeduction as yeEarnedDeduction } from '../src/lib/yearEndTax.ts';
 import { calcEmployee, calcPayroll } from '../src/lib/payroll.ts';
+import { encodeState, decodeState, shareUrl } from '../src/lib/shareState.ts';
 import { legalConversionRate, jeonseToWolse, wolseToJeonse, impliedConversionRate } from '../src/lib/rentConversion.ts';
 
 // ---- 간이세액표 (소득세법 시행령 별표 2, 2026.2.27 개정) 원본 값과 대조 ----
@@ -645,4 +646,22 @@ test('반올림: 부동소수점 오차로 10원이 덜 나오지 않음', () =>
     const e = calcNetPay({ annualSalary: m * 12 }).employment;
     assert.equal(e, Math.floor(Math.round(m * 9) / 10000) * 10, `${m}`);
   }
+});
+
+// ---- 공유 링크 ----
+
+test('공유 링크: 해시(#)로 인코딩·디코딩, 서버로 가는 쿼리(?)는 쓰지 않음', () => {
+  const url = shareUrl('https://barogyesanso.com', '/salary', { salary: '5000', nontax: '0', '@mode': 'net' });
+  assert.equal(url, 'https://barogyesanso.com/salary#salary=5000&nontax=0&%40mode=net');
+  assert.ok(!url.includes('?'));
+  assert.deepEqual(decodeState(new URL(url).hash), { salary: '5000', nontax: '0', '@mode': 'net' });
+  assert.equal(shareUrl('https://x.com', '/a', {}), 'https://x.com/a');
+});
+
+test('공유 링크: 이상한 키·너무 긴 값은 무시', () => {
+  assert.deepEqual(decodeState('#salary=1&<script>=2&a b=3'), { salary: '1' });
+  assert.deepEqual(decodeState('#x=' + 'a'.repeat(300)), {});
+  assert.deepEqual(decodeState(''), {});
+  assert.deepEqual(decodeState('#'), {});
+  assert.ok(encodeState({ k: 'v'.repeat(5000) }).length <= 1500);
 });

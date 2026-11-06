@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import ResultActions from '../components/ResultActions.astro';
 import SaveHistory from '../components/SaveHistory.astro';
 import { RATES } from '../rates/2026';
 import { GUIDES } from '../guides';
@@ -61,6 +62,7 @@ const relatedGuides = GUIDES.filter((g) => ['unemployment-benefit-guide'].includ
           <tr><th>상·하한 적용</th><td id="out-limit">-</td></tr>
         </tbody>
       </table>
+      <ResultActions calc="unemployment-benefit" />
     </div>
     <SaveHistory calc="unemployment-benefit" title="실업급여" />
   </div>
