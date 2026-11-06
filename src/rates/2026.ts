@@ -99,7 +99,7 @@ export const RATES = {
     },
     defaultFeeRate: 0.00015,
     overseas: { basicDeduction: 2_500_000, taxRate: 0.2, defaultFeeRate: 0.0025 },
-    dividend: { domesticIncomeTaxRate: 0.14, usWithholdingRate: 0.15, comprehensiveThreshold: 20_000_000 },
+    dividend: { domesticIncomeTaxRate: 0.14, usWithholdingRate: 0.15, comprehensiveThreshold: 20_000_000, minWithholding: 1_000 },
   },
 
   // 소득세는 국세청 근로소득 간이세액표(withholding2026.ts)를 조회해 계산합니다.

@@ -220,6 +220,8 @@ export function dividendTax(gross: number, market: DividendMarket): { incomeTax:
   const g = Math.floor(pos(gross));
   if (market === 'us') return { incomeTax: floor(g * S.dividend.usWithholdingRate), localTax: 0 };
   const incomeTax = floor10(g * S.dividend.domesticIncomeTaxRate);
+  // 소액부징수 (소득세법 제86조): 1회 원천징수 소득세가 1,000원 미만이면 떼지 않음
+  if (incomeTax < S.dividend.minWithholding) return { incomeTax: 0, localTax: 0 };
   return { incomeTax, localTax: floor10(incomeTax * RATES.localIncomeTaxRate) };
 }
 

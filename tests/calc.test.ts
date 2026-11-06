@@ -756,6 +756,9 @@ test('배당금: 국내 15.4%(10원 미만 절사), 미국 15%', () => {
   assert.equal(d.monthlyNet, 70_500);
   assert.equal(d.overThreshold, false);
   assert.deepEqual(dividendTax(12_345, 'domestic'), { incomeTax: 1_720, localTax: 170 });
+  // 소액부징수: 소득세 1,000원 미만이면 0
+  assert.deepEqual(dividendTax(7_000, 'domestic'), { incomeTax: 0, localTax: 0 });
+  assert.deepEqual(dividendTax(7_200, 'domestic'), { incomeTax: 1_000, localTax: 100 });
   const u = calcDividend({ annualGross: 1_000_000, payments: 4, market: 'us' });
   assert.equal(u.perPaymentTax, 37_500);
   assert.equal(calcDividend({ annualGross: 20_000_001, payments: 1, market: 'domestic' }).overThreshold, true);
