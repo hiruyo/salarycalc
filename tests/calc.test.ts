@@ -764,3 +764,10 @@ test('배당금: 국내 15.4%(10원 미만 절사), 미국 15%', () => {
   assert.equal(calcDividend({ annualGross: 20_000_001, payments: 1, market: 'domestic' }).overThreshold, true);
   assert.equal(investmentForMonthly(1_000_000, 0.05, 'domestic'), 283_690_000);
 });
+
+test('가이드 제목 40자·설명 80자 이내 (네이버 서치어드바이저 권장)', () => {
+  for (const g of GUIDES) {
+    assert.ok([...g.title].length <= 40, `제목 길이 초과: ${g.title}`);
+    assert.ok([...g.description].length <= 80, `설명 길이 초과: ${g.description}`);
+  }
+});

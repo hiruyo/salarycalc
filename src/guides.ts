@@ -14,15 +14,15 @@ export interface GuideMeta {
 export const GUIDES: GuideMeta[] = [
   {
     slug: 'stock-tax-guide',
-    title: '2026년 주식 세금 총정리: 증권거래세·배당소득세·양도소득세',
-    description: '국내 주식을 사고팔 때 붙는 증권거래세(코스피 0.05%+농특세 0.15%, 코스닥 0.20%), 배당소득세 15.4%, 대주주·해외주식 양도소득세를 한 번에 정리했습니다.',
+    title: '2026년 주식 세금 총정리: 거래세·배당세·양도세',
+    description: '국내 주식 증권거래세(코스피·코스닥 0.20%), 배당소득세 15.4%, 대주주·해외주식 양도소득세를 한 번에 정리했습니다.',
     published: '2026-11-07',
     updated: '2026-11-07',
     calculator: { href: '/stock-profit', label: '수수료·세금 뺀 수익 계산하기' },
   },
   {
     slug: 'overseas-stock-tax-guide',
-    title: '해외주식 양도소득세 신고 방법: 250만원 공제, 환율, 5월 신고',
+    title: '해외주식 양도소득세 신고 방법: 250만원 공제·5월 신고',
     description: '미국 주식 등 해외주식 양도세 계산법(결제일 기준환율, 손익 합산, 250만원 공제 후 22%), 신고 기간과 절세 방법을 예시로 정리했습니다.',
     published: '2026-11-07',
     updated: '2026-11-07',
@@ -30,7 +30,7 @@ export const GUIDES: GuideMeta[] = [
   },
   {
     slug: 'employer-insurance-guide',
-    title: '직원 한 명 뽑으면 얼마 들까? 사업주 4대보험·인건비 정리',
+    title: '직원 한 명 뽑으면 얼마? 사업주 4대보험·인건비 정리',
     description: '월급 외에 회사가 내는 국민연금·건강·고용·산재보험과 퇴직금 적립을 예시로 계산하고, 알바 4대보험 기준까지 정리했습니다.',
     published: '2026-11-07',
     updated: '2026-11-07',
@@ -38,7 +38,7 @@ export const GUIDES: GuideMeta[] = [
   },
   {
     slug: 'parental-leave-guide',
-    title: '2026년 육아휴직 급여 총정리: 월 최대 250만원, 6+6 부모육아휴직',
+    title: '2026년 육아휴직 급여 총정리: 월 최대 250만원·6+6',
     description: '육아휴직 기간과 급여(1~3개월 250만원, 4~6개월 200만원, 이후 160만원 상한), 6+6 특례, 신청 방법을 정리했습니다.',
     published: '2026-11-07',
     updated: '2026-11-07',
@@ -71,7 +71,7 @@ export const GUIDES: GuideMeta[] = [
   {
     slug: 'annual-leave-guide',
     title: '연차 발생 기준과 계산법 총정리 (1년 미만·퇴사·알바)',
-    description: '입사 1년 미만 월 연차, 1년 뒤 15일, 근속연수별 가산, 1년 근무 후 퇴사 시 연차, 단시간 근로자 연차와 연차수당까지 예시로 설명합니다.',
+    description: '입사 1년 미만 월 연차, 1년 뒤 15일, 근속연수별 가산, 퇴사 시 연차, 단시간 근로자 연차와 연차수당을 예시로 설명합니다.',
     published: '2026-11-07',
     updated: '2026-11-07',
     calculator: { href: '/annual-leave', label: '내 연차 계산하기' },

@@ -21,9 +21,12 @@ const jsonLd = {
   author: { '@type': 'Organization', name: SITE.name },
   publisher: { '@type': 'Organization', name: SITE.name },
 };
+// 네이버 권장: 제목 40자 이내 → 넘으면 사이트 이름을 붙이지 않음
+const fullTitle = `${guide.title} - ${SITE.name}`;
+const pageTitle = [...fullTitle].length <= 40 ? fullTitle : guide.title;
 ---
 
-<Base title={`${guide.title} - ${SITE.name}`} description={guide.description} ogType="article">
+<Base title={pageTitle} description={guide.description} ogType="article">
   <script is:inline slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 
   <article class="prose">
