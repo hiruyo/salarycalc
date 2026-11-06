@@ -9,6 +9,7 @@ import { freelancerFromGross, freelancerFromNet } from '../src/lib/freelancer.ts
 import { loadAll, listFor, save, remove, toCSV, MAX_PER_CALC, STORAGE_KEY, type StorageLike } from '../src/lib/history.ts';
 import { period, addToDate, age, parseYMD } from '../src/lib/dateCalc.ts';
 import { calcAnnualLeave, leaveDaysForYear, leaveHours } from '../src/lib/annualLeave.ts';
+import { calcYearEnd, cardDeduction, earnedTaxCredit, childTaxCredit, earnedIncomeDeduction as yeEarnedDeduction } from '../src/lib/yearEndTax.ts';
 import { legalConversionRate, jeonseToWolse, wolseToJeonse, impliedConversionRate } from '../src/lib/rentConversion.ts';
 
 // ---- 간이세액표 (소득세법 시행령 별표 2, 2026.2.27 개정) 원본 값과 대조 ----
@@ -470,4 +471,95 @@ test('연차: 주 15시간 미만은 미적용, 연차수당 계산', () => {
   assert.equal(pay.unusedHours, 40);
   assert.equal(pay.allowance, 600_000);
   assert.equal(calcAnnualLeave({ startDate: '2027-01-01', refDate: '2026-01-01' }).valid, false);
+});
+
+// ---- 연말정산 (2026년 귀속) ----
+
+test('연말정산: 총급여 5,000만원 1인 가구, 공제 없음 (손계산과 일치)', () => {
+  const r = calcYearEnd({ salary: 50_000_000, prepaidTax: 3_000_000 });
+  assert.equal(r.earnedDeduction, 12_250_000);
+  assert.equal(r.earnedIncome, 37_750_000);
+  assert.equal(r.pensionPaid, 197_910 * 12);
+  assert.equal(r.insurancePaid, (149_790 + 19_680 + 37_490) * 12);
+  // 과세표준 37,750,000 - 1,500,000 - 2,374,920 - 2,483,520 = 31,391,560
+  assert.equal(r.taxBase, 31_391_560);
+  assert.equal(r.calculatedTax, 3_448_734);
+  assert.equal(r.credits.earned, 660_000); // 총급여 5천: 한도 max(66만, 74만 - 1,700만×0.8%) = 66만
+  assert.equal(r.method, 'itemized');
+  assert.equal(r.decidedTax, 2_788_730);
+  assert.equal(r.decidedLocalTax, 278_870);
+  assert.equal(r.refund, 3_000_000 + 300_000 - 2_788_730 - 278_870);
+});
+
+test('연말정산: 근로소득공제·근로소득세액공제 한도', () => {
+  assert.equal(yeEarnedDeduction(5_000_000), 3_500_000);
+  assert.equal(yeEarnedDeduction(500_000_000), 20_000_000);
+  assert.equal(earnedTaxCredit(1_000_000, 30_000_000), 550_000);
+  assert.equal(earnedTaxCredit(3_000_000, 30_000_000), 740_000);
+  assert.equal(earnedTaxCredit(10_000_000, 100_000_000), 500_000);
+  assert.equal(earnedTaxCredit(30_000_000, 200_000_000), 200_000);
+});
+
+test('연말정산: 신용카드 공제 (최저사용금액은 신용카드부터 차감, 추가한도)', () => {
+  const r = cardDeduction({ salary: 50_000_000, creditCard: 20_000_000, debitCash: 5_000_000, culture: 0, market: 1_000_000, transit: 1_000_000, childrenUnder20: 0 });
+  // 신용 750만×15% + 체크 500만×30% + 시장 100만×40% + 교통 100만×40% = 342.5만
+  assert.equal(r.minSpend, 12_500_000);
+  assert.equal(r.baseLimit, 3_000_000);
+  assert.equal(r.base, 3_000_000);
+  assert.equal(r.extra, 425_000);
+  assert.equal(r.deduction, 3_425_000);
+  // 자녀 2명 → 기본한도 400만
+  const k = cardDeduction({ salary: 50_000_000, creditCard: 20_000_000, debitCash: 5_000_000, culture: 0, market: 1_000_000, transit: 1_000_000, childrenUnder20: 2 });
+  assert.equal(k.baseLimit, 4_000_000);
+  assert.equal(k.extra, 0);
+  assert.equal(k.deduction, 3_425_000);
+  // 추가한도 풀은 전통시장·대중교통 공제분까지만
+  const big = cardDeduction({ salary: 50_000_000, creditCard: 12_500_000, debitCash: 20_000_000, culture: 0, market: 500_000, transit: 0, childrenUnder20: 0 });
+  assert.equal(big.base, 3_000_000);
+  assert.equal(big.extra, 200_000);
+});
+
+test('연말정산: 총급여 7천 초과는 기본한도 250만(자녀 1명 275만), 문화체육은 신용카드로 계산', () => {
+  const r = cardDeduction({ salary: 80_000_000, creditCard: 20_000_000, debitCash: 10_000_000, culture: 2_000_000, market: 0, transit: 0, childrenUnder20: 1 });
+  // 최저 2,000만은 신용카드(문화 포함 2,200만)에서 차감 → 신용 200만×15% + 체크 1,000만×30% = 330만
+  assert.equal(r.baseLimit, 2_750_000);
+  assert.equal(r.base, 2_750_000);
+  assert.equal(r.extra, 0);
+});
+
+test('연말정산: 세액공제 항목 (자녀·연금·의료·월세·결혼·출산)', () => {
+  assert.deepEqual([0, 1, 2, 3, 4].map(childTaxCredit), [0, 250_000, 550_000, 950_000, 1_350_000]);
+  const base = { salary: 40_000_000, prepaidTax: 0 };
+  const none = calcYearEnd(base);
+  const r = calcYearEnd({
+    ...base, pensionSavings: 8_000_000, irp: 5_000_000, medicalOther: 1_000_000, medicalSelf: 2_000_000,
+    rent: 6_000_000, married: true, birthOrder: 2,
+  });
+  assert.equal(r.credits.pension, 1_350_000); // min(600만,800만)+500만=1,100만 → 900만 × 15%
+  assert.equal(r.credits.medical, 270_000); // 기준 120만: 기타 100만 소진, 본인 200만-20만=180만 × 15%
+  assert.equal(r.credits.rent, 1_020_000); // 600만 × 17%
+  assert.equal(r.credits.marriage, 500_000);
+  assert.equal(r.credits.birth, 500_000);
+  assert.ok(r.decidedTax < none.decidedTax);
+  // 총급여 5,500만 초과면 연금 12%, 8천 초과면 월세 없음
+  assert.equal(calcYearEnd({ salary: 60_000_000, irp: 9_000_000 }).credits.pension, 1_080_000);
+  assert.equal(calcYearEnd({ salary: 90_000_000, rent: 6_000_000 }).credits.rent, 0);
+});
+
+test('연말정산: 특별공제가 적으면 표준세액공제와 비교해 유리한 쪽 선택', () => {
+  for (const salary of [20_000_000, 35_000_000, 60_000_000, 100_000_000]) {
+    const r = calcYearEnd({ salary, donation: 100_000 });
+    assert.ok(['itemized', 'standard'].includes(r.method));
+    assert.ok(r.decidedTax >= 0);
+  }
+  // 4대보험 공제를 직접 0으로 넣으면 특별소득공제가 없어 표준세액공제가 유리
+  assert.equal(calcYearEnd({ salary: 50_000_000, insurancePaid: 0 }).method, 'standard');
+});
+
+test('연말정산: 결정세액은 음수가 되지 않고, 기납부 추정은 간이세액표 × 12', () => {
+  const r = calcYearEnd({ salary: 20_000_000, dependents: 4, children9plus: 2, childrenUnder20: 2, pensionSavings: 6_000_000 });
+  assert.equal(r.decidedTax, 0);
+  assert.equal(r.prepaidEstimated, true);
+  assert.ok(r.refund >= 0);
+  assert.equal(calcYearEnd({ salary: 0 }).valid, false);
 });

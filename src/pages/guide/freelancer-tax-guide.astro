@@ -1,0 +1,81 @@
+---
+import Article from '../../layouts/Article.astro';
+import { freelancerFromGross, freelancerFromNet } from '../../lib/freelancer';
+
+const won = (n: number) => n.toLocaleString('ko-KR');
+const grossRows = [300_000, 500_000, 1_000_000, 2_000_000, 3_000_000, 5_000_000].map((g) => freelancerFromGross(g));
+const netRows = [1_000_000, 2_000_000, 3_000_000].map((n) => freelancerFromNet(n));
+---
+
+<Article slug="freelancer-tax-guide">
+  <p>
+    외주·프리랜서 일을 하면 대금에서 3.3%를 떼고 받는 경우가 대부분이에요. 이 3.3%가 무엇인지, 금액별로 얼마를 받는지,
+    그리고 다음 해 5월 종합소득세 신고 때 왜 돈을 돌려받거나 더 내는지 정리했어요.
+  </p>
+
+  <h2>3.3%의 정체: 미리 떼는 세금</h2>
+  <p>
+    회사가 개인에게 용역 대금(사업소득)을 줄 때는 <strong>소득세 3%</strong>와 그 10%인 <strong>지방소득세 0.3%</strong>를 떼고 주고,
+    그 돈을 대신 세무서에 내요. 이것을 원천징수라고 해요. 3.3%는 최종 세금이 아니라 일단 미리 내는 금액이에요.
+  </p>
+
+  <h2>금액별 실수령액</h2>
+  <div class="card table-scroll">
+    <table>
+      <thead><tr><th>계약 금액</th><th>소득세 3%</th><th>지방세 0.3%</th><th>실수령액</th></tr></thead>
+      <tbody>
+        {grossRows.map((r) => (
+          <tr><td>{won(r.gross)}원</td><td>{won(r.incomeTax)}</td><td>{won(r.localIncomeTax)}</td><td><strong>{won(r.net)}원</strong></td></tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <p class="hint">세액은 10원 미만을 버려요.</p>
+
+  <h3>세후 금액을 정해 두고 청구하려면</h3>
+  <div class="card table-scroll">
+    <table>
+      <thead><tr><th>받고 싶은 금액</th><th>청구할 세전 금액</th></tr></thead>
+      <tbody>{netRows.map((r) => <tr><td>{won(r.net)}원 이상</td><td><strong>{won(r.gross)}원</strong></td></tr>)}</tbody>
+    </table>
+  </div>
+
+  <h2>다음 해 5월, 종합소득세 신고</h2>
+  <p>
+    1년 동안 3.3%를 떼고 받은 소득은 다음 해 <strong>5월 1일~31일</strong>에 종합소득세로 신고해요. 이때 1년 소득과 경비를 모두 계산해 실제 세금을 정하고,
+    미리 낸 3.3%와 비교해 차액을 돌려받거나 더 내요. 홈택스나 손택스에서 직접 신고할 수 있고, 국세청이 미리 채워 준 신고서를 쓸 수 있는 경우도 많아요.
+  </p>
+  <h3>돌려받는 경우가 많은 이유</h3>
+  <ul>
+    <li>소득이 크지 않으면 실제 세율(6~15%)을 적용해도 경비와 기본공제를 빼고 나면 세금이 3%보다 적은 경우가 많아요.</li>
+    <li>장부를 쓰지 않아도 업종별 경비율을 적용해 수입의 일정 비율을 경비로 인정받을 수 있어요.</li>
+    <li>부양가족 공제, 연금저축·IRP 세액공제 등을 받을 수 있어요.</li>
+  </ul>
+  <h3>더 내는 경우</h3>
+  <ul>
+    <li>근로소득(월급)이 따로 있어서 소득이 합쳐지면 세율 구간이 올라가요.</li>
+    <li>프리랜서 수입 자체가 커서 세율 구간이 높아지는 경우예요.</li>
+  </ul>
+
+  <h2>4대보험은 어떻게 되나요</h2>
+  <p>
+    3.3% 사업소득으로 받으면 회사에서 4대보험을 떼지 않아요. 대신 다른 직장 가입이 없다면 국민연금과 건강보험을 지역가입자로 내게 돼요.
+    소득이 신고된 뒤 건강보험료가 오를 수 있으니 미리 감안해 두세요.
+  </p>
+
+  <h2>3.3%와 8.8%의 차이</h2>
+  <p>
+    계속·반복적으로 하는 일은 사업소득(3.3%)이고, 강연료·원고료처럼 가끔 받는 대가는 기타소득이에요.
+    기타소득은 필요경비 60%를 뺀 금액에 22%(지방세 포함)를 매겨서 결국 지급액의 8.8%를 떼요.
+  </p>
+
+  <h2>자주 묻는 질문</h2>
+  <details>
+    <summary>회사가 3.3%를 떼지 않고 전액을 줬어요.</summary>
+    <p>원천징수가 안 됐더라도 소득은 5월에 직접 신고해야 해요. 미리 낸 세금이 없으니 신고 때 낼 세금이 생길 수 있어요.</p>
+  </details>
+  <details>
+    <summary>직장인인데 부업으로 3.3%를 받았어요.</summary>
+    <p>회사 연말정산과 별개로 5월에 근로소득과 사업소득을 합쳐 종합소득세를 신고해야 해요.</p>
+  </details>
+</Article>

@@ -13,6 +13,46 @@ export interface GuideMeta {
 
 export const GUIDES: GuideMeta[] = [
   {
+    slug: 'year-end-tax-guide',
+    title: '2026년 귀속 연말정산 총정리: 달라진 점과 환급 늘리는 법',
+    description: '2027년 1월 연말정산 일정, 신용카드 자녀별 한도 상향·자녀세액공제 9세 등 달라진 점, 연말까지 환급을 늘리는 방법을 정리했습니다.',
+    published: '2026-11-07',
+    updated: '2026-11-07',
+    calculator: { href: '/year-end-tax', label: '내 연말정산 환급액 미리 계산하기' },
+  },
+  {
+    slug: 'annual-leave-guide',
+    title: '연차 발생 기준과 계산법 총정리 (1년 미만·퇴사·알바)',
+    description: '입사 1년 미만 월 연차, 1년 뒤 15일, 근속연수별 가산, 1년 근무 후 퇴사 시 연차, 단시간 근로자 연차와 연차수당까지 예시로 설명합니다.',
+    published: '2026-11-07',
+    updated: '2026-11-07',
+    calculator: { href: '/annual-leave', label: '내 연차 계산하기' },
+  },
+  {
+    slug: 'freelancer-tax-guide',
+    title: '프리랜서 3.3% 세금과 5월 종합소득세 신고 정리',
+    description: '프리랜서 대금에서 떼는 3.3%의 의미, 금액별 실수령액 표, 5월 종합소득세 신고로 환급받거나 더 내는 이유를 정리했습니다.',
+    published: '2026-11-07',
+    updated: '2026-11-07',
+    calculator: { href: '/freelancer-tax', label: '3.3% 실수령액 계산하기' },
+  },
+  {
+    slug: 'rent-conversion-guide',
+    title: '전월세 전환율 계산법과 법정 상한 (전세 vs 월세 비교)',
+    description: '전세를 월세로 바꿀 때 쓰는 전환율, 법정 상한(기준금리 + 2%), 계산 예시와 전세대출 이자와 비교하는 법을 정리했습니다.',
+    published: '2026-11-07',
+    updated: '2026-11-07',
+    calculator: { href: '/rent-conversion', label: '전월세 전환 계산하기' },
+  },
+  {
+    slug: 'age-and-date-guide',
+    title: '만 나이 계산법과 D-day·날짜 계산 쉽게 하는 법',
+    description: '만 나이 통일 이후 나이 세는 법, 연 나이가 여전히 쓰이는 경우, D-day와 100일·계약 만료일 계산 방법을 정리했습니다.',
+    published: '2026-11-07',
+    updated: '2026-11-07',
+    calculator: { href: '/date-calculator', label: '날짜 계산기 열기' },
+  },
+  {
     slug: 'salary-table-2026',
     title: '2026년 연봉별 실수령액 표 (2,400만원 ~ 1억원)',
     description: '2026년 4대보험 요율과 근로소득 간이세액표를 적용한 연봉별 월 실수령액 표입니다. 공제 항목별 금액을 함께 보여드려요.',

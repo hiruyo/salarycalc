@@ -1,0 +1,87 @@
+---
+import Article from '../../layouts/Article.astro';
+import { calcAnnualLeave, leaveDaysForYear, leaveHours } from '../../lib/annualLeave';
+
+const ex7 = calcAnnualLeave({ startDate: '2026-01-01', refDate: '2026-07-31' });
+const ex365 = calcAnnualLeave({ startDate: '2026-01-01', refDate: '2026-12-31' });
+const ex366 = calcAnnualLeave({ startDate: '2026-01-01', refDate: '2027-01-01' });
+const years = [1, 3, 5, 10, 15, 21].map((n) => ({ n, days: leaveDaysForYear(n) }));
+const parts = [15, 20, 25, 30].map((h) => ({ h, first: leaveHours(15, h) }));
+---
+
+<Article slug="annual-leave-guide">
+  <p>
+    연차유급휴가(연차)는 일정 기간 일한 근로자에게 쉬어도 임금을 주는 휴가예요. 입사 첫해에는 매달, 1년이 지나면 1년 단위로 생기고,
+    오래 일할수록 늘어나요. 1년만 일하고 퇴사할 때 연차가 몇 개인지처럼 헷갈리는 경우까지 예시로 정리했어요.
+  </p>
+
+  <h2>연차가 적용되는 사람</h2>
+  <ul>
+    <li>상시 근로자 <strong>5인 이상</strong> 사업장의 근로자예요. 5인 미만 사업장은 법정 연차가 없어요(회사 규정이 있으면 따라요).</li>
+    <li>4주 평균 1주 소정근로시간이 <strong>15시간 이상</strong>이어야 해요. 정규직·계약직·아르바이트 모두 같아요.</li>
+  </ul>
+
+  <h2>입사 1년 미만: 매달 1일씩, 최대 11일</h2>
+  <p>
+    1개월을 개근하면 1일이 생겨요. 한 달을 다 채운 <strong>다음 날</strong> 생기기 때문에, 1월 1일 입사자는 2월 1일에 첫 연차가 생겨요.
+    예를 들어 1월 1일 입사 후 7월 31일까지 개근하고 퇴사하면 연차는 <strong>{ex7.monthlyLeaveDays}일</strong>이에요.
+    이 11일은 입사 후 1년 안에 써야 하고, 1년이 지나 생기는 15일과 별개예요.
+  </p>
+
+  <h2>1년 이상: 15일, 그 뒤로 2년마다 1일씩</h2>
+  <div class="card table-scroll">
+    <table>
+      <thead><tr><th>근속연수</th><th>연차</th></tr></thead>
+      <tbody>{years.map(({ n, days }) => <tr><td>{n}년</td><td>{days}일</td></tr>)}</tbody>
+    </table>
+  </div>
+  <p>
+    1년간 80% 이상 출근하면 15일이 생기고, 3년차부터 2년마다 1일씩 늘어 최대 25일이에요(근속 21년부터 25일).
+    80% 미만으로 출근했다면 1년 미만 근로자처럼 개근한 달마다 1일씩 생겨요.
+  </p>
+
+  <h2>1년 일하고 퇴사하면 연차는 몇 개?</h2>
+  <p>
+    2021년 대법원 판결 이후 고용노동부는 "1년 근로를 마친 <strong>다음 날</strong>에도 근로관계가 있어야 15일이 생긴다"고 해석을 바꿨어요.
+  </p>
+  <ul>
+    <li>2026년 1월 1일 입사, 12월 31일까지 근무 후 퇴사(재직 {ex365.tenureDays}일): 연차 <strong>{ex365.totalAccruedDays}일</strong></li>
+    <li>2027년 1월 1일까지 근무 후 퇴사(재직 {ex366.tenureDays}일째): 연차 <strong>{ex366.totalAccruedDays}일</strong> (11일 + 15일)</li>
+  </ul>
+  <p>
+    퇴사일 하루 차이로 쓰지 못한 연차수당이 15일분 달라질 수 있어요. 1년 계약직도 같은 기준이라, 계약이 정확히 1년이면 최대 11일이에요.
+  </p>
+
+  <h2>아르바이트·단시간 근로자의 연차</h2>
+  <p>
+    주 15시간 이상 40시간 미만 근로자는 연차를 <strong>시간</strong>으로 계산해요.
+    "통상 근로자 연차일수 × 내 주 소정근로시간 ÷ 40 × 8시간"이고, 1시간 미만은 1시간으로 봐요. 1년 이상 근무해 15일이 생겼을 때는 다음과 같아요.
+  </p>
+  <div class="card table-scroll">
+    <table>
+      <thead><tr><th>주 소정근로시간</th><th>연차 (1년 이상)</th></tr></thead>
+      <tbody>{parts.map(({ h, first }) => <tr><td>{h}시간</td><td>{first}시간</td></tr>)}</tbody>
+    </table>
+  </div>
+
+  <h2>못 쓴 연차는 수당으로</h2>
+  <p>
+    연차가 생기고 1년 안에 쓰지 못하면 미사용 연차수당을 받아요. <strong>미사용 일수 × 1일 통상임금</strong>(주 40시간이면 통상시급 × 8시간)이에요.
+    다만 회사가 법에 정한 절차대로 연차 사용을 촉진했는데도 쓰지 않았다면 수당이 없을 수 있어요. 퇴사로 더 이상 연차를 쓸 수 없게 되면 남은 연차는 수당으로 정산해요(이미 사용 기간이 끝나 소멸한 연차는 제외).
+  </p>
+
+  <h2>회계연도 기준으로 주는 회사라면</h2>
+  <p>
+    많은 회사가 관리 편의를 위해 매년 1월 1일 기준으로 연차를 줘요. 이렇게 해도 되지만, 퇴사할 때 입사일 기준으로 계산한 연차보다 적게 받았다면 그 차이를 정산해야 해요.
+  </p>
+
+  <h2>자주 묻는 질문</h2>
+  <details>
+    <summary>육아휴직 기간에도 연차가 생기나요?</summary>
+    <p>네. 육아휴직 기간과 출산전후휴가, 업무상 재해로 쉰 기간은 출근한 것으로 보고 연차를 계산해요.</p>
+  </details>
+  <details>
+    <summary>반차나 시간 단위로 써도 되나요?</summary>
+    <p>법에 정해진 건 아니지만 회사와 합의하면 반차나 시간 단위로 나눠 쓸 수 있어요. 많은 회사가 반차를 허용해요.</p>
+  </details>
+</Article>

@@ -1,7 +1,9 @@
 ---
 import Base from '../layouts/Base.astro';
 import SaveHistory from '../components/SaveHistory.astro';
+import { GUIDES } from '../guides';
 import { RATES } from '../rates/2026';
+const relatedGuides = GUIDES.filter((g) => ['freelancer-tax-guide', 'year-end-tax-guide'].includes(g.slug));
 ---
 
 <Base
@@ -74,6 +76,19 @@ import { RATES } from '../rates/2026';
     <summary>8.8%는 무엇인가요?</summary>
     <p>강연료·원고료처럼 일시적으로 받는 기타소득은 필요경비 60%를 뺀 금액에 22%(지방소득세 포함)를 매겨서, 지급액의 8.8%를 떼요. 이 계산기는 사업소득 3.3% 기준이에요.</p>
   </details>
+
+
+  <h2>관련 가이드</h2>
+  <ul class="links">
+    {relatedGuides.map((g) => (
+      <li>
+        <a href={`/guide/${g.slug}`}>
+          <strong>{g.title}</strong>
+          <span>{g.description}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
 
   <script>
     import { freelancerFromGross, freelancerFromNet } from '../lib/freelancer';

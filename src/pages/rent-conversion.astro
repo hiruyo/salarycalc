@@ -1,12 +1,14 @@
 ---
 import Base from '../layouts/Base.astro';
 import SaveHistory from '../components/SaveHistory.astro';
+import { GUIDES } from '../guides';
 import { RATES } from '../rates/2026';
 import { legalConversionRate } from '../lib/rentConversion';
 
 const r = RATES.rentConversion;
 const legal = legalConversionRate();
 const pct = (n: number) => `${Number((n * 100).toFixed(2))}%`;
+const relatedGuides = GUIDES.filter((g) => ['rent-conversion-guide', 'year-end-tax-guide'].includes(g.slug));
 ---
 
 <Base
@@ -84,6 +86,19 @@ const pct = (n: number) => `${Number((n * 100).toFixed(2))}%`;
     <summary>기준금리가 바뀌면요?</summary>
     <p>한국은행 금융통화위원회가 기준금리를 바꾸면 법정 상한도 바로 바뀌어요. 이 사이트도 변경 시 갱신해요.</p>
   </details>
+
+
+  <h2>관련 가이드</h2>
+  <ul class="links">
+    {relatedGuides.map((g) => (
+      <li>
+        <a href={`/guide/${g.slug}`}>
+          <strong>{g.title}</strong>
+          <span>{g.description}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
 
   <script>
     import { jeonseToWolse, wolseToJeonse } from '../lib/rentConversion';

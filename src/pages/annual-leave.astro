@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import SaveHistory from '../components/SaveHistory.astro';
+import { GUIDES } from '../guides';
 import { leaveDaysForYear } from '../lib/annualLeave';
 
 // 2년 단위 구간 (1~2년, 3~4년, …, 19~20년) + 21년 이상
@@ -8,6 +9,7 @@ const table = [
   ...Array.from({ length: 10 }, (_, i) => 2 * i + 1).map((n) => ({ label: `${n}~${n + 1}년`, days: leaveDaysForYear(n) })),
   { label: '21년 이상', days: leaveDaysForYear(21) },
 ];
+const relatedGuides = GUIDES.filter((g) => ['annual-leave-guide'].includes(g.slug));
 ---
 
 <Base
@@ -114,6 +116,19 @@ const table = [
     <summary>회사가 연차를 1월 1일 기준으로 줘요.</summary>
     <p>회계연도 기준도 허용되지만, 퇴사 시점에 입사일 기준으로 계산한 연차보다 적으면 그 차이를 정산해야 해요. 이 계산기는 입사일 기준 결과를 보여줘요.</p>
   </details>
+
+
+  <h2>관련 가이드</h2>
+  <ul class="links">
+    {relatedGuides.map((g) => (
+      <li>
+        <a href={`/guide/${g.slug}`}>
+          <strong>{g.title}</strong>
+          <span>{g.description}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
 
   <script>
     import { calcAnnualLeave } from '../lib/annualLeave';

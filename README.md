@@ -1,6 +1,6 @@
 # 바로계산소 (barogyesanso.com)
 
-Astro 기반 정적 사이트 (구 월급계산소 → 셈비서 → 바로계산소). 연봉 실수령액·주휴수당·퇴직금·연차·실업급여·프리랜서 3.3%·전월세 전환·날짜 계산기가 들어 있습니다.
+Astro 기반 정적 사이트 (구 월급계산소 → 셈비서 → 바로계산소). 연봉 실수령액·주휴수당·퇴직금·연차·연말정산·실업급여·프리랜서 3.3%·전월세 전환·날짜 계산기가 들어 있습니다.
 계산은 모두 브라우저에서 실행되므로 서버 비용이 없습니다.
 
 ## 시작하기
@@ -20,6 +20,7 @@ src/
   guides.ts              가이드 글 목록
   rates/2026.ts          연도별 4대보험 요율 상수 (매년 갱신)
   rates/withholding2026.ts 근로소득 간이세액표 데이터 (PDF에서 자동 생성)
+  rates/yearEnd2026.ts   연말정산 공제 기준 (2026년 귀속)
   lib/netpay.ts          실수령액 계산
   lib/withholding.ts     간이세액표 조회
   lib/weeklyHolidayPay.ts 주휴수당 계산
@@ -31,10 +32,11 @@ src/
   lib/rentConversion.ts  전월세 전환
   lib/dateCalc.ts        날짜 계산 (기간·D-day, 더하기, 만 나이)
   lib/annualLeave.ts     연차 (입사일 기준, 단시간 비례, 연차수당)
+  lib/yearEndTax.ts      연말정산 환급 예상 (소득·세액공제, 표준세액공제 비교)
   lib/history.ts         계산 결과 저장·이력·CSV (저장소 교체 가능한 순수 로직)
   lib/historyUi.ts       저장 UI (입력·결과 자동 수집, 불러오기)
   components/SaveHistory.astro 계산기에 붙이는 '내 계산 기록' 영역
-  pages/                 계산기 8종, about, privacy, terms, contact
+  pages/                 계산기 9종, about, privacy, terms, contact
   pages/guide/           가이드 글
 tests/calc.test.ts       계산 로직 테스트
 ```
@@ -74,7 +76,7 @@ tests/calc.test.ts       계산 로직 테스트
 
 ## 유료화 로드맵
 
-1. **지금 (무료)**: 로그인 없이 브라우저에 저장·이력·CSV 내보내기 (`SaveHistory` 컴포넌트, 계산기 8종에 적용)
+1. **지금 (무료)**: 로그인 없이 브라우저에 저장·이력·CSV 내보내기 (`SaveHistory` 컴포넌트, 계산기 9종에 적용)
 2. **수요 측정**: GA4를 붙이면 `history_save` / `history_load` / `history_export` 이벤트가 자동 전송됨 (`historyUi.ts`의 `track`)
 3. **유료 전환 판단**: 저장 사용자가 충분하면 로그인 + 클라우드 저장(기기 간 동기화), 무제한 이력, PDF 내보내기 등을 유료로
    - `history.ts`의 `StorageLike`를 서버 저장소 구현으로 바꾸면 UI는 그대로 재사용 가능
@@ -97,6 +99,13 @@ tests/calc.test.ts       계산 로직 테스트
    자녀 공제액(`src/lib/withholding.ts`의 `childDeduction`)과 10,000천원 초과 공식도 새 표와 비교
 2-1. `import`를 새 연도 파일로 교체, 페이지의 `기준 연도` 확인
 3. `npm test` 후 배포
+
+## 연말정산 계산기 매년 갱신 (귀속연도마다)
+
+1. `src/rates/yearEnd2026.ts`를 `yearEnd2027.ts`로 복사하고, 그해 세법 개정(보통 전년 12월 국회 통과)을 반영
+   - 신용카드 공제 기본·추가 한도, 자녀세액공제 대상 나이(2027년 귀속 10세 이상 예정), 결혼세액공제 기간, 월세 한도 등
+2. `src/lib/yearEndTax.ts`와 페이지의 import를 새 파일로 교체, 페이지 제목의 귀속연도 확인
+3. 연말정산 가이드 글(`guide/year-end-tax-guide`)의 "달라진 점" 갱신
 
 ## 국민연금 상·하한 (연 2회 구간 주의)
 

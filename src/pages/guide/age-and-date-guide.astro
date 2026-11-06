@@ -1,0 +1,74 @@
+---
+import Article from '../../layouts/Article.astro';
+import { age, addToDate, period } from '../../lib/dateCalc';
+
+const ex = age('1995-06-15', '2026-11-07');
+const exBefore = age('1995-12-25', '2026-11-07');
+const hundred = addToDate('2026-11-07', 99, 'day');
+const dday = period('2026-11-07', '2027-01-01');
+const contractEnd = addToDate(addToDate('2026-03-02', 1, 'year').date, -1, 'day');
+---
+
+<Article slug="age-and-date-guide">
+  <p>
+    2023년 6월부터 법령과 계약에서 나이를 원칙적으로 <strong>만 나이</strong>로 세게 됐어요. 그런데 아직 연 나이를 쓰는 곳도 있어서 헷갈리기 쉬워요.
+    만 나이 계산법과 함께 D-day, 100일, 계약 만료일처럼 자주 하는 날짜 계산도 정리했어요.
+  </p>
+
+  <h2>만 나이 계산법</h2>
+  <p>태어난 날 0살에서 시작해서 <strong>생일이 지날 때마다 한 살</strong>씩 더해요.</p>
+  <ul>
+    <li>올해 생일이 지났다면: 올해 − 출생 연도</li>
+    <li>올해 생일이 안 지났다면: 올해 − 출생 연도 − 1</li>
+  </ul>
+  <p>
+    2026년 11월 7일 기준으로 1995년 6월 15일생은 생일이 지나 <strong>만 {ex.manAge}세</strong>,
+    1995년 12월 25일생은 아직 생일 전이라 <strong>만 {exBefore.manAge}세</strong>예요.
+  </p>
+
+  <h2>세 가지 나이 비교</h2>
+  <div class="card table-scroll">
+    <table>
+      <thead><tr><th>구분</th><th>계산</th><th>1995.6.15생 (2026.11.7 기준)</th></tr></thead>
+      <tbody>
+        <tr><td>만 나이</td><td>생일마다 +1</td><td>{ex.manAge}세</td></tr>
+        <tr><td>연 나이</td><td>올해 − 출생 연도</td><td>{ex.yearAge}세</td></tr>
+        <tr><td>세는 나이</td><td>연 나이 + 1</td><td>{ex.koreanAge}세</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>아직 연 나이를 쓰는 경우</h2>
+  <p>
+    법에서 따로 정한 경우에는 연 나이를 그대로 써요. 대표적으로 <strong>청소년보호법</strong>(술·담배 구매 가능 나이)과
+    <strong>병역법</strong>(병역판정검사 대상 나이)이 연 나이 기준이에요. 그래서 "올해 19세가 되는 해의 1월 1일"부터 술·담배를 살 수 있어요.
+  </p>
+
+  <h2>D-day 계산</h2>
+  <p>
+    D-day는 목표일까지 남은 날수예요. 목표일 날짜에서 오늘 날짜를 빼면 돼요. 2026년 11월 7일에서 2027년 1월 1일까지는
+    <strong>D-{dday.days}</strong>이에요. 목표일 당일이 D-day, 지난 뒤로는 D+1, D+2…로 세요.
+  </p>
+
+  <h2>100일, 1000일 계산</h2>
+  <p>
+    기념일은 보통 시작한 날을 <strong>1일째</strong>로 세요. 그래서 100일째는 시작일에 99일을 더한 날이에요.
+    2026년 11월 7일이 1일째라면 100일째는 <strong>{hundred.date} ({hundred.weekday})</strong>이에요. 아기 백일도 같은 방식으로 태어난 날을 1일째로 세요.
+  </p>
+
+  <h2>계약 기간 마지막 날</h2>
+  <p>
+    "1년 계약"은 보통 시작일부터 1년이 되는 날의 전날까지예요. 2026년 3월 2일에 시작한 1년 계약은 <strong>{contractEnd.date}</strong>까지예요.
+    개월 단위로 더할 때 그 달에 같은 날짜가 없으면 그 달의 마지막 날로 맞춰요(1월 31일 + 1개월 = 2월 28일 또는 29일). 계약서에 적힌 날짜가 있으면 그게 우선이에요.
+  </p>
+
+  <h2>자주 묻는 질문</h2>
+  <details>
+    <summary>2월 29일생은 평년에 언제 나이를 먹나요?</summary>
+    <p>평년에는 2월 29일이 없어서, 실무에서는 보통 3월 1일에 한 살 더 먹는 것으로 봐요. 이 사이트의 날짜 계산기도 이 방식으로 계산해요.</p>
+  </details>
+  <details>
+    <summary>두 날짜 사이 일수에 첫날을 포함하나요?</summary>
+    <p>"며칠 차이"는 첫날을 빼고 세고, 여행 일정이나 근무 일수처럼 양 끝을 모두 세려면 1을 더해요. 날짜 계산기는 두 값을 모두 보여줘요.</p>
+  </details>
+</Article>

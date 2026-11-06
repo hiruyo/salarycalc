@@ -1,0 +1,78 @@
+---
+import Article from '../../layouts/Article.astro';
+import { RATES } from '../../rates/2026';
+import { legalConversionRate, jeonseToWolse, wolseToJeonse } from '../../lib/rentConversion';
+
+const won = (n: number) => n.toLocaleString('ko-KR');
+const pct = (n: number) => `${Number((n * 100).toFixed(2))}%`;
+const r = RATES.rentConversion;
+const legal = legalConversionRate();
+const ex = jeonseToWolse(300_000_000, 100_000_000, legal);
+const back = wolseToJeonse(50_000_000, 1_000_000, legal);
+const rows = [0.04, legal, 0.06, 0.07].map((rate) => ({ rate, r: jeonseToWolse(300_000_000, 100_000_000, rate) }));
+// 전세대출 비교 예시: 2억 대출, 금리 4%
+const loanInterestMonthly = Math.floor((200_000_000 * 0.04) / 12);
+---
+
+<Article slug="rent-conversion-guide">
+  <p>
+    전세보증금 일부를 월세로 바꾸거나 반대로 계산할 때 쓰는 비율이 <strong>전월세 전환율</strong>이에요.
+    계약 중에 보증금을 월세로 돌릴 때는 법으로 정한 상한이 있어서, 그보다 높게 월세를 요구받았다면 돌려받을 수 있어요.
+  </p>
+
+  <h2>전환율 계산 공식</h2>
+  <div class="card">
+    <p style="margin:0"><strong>월세 = (전세 보증금 − 월세 보증금) × 전환율 ÷ 12</strong></p>
+    <p style="margin:8px 0 0"><strong>전세 보증금 = 월세 보증금 + 월세 × 12 ÷ 전환율</strong></p>
+  </div>
+  <p>
+    예를 들어 전세 3억원을 보증금 1억원짜리 월세로 바꾸면, 월세로 바뀌는 2억원에 전환율 {pct(legal)}를 곱하고 12로 나눠
+    월 <strong>{won(ex.monthlyRent)}원</strong>이 나와요. 거꾸로 보증금 5천만원에 월세 100만원은 전세로 약 <strong>{won(back.jeonseDeposit)}원</strong>과 같아요.
+  </p>
+
+  <h2>법정 전환율 상한</h2>
+  <p>
+    주택임대차보호법은 계약 기간 중이나 갱신할 때 보증금을 월세로 바꾸는 경우, 전환율이 <strong>연 10%</strong>와
+    <strong>한국은행 기준금리 + 연 2%</strong> 중 낮은 값을 넘지 못하게 해요.
+    {r.baseRateAsOf} 기준금리가 연 {pct(r.baseRate)}라서 지금 상한은 <strong>연 {pct(legal)}</strong>예요.
+  </p>
+  <ul>
+    <li>상한보다 높게 받은 월세는 초과분을 돌려달라고 청구할 수 있어요.</li>
+    <li>새로 맺는 계약에는 이 상한이 적용되지 않아요. 그래서 시장에서 쓰이는 전환율은 지역에 따라 상한보다 높기도 해요.</li>
+    <li>기준금리가 바뀌면 상한도 같이 바뀌어요.</li>
+  </ul>
+
+  <h2>전환율에 따라 월세가 얼마나 달라질까</h2>
+  <p>전세 3억원 → 보증금 1억원으로 바꿀 때 전환율별 월세예요.</p>
+  <div class="card table-scroll">
+    <table>
+      <thead><tr><th>전환율</th><th>월세</th><th>연간 월세</th></tr></thead>
+      <tbody>
+        {rows.map(({ rate, r }) => (
+          <tr><td>{pct(rate)}{rate === legal ? ' (법정 상한)' : ''}</td><td>{won(r.monthlyRent)}원</td><td>{won(r.annualRent)}원</td></tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <h2>전세 vs 월세, 뭐가 나을까</h2>
+  <p>
+    전세보증금이 부족해 대출을 받는다면 <strong>대출 이자</strong>와 <strong>월세</strong>를 비교해 보세요.
+    2억원을 연 4%로 빌리면 이자가 월 약 {won(loanInterestMonthly)}원이에요. 같은 2억원을 전환율 {pct(legal)}로 월세로 내면 월 {won(ex.monthlyRent)}원이라,
+    이 경우에는 대출을 받아 전세로 사는 쪽이 매달 덜 나가요. 다만 전세는 보증금을 돌려받지 못할 위험이 있으니 보증보험 가입 여부와 집의 시세·대출을 꼭 확인하세요.
+  </p>
+  <p>
+    월세로 산다면 무주택 세대주이고 총급여 8천만원 이하일 때 연말정산에서 월세의 15~17%(연 1,000만원 한도)를 세액공제받을 수 있어요.
+    이 혜택까지 더해 비교하면 정확해요.
+  </p>
+
+  <h2>자주 묻는 질문</h2>
+  <details>
+    <summary>집주인이 법정 상한보다 높게 월세를 올려 달래요.</summary>
+    <p>계약 기간 중이거나 갱신할 때라면 상한을 넘는 부분은 무효예요. 이미 냈다면 초과분 반환을 청구할 수 있어요. 갱신 시 차임 증액은 별도로 5% 상한도 있어요.</p>
+  </details>
+  <details>
+    <summary>상가도 같은 기준인가요?</summary>
+    <p>상가는 상가건물 임대차보호법을 따르며, 연 12%와 기준금리의 4.5배 중 낮은 비율이 상한이에요.</p>
+  </details>
+</Article>
