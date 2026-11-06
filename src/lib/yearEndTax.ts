@@ -6,7 +6,9 @@
  *       → 기납부세액과 비교해 환급/추가 납부
  *
  * 특별소득공제·특별세액공제·월세를 받는 경우와 표준세액공제(13만원)를 받는 경우를 모두 계산해 세금이 적은 쪽을 고릅니다.
- * 단순화: 부녀자·한부모 공제, 주택자금, 장애인 전용보험, 난임·미숙아 의료비, 정치자금·고향사랑 기부금은 반영하지 않습니다.
+ * 단순화: 부녀자·한부모 공제, 주택자금, 장애인 전용보험, 난임·미숙아 의료비, 정치자금·고향사랑·종교단체 기부금,
+ *         세대주와 주소가 다른 배우자의 월세 공제(2026 신설)는 반영하지 않습니다.
+ *         총급여 7천만원 초과자의 문화체육 사용분은 결제수단별로 나뉘지만, 입력칸이 하나라 신용카드(15%)로 계산합니다(보수적).
  */
 import { YEAR_END as Y } from '../rates/yearEnd2026.ts';
 import { calcNetPay } from './netpay.ts';
@@ -21,9 +23,9 @@ export interface YearEndInput {
   seniors70?: number;
   /** 그중 장애인 */
   disabled?: number;
-  /** 기본공제 대상 20세 이하 자녀 수 (카드 한도용) */
+  /** 기본공제 대상 자녀 수: 20세 이하, 장애인은 나이 무관 (카드 기본한도용) */
   childrenUnder20?: number;
-  /** 그중 9세 이상 자녀 수 (자녀세액공제용) */
+  /** 자녀세액공제 대상 자녀 수: 2026년 귀속은 2006~2016년생(9세 이상, 2017년생 제외), 장애인은 나이 무관 */
   children9plus?: number;
   /** 올해 출생·입양한 자녀의 순서 (0 없음, 1 첫째, 2 둘째, 3 셋째 이상) */
   birthOrder?: 0 | 1 | 2 | 3;
@@ -47,7 +49,7 @@ export interface YearEndInput {
   irp?: number;
   /** 보장성 보험료 */
   lifeInsurance?: number;
-  /** 본인·65세 이상·장애인 의료비 */
+  /** 본인·65세 이상·장애인·6세 이하 자녀·중증질환 산정특례자 의료비 (700만원 한도 없음) */
   medicalSelf?: number;
   /** 그 외 부양가족 의료비 */
   medicalOther?: number;
@@ -196,7 +198,7 @@ export function calcYearEnd(input: YearEndInput): YearEndResult {
   const seniors = Math.min(dependents, Math.floor(n0(input.seniors70)));
   const disabled = Math.min(dependents, Math.floor(n0(input.disabled)));
   const childrenUnder20 = Math.floor(n0(input.childrenUnder20));
-  const children9plus = Math.min(childrenUnder20, Math.floor(n0(input.children9plus)));
+  const children9plus = Math.floor(n0(input.children9plus));
 
   // 4대보험 추정 (총급여를 12로 나눈 월급 기준)
   const np = calcNetPay({ annualSalary: salary, nonTaxableMonthly: 0, familyCount: dependents, children: children9plus });
@@ -244,7 +246,8 @@ export function calcYearEnd(input: YearEndInput): YearEndResult {
   const selfNet = Math.max(0, self - Math.max(0, threshold - other));
   const medicalCredit = Math.floor((Math.min(otherNet, Y.medical.otherLimit) + selfNet) * Y.medical.rate);
   const educationCredit = Math.floor(n0(input.education) * Y.education.rate);
-  const don = n0(input.donation);
+  // 일반기부금은 근로소득금액의 30%까지만 공제 대상
+  const don = Math.min(n0(input.donation), Math.floor(earnedIncome * 0.3));
   const d = Y.donation;
   const donationCredit = Math.floor(Math.min(don, d.threshold) * d.lowRate + Math.max(0, don - d.threshold) * d.highRate);
   const r = Y.rent;

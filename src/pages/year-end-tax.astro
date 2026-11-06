@@ -10,7 +10,7 @@ const man = (n: number) => `${(n / 10_000).toLocaleString('ko-KR')}만원`;
 
 <Base
   title={`${Y.year}년 귀속 연말정산 환급 계산기 (13월의 월급 미리 계산)`}
-  description={`${Y.year}년 귀속 연말정산(${Y.year + 1}년 1~2월) 환급액을 미리 계산해요. 신용카드 자녀별 한도 상향, 자녀세액공제 9세 기준, 연금저축·IRP, 월세, 의료비, 교육비까지 반영합니다.`}
+  description={`${Y.year}년 귀속 연말정산(${Y.year + 1}년 1~2월) 환급액을 미리 계산해요. 신용카드 자녀별 한도 상향, 자녀세액공제 대상(2006~2016년생), 연금저축·IRP, 월세, 의료비, 교육비까지 반영합니다.`}
 >
   <h1>{Y.year}년 귀속 연말정산 환급 계산기</h1>
   <p class="lead">
@@ -32,11 +32,11 @@ const man = (n: number) => `${(n / 10_000).toLocaleString('ko-KR')}만원`;
     <label for="disabledCount">그중 장애인</label>
     <input id="disabledCount" type="number" inputmode="numeric" min="0" step="1" value="0" />
 
-    <label for="kids20">기본공제 받는 20세 이하 자녀 수</label>
+    <label for="kids20">기본공제 받는 자녀 수 (20세 이하, 장애인은 나이 무관)</label>
     <input id="kids20" type="number" inputmode="numeric" min="0" step="1" value="0" />
-    <label for="kids9">그중 9세 이상 자녀 수</label>
+    <label for="kids9">그중 2006~2016년생 자녀 수 (장애인은 나이 무관)</label>
     <input id="kids9" type="number" inputmode="numeric" min="0" step="1" value="0" />
-    <div class="hint">{Y.year}년 귀속 자녀세액공제는 9세 이상(2017년 이전 출생) 자녀가 대상이에요.</div>
+    <div class="hint">{Y.year}년 귀속 자녀세액공제는 9세 이상이 대상이지만, 2017년생은 부칙에 따라 제외돼서 실제로는 2006~2016년생이에요.</div>
 
     <label for="birth">올해 출생·입양한 자녀</label>
     <select id="birth">
@@ -55,6 +55,7 @@ const man = (n: number) => `${(n / 10_000).toLocaleString('ko-KR')}만원`;
       <input id="debit" type="number" inputmode="decimal" min="0" step="10" value="500" />
       <label for="culture">도서·공연·영화·체육시설 등 문화체육</label>
       <input id="culture" type="number" inputmode="decimal" min="0" step="10" value="0" />
+      <div class="hint">총급여 7천만원 이하만 30%로 따로 공제돼요. 7천만원 초과라면 이 칸 대신 결제한 수단(신용카드·체크카드) 칸에 더해 넣으세요.</div>
       <label for="market">전통시장</label>
       <input id="market" type="number" inputmode="decimal" min="0" step="10" value="0" />
       <label for="transit">대중교통</label>
@@ -70,14 +71,14 @@ const man = (n: number) => `${(n / 10_000).toLocaleString('ko-KR')}만원`;
       <input id="irp" type="number" inputmode="decimal" min="0" step="10" value="0" />
       <label for="lifeIns">보장성 보험료</label>
       <input id="lifeIns" type="number" inputmode="decimal" min="0" step="10" value="0" />
-      <label for="medSelf">의료비: 본인·65세 이상·장애인</label>
+      <label for="medSelf">의료비: 본인·65세 이상·장애인·6세 이하 자녀</label>
       <input id="medSelf" type="number" inputmode="decimal" min="0" step="10" value="0" />
       <label for="medOther">의료비: 그 외 부양가족</label>
       <input id="medOther" type="number" inputmode="decimal" min="0" step="10" value="0" />
       <label for="edu">교육비 (1인당 한도 내 금액)</label>
       <input id="edu" type="number" inputmode="decimal" min="0" step="10" value="0" />
       <div class="hint">본인은 한도 없음, 유치원~고등학생 1인당 300만원, 대학생 900만원까지 넣으세요.</div>
-      <label for="donation">기부금</label>
+      <label for="donation">기부금 (일반 기부금)</label>
       <input id="donation" type="number" inputmode="decimal" min="0" step="1" value="0" />
       <label for="rent">월세 (연간 합계)</label>
       <input id="rent" type="number" inputmode="decimal" min="0" step="10" value="0" />
@@ -120,7 +121,7 @@ const man = (n: number) => `${(n / 10_000).toLocaleString('ko-KR')}만원`;
   <h2>{Y.year}년 귀속 연말정산, 무엇이 달라졌나</h2>
   <ul>
     <li><strong>신용카드 공제 한도 자녀별 상향</strong>: 총급여 7천만원 이하는 기본한도 {man(Y.card.baseLimitLow[0])}에 자녀 1명당 50만원(최대 {man(Y.card.baseLimitLow[2])}), 7천만원 초과는 {man(Y.card.baseLimitHigh[0])}에 자녀 1명당 25만원(최대 {man(Y.card.baseLimitHigh[2])})이에요.</li>
-    <li><strong>자녀세액공제 9세 이상</strong>: 대상 나이가 8세에서 9세 이상으로 바뀌었어요. 금액은 1명 25만원, 2명 55만원, 3명부터 1명당 40만원 추가로 같아요.</li>
+    <li><strong>자녀세액공제 9세 이상</strong>: 대상 나이가 8세에서 9세 이상으로 바뀌었어요. 다만 2017년생은 부칙에 따라 제외돼서 실제 대상은 2006~2016년생이에요. 금액은 1명 25만원, 2명 55만원, 3명부터 1명당 40만원 추가로 같아요.</li>
     <li><strong>초등 저학년 예체능 학원비</strong>: 9세 미만 또는 초등 1~2학년 자녀의 예체능 학원·체육시설 수강료가 교육비 공제 대상에 들어갔어요.</li>
     <li><strong>결혼세액공제</strong>: 2024~2026년에 혼인신고하면 생애 한 번 50만원을 공제받아요.</li>
   </ul>

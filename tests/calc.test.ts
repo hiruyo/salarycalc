@@ -563,3 +563,14 @@ test('연말정산: 결정세액은 음수가 되지 않고, 기납부 추정은
   assert.ok(r.refund >= 0);
   assert.equal(calcYearEnd({ salary: 0 }).valid, false);
 });
+
+test('연말정산: 기부금은 근로소득금액 30%까지, 장애인 자녀는 20세 초과도 자녀공제', () => {
+  const r = calcYearEnd({ salary: 30_000_000, donation: 50_000_000 });
+  // 근로소득금액 = 3,000만 - (750만 + 1,500만×15%) = 2,025만 → 30% = 607.5만 × 15%
+  assert.equal(r.earnedIncome, 20_250_000);
+  // 표준세액공제가 선택될 수도 있으니 특별공제 적용 시 기부금 공제액만 직접 확인
+  const itemized = calcYearEnd({ salary: 30_000_000, donation: 50_000_000, insurancePaid: 5_000_000 });
+  assert.equal(itemized.credits.donation, Math.floor(6_075_000 * 0.15));
+  const disabledAdult = calcYearEnd({ salary: 60_000_000, childrenUnder20: 0, children9plus: 1 });
+  assert.equal(disabledAdult.credits.child, 250_000);
+});
