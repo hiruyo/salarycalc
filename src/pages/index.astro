@@ -1,80 +1,72 @@
 ---
 import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
 import { RATES } from '../rates/2026';
 import { GUIDES } from '../guides';
 import { SITE } from '../site';
+import { CALC_GROUPS } from '../calculators';
+import { calcNetPay } from '../lib/netpay';
+
+// 첫 화면 미리 계산 (스크립트가 실행되기 전에도 숫자가 보이도록)
+const initial = calcNetPay({ annualSalary: 40_000_000, nonTaxableMonthly: 200_000, familyCount: 1 });
+const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
 ---
 
 <Base
   title={`${SITE.name} - 연봉 실수령액·연차·퇴직금·실업급여 생활 계산기 (${RATES.year}년)`}
   description={`${RATES.year}년 기준을 반영한 생활 계산기 모음. 연봉 실수령액, 연말정산 환급, 주휴수당, 퇴직금, 연차, 실업급여, 프리랜서 3.3%, 전월세 전환, 날짜 계산을 회원가입 없이 바로 하고 결과를 저장하세요.`}
 >
-  <h1>{SITE.name}</h1>
-  <p class="lead">
-    돈과 날짜 계산, 입력하면 바로 끝나요. {RATES.year}년 기준으로 계산하고, 결과는 저장해 두고 다시 볼 수 있어요.
-    입력한 값은 서버로 전송되지 않습니다.
-  </p>
+  <section class="hero wide">
+    <div class="hero-copy">
+      <h1>숫자를 넣는 순간<br />계산이 끝나요</h1>
+      <p class="lead">
+        월급, 세금, 퇴사, 집, 날짜까지. {RATES.year}년 기준으로 바로 계산하고 결과는 저장해 둘 수 있어요.
+        입력한 값은 이 기기 밖으로 나가지 않아요.
+      </p>
+    </div>
 
-  <ul class="links">
-    <li>
-      <a href="/salary">
-        <strong>연봉 실수령액 계산기</strong>
-        <span>국민연금·건강보험·장기요양·고용보험·소득세를 뺀 월 실수령액</span>
-      </a>
-    </li>
-    <li>
-      <a href="/year-end-tax">
-        <strong>연말정산 환급 계산기 (2026년 귀속)</strong>
-        <span>카드·연금저축·월세·의료비를 넣고 13월의 월급 미리 계산</span>
-      </a>
-    </li>
-    <li>
-      <a href="/weekly-holiday-pay">
-        <strong>주휴수당 계산기</strong>
-        <span>시급과 주 근로시간으로 주휴수당과 월 환산 급여 계산</span>
-      </a>
-    </li>
-    <li>
-      <a href="/severance-pay">
-        <strong>퇴직금 계산기</strong>
-        <span>입사일·퇴사일·최근 3개월 급여로 예상 퇴직금 계산</span>
-      </a>
-    </li>
-    <li>
-      <a href="/annual-leave">
-        <strong>연차 계산기</strong>
-        <span>입사일 기준 발생 연차, 다음 연차 발생일, 미사용 연차수당</span>
-      </a>
-    </li>
-    <li>
-      <a href="/unemployment-benefit">
-        <strong>실업급여 계산기</strong>
-        <span>최근 3개월 급여·나이·고용보험 가입기간으로 구직급여 계산</span>
-      </a>
-    </li>
-    <li>
-      <a href="/freelancer-tax">
-        <strong>프리랜서 3.3% 세금 계산기</strong>
-        <span>외주·프리랜서 대금의 실수령액과 청구할 세전 금액 계산</span>
-      </a>
-    </li>
-    <li>
-      <a href="/rent-conversion">
-        <strong>전월세 전환 계산기</strong>
-        <span>전세↔월세 환산 금액과 법정 전환율 상한 확인</span>
-      </a>
-    </li>
-    <li>
-      <a href="/date-calculator">
-        <strong>날짜 계산기</strong>
-        <span>D-day, 두 날짜 사이 일수·평일 수, 며칠 뒤 날짜, 만 나이</span>
-      </a>
-    </li>
-  </ul>
+    <form class="receipt quick" id="quick" onsubmit="return false;" aria-label="연봉 실수령액 빠른 계산">
+      <label for="quick-salary">연봉 (만원)</label>
+      <input id="quick-salary" type="number" inputmode="numeric" min="0" step="100" value="4000" />
+      <div class="result-main">
+        <div class="label">월 예상 실수령액</div>
+        <div class="big" id="quick-net">{won(initial.netMonthly)}</div>
+      </div>
+      <table>
+        <tbody>
+          <tr><th>4대보험</th><td id="quick-ins">{won(initial.insuranceTotal)}</td></tr>
+          <tr><th>소득세·지방소득세</th><td id="quick-tax">{won(initial.taxTotal)}</td></tr>
+        </tbody>
+      </table>
+      <p class="hint">식대 20만원 비과세, 1인 가구 기준이에요.</p>
+      <a class="quick-more" id="quick-more" href="/salary?salary=4000">공제 내역 자세히 보기</a>
+    </form>
+  </section>
+
+  <section class="calc-index wide" aria-label="계산기 목록">
+    {CALC_GROUPS.map((g) => (
+      <div class="calc-group">
+        <h2>{g.name}</h2>
+        <ul>
+          {g.items.map((c) => (
+            <li>
+              <a href={c.href}>
+                <span class="calc-icon"><Icon name={c.icon} /></span>
+                <span class="calc-text">
+                  <strong>{c.name}</strong>
+                  <span>{c.desc}</span>
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))}
+  </section>
 
   <h2>급여·세금 가이드</h2>
   <ul class="links">
-    {GUIDES.slice(0, 4).map((g) => (
+    {GUIDES.slice(0, 5).map((g) => (
       <li>
         <a href={`/guide/${g.slug}`}>
           <strong>{g.title}</strong>
@@ -83,5 +75,56 @@ import { SITE } from '../site';
       </li>
     ))}
   </ul>
-  <p><a href="/guide">가이드 전체 보기 →</a></p>
+  <p><a href="/guide">가이드 전체 보기</a></p>
+
+  <script>
+    import { calcNetPay } from '../lib/netpay';
+
+    const input = document.getElementById('quick-salary') as HTMLInputElement;
+    const set = (id: string, text: string) => {
+      document.getElementById(id)!.textContent = text;
+    };
+    const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
+
+    function render() {
+      const man = Number(input.value) || 0;
+      const r = calcNetPay({ annualSalary: man * 10_000, nonTaxableMonthly: 200_000, familyCount: 1 });
+      set('quick-net', man > 0 ? won(r.netMonthly) : '-');
+      set('quick-ins', man > 0 ? won(r.insuranceTotal) : '-');
+      set('quick-tax', man > 0 ? won(r.taxTotal) : '-');
+      (document.getElementById('quick-more') as HTMLAnchorElement).href = `/salary?salary=${encodeURIComponent(String(man || 4000))}`;
+    }
+    input.addEventListener('input', render);
+    render();
+  </script>
 </Base>
+
+<style>
+  .hero { display: grid; gap: 24px; align-items: center; margin: 8px 0 44px; }
+  .hero h1 { font-size: 2.45rem; line-height: 1.22; letter-spacing: -0.035em; margin-bottom: 14px; }
+  .hero .lead { max-width: 30em; margin: 0; }
+  @media (min-width: 900px) {
+    .hero { grid-template-columns: minmax(0, 1fr) 400px; gap: 48px; margin: 24px 0 56px; }
+    .hero h1 { font-size: 3rem; }
+  }
+  @media (max-width: 560px) { .hero h1 { font-size: 2rem; } }
+
+  .quick label { margin-top: 0; }
+  .quick input { margin-bottom: 18px; font-size: 1.15rem; }
+  .quick-more { display: inline-block; margin-top: 10px; font-weight: 500; font-size: 0.95rem; }
+
+  .calc-index { display: grid; gap: 8px 40px; }
+  @media (min-width: 900px) { .calc-index { grid-template-columns: repeat(3, 1fr); } }
+  .calc-group h2 { font-size: 0.95rem; color: var(--muted); font-weight: 500; margin: 12px 0 4px; }
+  .calc-group ul { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--line); }
+  .calc-group li { margin: 0; border-bottom: 1px solid var(--line); }
+  .calc-group a { display: flex; align-items: center; gap: 14px; padding: 14px 4px; text-decoration: none; color: var(--ink); }
+  .calc-group a:hover strong { color: var(--blue); }
+  .calc-icon {
+    display: grid; place-items: center; flex-shrink: 0; width: 42px; height: 42px;
+    border-radius: 10px; background: var(--blue-soft); color: var(--blue);
+  }
+  .calc-text { display: flex; flex-direction: column; min-width: 0; }
+  .calc-text strong { font-weight: 700; font-size: 1.02rem; }
+  .calc-text span { color: var(--muted); font-size: 0.88rem; }
+</style>

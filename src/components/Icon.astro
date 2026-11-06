@@ -1,0 +1,81 @@
+---
+import type { CalcIcon } from '../calculators';
+
+interface Props {
+  name: CalcIcon;
+  size?: number;
+}
+const { name, size = 22 } = Astro.props;
+---
+
+<svg
+  class="icon"
+  width={size}
+  height={size}
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.8"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+>
+  {name === 'banknote' && (
+    <>
+      <rect x="2.5" y="6" width="19" height="12" rx="2" />
+      <circle cx="12" cy="12" r="2.6" />
+      <path d="M6 9.5v5M18 9.5v5" />
+    </>
+  )}
+  {name === 'receipt' && (
+    <>
+      <path d="M6 3h12v18l-2-1.4-2 1.4-2-1.4-2 1.4-2-1.4L6 21z" />
+      <path d="M9 8h6M9 12h6M9 16h3" />
+    </>
+  )}
+  {name === 'clock' && (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3.2 2" />
+    </>
+  )}
+  {name === 'briefcase' && (
+    <>
+      <rect x="3" y="7.5" width="18" height="12" rx="2" />
+      <path d="M9 7.5V5.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 5.5v2M3 13h18" />
+    </>
+  )}
+  {name === 'sun' && (
+    <>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" />
+    </>
+  )}
+  {name === 'umbrella' && (
+    <>
+      <path d="M3 12a9 9 0 0 1 18 0z" />
+      <path d="M12 12v6.5a2 2 0 0 1-4 0" />
+    </>
+  )}
+  {name === 'percent' && (
+    <>
+      <circle cx="7.5" cy="7.5" r="2.5" />
+      <circle cx="16.5" cy="16.5" r="2.5" />
+      <path d="M18.5 5.5l-13 13" />
+    </>
+  )}
+  {name === 'house' && (
+    <>
+      <path d="M3.5 11L12 4l8.5 7" />
+      <path d="M5.5 9.5V20h13V9.5" />
+      <path d="M10 20v-5.5h4V20" />
+    </>
+  )}
+  {name === 'calendar' && (
+    <>
+      <rect x="3.5" y="5" width="17" height="15.5" rx="2" />
+      <path d="M3.5 10h17M8 3v4M16 3v4" />
+      <path d="M8 14h2M14 14h2M8 17h2" />
+    </>
+  )}
+</svg>

@@ -13,35 +13,37 @@ const relatedGuides = GUIDES.filter((g) => ['freelancer-tax-guide', 'year-end-ta
   <h1>프리랜서 3.3% 세금 계산기</h1>
   <p class="lead">계약 금액에서 3.3%를 뗀 실수령액, 또는 받고 싶은 금액에 맞춰 청구할 세전 금액을 계산해요.</p>
 
-  <form id="calc-form" class="card" onsubmit="return false;">
-    <label>계산 방향</label>
-    <div class="segmented" role="radiogroup">
-      <label class="check"><input type="radio" name="mode" value="gross" checked /> 세전 금액 → 실수령액</label>
-      <label class="check"><input type="radio" name="mode" value="net" /> 실수령액 → 세전 금액</label>
-    </div>
+  <div class="calc-layout">
+    <form id="calc-form" class="card" onsubmit="return false;">
+      <label>계산 방향</label>
+      <div class="segmented" role="radiogroup">
+        <label class="check"><input type="radio" name="mode" value="gross" checked /> 세전 금액 → 실수령액</label>
+        <label class="check"><input type="radio" name="mode" value="net" /> 실수령액 → 세전 금액</label>
+      </div>
 
-    <label for="amount" id="amount-label">세전 금액 (원)</label>
-    <input id="amount" type="number" inputmode="numeric" min="0" step="10000" value="1000000" />
-    <div class="hint" id="amount-hint">계약서나 견적서에 적힌 금액을 입력하세요.</div>
-  </form>
+      <label for="amount" id="amount-label">세전 금액 (원)</label>
+      <input id="amount" type="number" inputmode="numeric" min="0" step="10000" value="1000000" />
+      <div class="hint" id="amount-hint">계약서나 견적서에 적힌 금액을 입력하세요.</div>
+    </form>
 
-  <div class="card" data-history-results>
-    <div class="result-main">
-      <div class="label" id="out-main-label">실수령액</div>
-      <div class="big" id="out-main">-</div>
+    <div class="receipt" data-history-results>
+      <div class="result-main">
+        <div class="label" id="out-main-label">실수령액</div>
+        <div class="big" id="out-main">-</div>
+      </div>
+      <table>
+        <tbody>
+          <tr><th>세전 금액</th><td id="out-gross">-</td></tr>
+          <tr><th>소득세 (3%)</th><td id="out-tax">-</td></tr>
+          <tr><th>지방소득세 (0.3%)</th><td id="out-local">-</td></tr>
+          <tr class="total"><th>원천징수 합계</th><td id="out-total">-</td></tr>
+          <tr class="total"><th>실수령액</th><td id="out-net">-</td></tr>
+        </tbody>
+      </table>
     </div>
-    <table>
-      <tbody>
-        <tr><th>세전 금액</th><td id="out-gross">-</td></tr>
-        <tr><th>소득세 (3%)</th><td id="out-tax">-</td></tr>
-        <tr><th>지방소득세 (0.3%)</th><td id="out-local">-</td></tr>
-        <tr class="total"><th>원천징수 합계</th><td id="out-total">-</td></tr>
-        <tr class="total"><th>실수령액</th><td id="out-net">-</td></tr>
-      </tbody>
-    </table>
+    <SaveHistory calc="freelancer-tax" title="프리랜서3.3" />
   </div>
 
-  <SaveHistory calc="freelancer-tax" title="프리랜서3.3" />
 
   <p class="notice">
     3.3%는 미리 떼는 세금(원천징수)이에요. 실제 세금은 다음 해 5월 종합소득세 신고 때 확정되고, 소득과 경비에 따라 일부를 돌려받거나 더 낼 수 있어요.

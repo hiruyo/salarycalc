@@ -8,7 +8,7 @@ interface Props {
 const { calc, title } = Astro.props;
 ---
 
-<section class="card history" data-history data-calc={calc} data-title={title}>
+<section class="history" data-history data-calc={calc} data-title={title}>
   <div class="history-head">
     <h2>내 계산 기록</h2>
     <div class="history-actions">
@@ -26,25 +26,24 @@ const { calc, title } = Astro.props;
 </script>
 
 <style is:global>
+  .history { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; margin: 24px 0 8px; }
   .history-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-  .history-head h2 { margin: 0; font-size: 1.1rem; }
+  .history-head h2 { margin: 0; font-size: 1.05rem; }
   .history-actions { display: flex; gap: 8px; }
   .history button {
-    font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer;
-    border: 1px solid var(--accent); background: var(--accent); color: #fff;
-    border-radius: 8px; padding: 8px 12px;
+    font: inherit; font-size: 0.9rem; font-weight: 500; cursor: pointer; min-height: 40px;
+    border: 1px solid var(--blue); background: var(--blue); color: #fff; border-radius: 8px; padding: 0 14px;
   }
-  .history button.ghost { background: #fff; color: var(--accent); }
-  .history button:disabled { opacity: 0.45; cursor: default; }
+  .history button.ghost { background: transparent; color: var(--blue); }
+  .history button:disabled { opacity: 0.4; cursor: default; }
+  @media (prefers-color-scheme: dark) { .history button:not(.ghost) { color: #10162b; } }
   .history-list { list-style: none; padding: 0; margin: 12px 0 0; }
-  .history-list li {
-    display: flex; justify-content: space-between; align-items: center; gap: 12px;
-    padding: 12px 0; border-top: 1px solid var(--line);
-  }
+  .history-list li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 0; margin: 0; border-top: 1px solid var(--line); }
   .history-list li > div:first-child { display: flex; flex-direction: column; min-width: 0; }
   .history-list .history-empty { color: var(--muted); font-size: 0.9rem; display: block; }
-  .history-date { color: var(--muted); font-size: 0.8rem; }
+  .history-date { color: var(--muted); font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+  .history-list strong { font-variant-numeric: tabular-nums; }
   .history-sub { color: var(--muted); font-size: 0.82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .history-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
-  .history-item-actions button { padding: 6px 10px; font-size: 0.82rem; }
+  .history-item-actions button { min-height: 34px; padding: 0 10px; font-size: 0.82rem; }
 </style>

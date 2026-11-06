@@ -29,11 +29,11 @@ const jsonLd = {
   <article class="prose">
     <div class="breadcrumb"><a href="/">홈</a> › <a href="/guide">가이드</a></div>
     <h1>{guide.title}</h1>
-    <p class="meta">작성 {guide.published} · 수정 {guide.updated}</p>
+    <p class="meta">{guide.updated === guide.published ? `${guide.published} 작성` : `${guide.updated} 수정`}</p>
 
     <slot />
 
-    <a class="cta" href={guide.calculator.href}>{guide.calculator.label} →</a>
+    <a class="cta" href={guide.calculator.href}>{guide.calculator.label}</a>
 
     <p class="notice">
       이 글은 공개된 법령과 정부 고시를 바탕으로 작성한 일반 정보이며, 개인별 상황에 따라 실제 금액은 다를 수 있습니다.

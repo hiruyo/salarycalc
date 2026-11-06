@@ -17,101 +17,103 @@ const man = (n: number) => `${(n / 10_000).toLocaleString('ko-KR')}만원`;
     올해 급여와 지출을 넣으면 {Y.year + 1}년 초 연말정산에서 돌려받을(또는 더 낼) 금액을 미리 계산해요. 금액은 모두 <strong>만원</strong> 단위예요.
   </p>
 
-  <form id="calc-form" class="card" onsubmit="return false;">
-    <h2 class="form-h">기본 정보</h2>
-    <label for="salary">올해 총급여 (만원)</label>
-    <input id="salary" type="number" inputmode="decimal" min="0" step="100" value="5000" />
-    <div class="hint">비과세(식대 등)를 뺀 연간 급여예요. 성과급 포함. 모르면 연봉에서 연 식대 240만원을 빼세요.</div>
+  <div class="calc-layout">
+    <form id="calc-form" class="card" onsubmit="return false;">
+      <h2 class="form-h">기본 정보</h2>
+      <label for="salary">올해 총급여 (만원)</label>
+      <input id="salary" type="number" inputmode="decimal" min="0" step="100" value="5000" />
+      <div class="hint">비과세(식대 등)를 뺀 연간 급여예요. 성과급 포함. 모르면 연봉에서 연 식대 240만원을 빼세요.</div>
 
-    <label for="dependents">기본공제 인원 (본인 포함)</label>
-    <input id="dependents" type="number" inputmode="numeric" min="1" step="1" value="1" />
-    <div class="hint">소득이 적은 배우자·자녀·부모님 등 부양가족을 더해요 (연 소득금액 100만원 이하 등 요건).</div>
+      <label for="dependents">기본공제 인원 (본인 포함)</label>
+      <input id="dependents" type="number" inputmode="numeric" min="1" step="1" value="1" />
+      <div class="hint">소득이 적은 배우자·자녀·부모님 등 부양가족을 더해요 (연 소득금액 100만원 이하 등 요건).</div>
 
-    <label for="seniors">그중 70세 이상</label>
-    <input id="seniors" type="number" inputmode="numeric" min="0" step="1" value="0" />
-    <label for="disabledCount">그중 장애인</label>
-    <input id="disabledCount" type="number" inputmode="numeric" min="0" step="1" value="0" />
+      <label for="seniors">그중 70세 이상</label>
+      <input id="seniors" type="number" inputmode="numeric" min="0" step="1" value="0" />
+      <label for="disabledCount">그중 장애인</label>
+      <input id="disabledCount" type="number" inputmode="numeric" min="0" step="1" value="0" />
 
-    <label for="kids20">기본공제 받는 자녀 수 (20세 이하, 장애인은 나이 무관)</label>
-    <input id="kids20" type="number" inputmode="numeric" min="0" step="1" value="0" />
-    <label for="kids9">그중 2006~2016년생 자녀 수 (장애인은 나이 무관)</label>
-    <input id="kids9" type="number" inputmode="numeric" min="0" step="1" value="0" />
-    <div class="hint">{Y.year}년 귀속 자녀세액공제는 9세 이상이 대상이지만, 2017년생은 부칙에 따라 제외돼서 실제로는 2006~2016년생이에요.</div>
+      <label for="kids20">기본공제 받는 자녀 수 (20세 이하, 장애인은 나이 무관)</label>
+      <input id="kids20" type="number" inputmode="numeric" min="0" step="1" value="0" />
+      <label for="kids9">그중 2006~2016년생 자녀 수 (장애인은 나이 무관)</label>
+      <input id="kids9" type="number" inputmode="numeric" min="0" step="1" value="0" />
+      <div class="hint">{Y.year}년 귀속 자녀세액공제는 9세 이상이 대상이지만, 2017년생은 부칙에 따라 제외돼서 실제로는 2006~2016년생이에요.</div>
 
-    <label for="birth">올해 출생·입양한 자녀</label>
-    <select id="birth">
-      <option value="0" selected>없음</option>
-      <option value="1">첫째</option>
-      <option value="2">둘째</option>
-      <option value="3">셋째 이상</option>
-    </select>
-    <label class="check"><input id="married" type="checkbox" /> 올해 혼인신고 (결혼세액공제, 생애 1회)</label>
+      <label for="birth">올해 출생·입양한 자녀</label>
+      <select id="birth">
+        <option value="0" selected>없음</option>
+        <option value="1">첫째</option>
+        <option value="2">둘째</option>
+        <option value="3">셋째 이상</option>
+      </select>
+      <label class="check"><input id="married" type="checkbox" /> 올해 혼인신고 (결혼세액공제, 생애 1회)</label>
 
-    <details open>
-      <summary>카드·현금 사용액 (연간, 만원)</summary>
-      <label for="credit">신용카드</label>
-      <input id="credit" type="number" inputmode="decimal" min="0" step="10" value="1500" />
-      <label for="debit">체크카드·현금영수증</label>
-      <input id="debit" type="number" inputmode="decimal" min="0" step="10" value="500" />
-      <label for="culture">도서·공연·영화·체육시설 등 문화체육</label>
-      <input id="culture" type="number" inputmode="decimal" min="0" step="10" value="0" />
-      <div class="hint">총급여 7천만원 이하만 30%로 따로 공제돼요. 7천만원 초과라면 이 칸 대신 결제한 수단(신용카드·체크카드) 칸에 더해 넣으세요.</div>
-      <label for="market">전통시장</label>
-      <input id="market" type="number" inputmode="decimal" min="0" step="10" value="0" />
-      <label for="transit">대중교통</label>
-      <input id="transit" type="number" inputmode="decimal" min="0" step="10" value="60" />
-      <div class="hint">아직 연말이 아니면 지금까지 쓴 금액에 남은 달 예상치를 더해 넣으세요.</div>
-    </details>
+      <details open>
+        <summary>카드·현금 사용액 (연간, 만원)</summary>
+        <label for="credit">신용카드</label>
+        <input id="credit" type="number" inputmode="decimal" min="0" step="10" value="1500" />
+        <label for="debit">체크카드·현금영수증</label>
+        <input id="debit" type="number" inputmode="decimal" min="0" step="10" value="500" />
+        <label for="culture">도서·공연·영화·체육시설 등 문화체육</label>
+        <input id="culture" type="number" inputmode="decimal" min="0" step="10" value="0" />
+        <div class="hint">총급여 7천만원 이하만 30%로 따로 공제돼요. 7천만원 초과라면 이 칸 대신 결제한 수단(신용카드·체크카드) 칸에 더해 넣으세요.</div>
+        <label for="market">전통시장</label>
+        <input id="market" type="number" inputmode="decimal" min="0" step="10" value="0" />
+        <label for="transit">대중교통</label>
+        <input id="transit" type="number" inputmode="decimal" min="0" step="10" value="60" />
+        <div class="hint">아직 연말이 아니면 지금까지 쓴 금액에 남은 달 예상치를 더해 넣으세요.</div>
+      </details>
 
-    <details>
-      <summary>연금·보험·의료·교육·기부·월세 (연간, 만원)</summary>
-      <label for="pensionSavings">연금저축 납입액</label>
-      <input id="pensionSavings" type="number" inputmode="decimal" min="0" step="10" value="0" />
-      <label for="irp">IRP 납입액 (본인 납입분)</label>
-      <input id="irp" type="number" inputmode="decimal" min="0" step="10" value="0" />
-      <label for="lifeIns">보장성 보험료</label>
-      <input id="lifeIns" type="number" inputmode="decimal" min="0" step="10" value="0" />
-      <label for="medSelf">의료비: 본인·65세 이상·장애인·6세 이하 자녀</label>
-      <input id="medSelf" type="number" inputmode="decimal" min="0" step="10" value="0" />
-      <label for="medOther">의료비: 그 외 부양가족</label>
-      <input id="medOther" type="number" inputmode="decimal" min="0" step="10" value="0" />
-      <label for="edu">교육비 (1인당 한도 내 금액)</label>
-      <input id="edu" type="number" inputmode="decimal" min="0" step="10" value="0" />
-      <div class="hint">본인은 한도 없음, 유치원~고등학생 1인당 300만원, 대학생 900만원까지 넣으세요.</div>
-      <label for="donation">기부금 (일반 기부금)</label>
-      <input id="donation" type="number" inputmode="decimal" min="0" step="1" value="0" />
-      <label for="rent">월세 (연간 합계)</label>
-      <input id="rent" type="number" inputmode="decimal" min="0" step="10" value="0" />
-      <div class="hint">무주택 세대주(요건 충족 시 세대원), 국민주택규모 또는 기준시가 4억원 이하, 전입신고한 주택이어야 해요.</div>
-      <label for="housing">주택청약 납입액</label>
-      <input id="housing" type="number" inputmode="decimal" min="0" step="10" value="0" />
-      <div class="hint">총급여 7천만원 이하 무주택 세대주만 공제돼요.</div>
-    </details>
+      <details>
+        <summary>연금·보험·의료·교육·기부·월세 (연간, 만원)</summary>
+        <label for="pensionSavings">연금저축 납입액</label>
+        <input id="pensionSavings" type="number" inputmode="decimal" min="0" step="10" value="0" />
+        <label for="irp">IRP 납입액 (본인 납입분)</label>
+        <input id="irp" type="number" inputmode="decimal" min="0" step="10" value="0" />
+        <label for="lifeIns">보장성 보험료</label>
+        <input id="lifeIns" type="number" inputmode="decimal" min="0" step="10" value="0" />
+        <label for="medSelf">의료비: 본인·65세 이상·장애인·6세 이하 자녀</label>
+        <input id="medSelf" type="number" inputmode="decimal" min="0" step="10" value="0" />
+        <label for="medOther">의료비: 그 외 부양가족</label>
+        <input id="medOther" type="number" inputmode="decimal" min="0" step="10" value="0" />
+        <label for="edu">교육비 (1인당 한도 내 금액)</label>
+        <input id="edu" type="number" inputmode="decimal" min="0" step="10" value="0" />
+        <div class="hint">본인은 한도 없음, 유치원~고등학생 1인당 300만원, 대학생 900만원까지 넣으세요.</div>
+        <label for="donation">기부금 (일반 기부금)</label>
+        <input id="donation" type="number" inputmode="decimal" min="0" step="1" value="0" />
+        <label for="rent">월세 (연간 합계)</label>
+        <input id="rent" type="number" inputmode="decimal" min="0" step="10" value="0" />
+        <div class="hint">무주택 세대주(요건 충족 시 세대원), 국민주택규모 또는 기준시가 4억원 이하, 전입신고한 주택이어야 해요.</div>
+        <label for="housing">주택청약 납입액</label>
+        <input id="housing" type="number" inputmode="decimal" min="0" step="10" value="0" />
+        <div class="hint">총급여 7천만원 이하 무주택 세대주만 공제돼요.</div>
+      </details>
 
-    <details>
-      <summary>이미 낸 세금·보험료 (선택, 비우면 자동 추정)</summary>
-      <label for="prepaid">올해 원천징수된 소득세 합계 (만원)</label>
-      <input id="prepaid" type="number" inputmode="decimal" min="0" step="1" placeholder="비우면 간이세액표로 추정" />
-      <div class="hint">급여명세서 '소득세' 칸을 모두 더한 값이에요(지방소득세 제외). 정확할수록 결과가 정확해져요.</div>
-      <label for="pensionPaid">국민연금 납부액 (만원)</label>
-      <input id="pensionPaid" type="number" inputmode="decimal" min="0" step="1" placeholder="비우면 총급여로 추정" />
-      <label for="insPaid">건강·장기요양·고용보험료 합계 (만원)</label>
-      <input id="insPaid" type="number" inputmode="decimal" min="0" step="1" placeholder="비우면 총급여로 추정" />
-    </details>
-  </form>
+      <details>
+        <summary>이미 낸 세금·보험료 (선택, 비우면 자동 추정)</summary>
+        <label for="prepaid">올해 원천징수된 소득세 합계 (만원)</label>
+        <input id="prepaid" type="number" inputmode="decimal" min="0" step="1" placeholder="비우면 간이세액표로 추정" />
+        <div class="hint">급여명세서 '소득세' 칸을 모두 더한 값이에요(지방소득세 제외). 정확할수록 결과가 정확해져요.</div>
+        <label for="pensionPaid">국민연금 납부액 (만원)</label>
+        <input id="pensionPaid" type="number" inputmode="decimal" min="0" step="1" placeholder="비우면 총급여로 추정" />
+        <label for="insPaid">건강·장기요양·고용보험료 합계 (만원)</label>
+        <input id="insPaid" type="number" inputmode="decimal" min="0" step="1" placeholder="비우면 총급여로 추정" />
+      </details>
+    </form>
 
-  <div class="card" data-history-results>
-    <div class="result-main">
-      <div class="label" id="out-main-label">예상 환급액</div>
-      <div class="big" id="out-main">-</div>
+    <div class="receipt" data-history-results>
+      <div class="result-main">
+        <div class="label" id="out-main-label">예상 환급액</div>
+        <div class="big" id="out-main">-</div>
+      </div>
+      <table>
+        <tbody id="out-rows"></tbody>
+      </table>
+      <p class="hint" id="out-tip"></p>
     </div>
-    <table>
-      <tbody id="out-rows"></tbody>
-    </table>
-    <p class="hint" id="out-tip"></p>
+    <SaveHistory calc="year-end-tax" title="연말정산" />
   </div>
 
-  <SaveHistory calc="year-end-tax" title="연말정산" />
 
   <p class="notice">
     근로소득만 있는 직장인 기준의 예상치예요. 부녀자·한부모 공제, 주택자금, 난임 의료비, 고향사랑·정치자금 기부금 등은 반영하지 않았어요.
@@ -228,16 +230,17 @@ const man = (n: number) => `${(n / 10_000).toLocaleString('ko-KR')}만원`;
       if (c.standard) detail.push(`표준 ${won(c.standard)}`);
 
       rows([
-        ['결정세액 (내야 할 세금)', `${won(r.decidedTax + r.decidedLocalTax)} (소득세 ${won(r.decidedTax)})`],
-        ['기납부세액 (이미 낸 세금)', `${won(r.prepaidTax + r.prepaidLocalTax)}${r.prepaidEstimated ? ' · 추정' : ''}`],
+        ['결정세액 (낼 세금)', won(r.decidedTax + r.decidedLocalTax)],
+        ['기납부세액 (낸 세금)', `${won(r.prepaidTax + r.prepaidLocalTax)}${r.prepaidEstimated ? ' (추정)' : ''}`],
         ['과세표준', won(r.taxBase)],
         ['산출세액', won(r.calculatedTax)],
-        ['신용카드 등 소득공제', `${won(r.card.deduction)}${r.card.extra ? ` (추가한도 ${won(r.card.extra)} 포함)` : ''}`],
+        ['카드 등 소득공제', won(r.card.deduction)],
         ['근로소득세액공제', won(c.earned)],
         ['기타 세액공제', detail.length ? detail.join(' · ') : '없음'],
         ['세액공제 합계', won(creditSum)],
-        ['적용 방식', r.method === 'standard' ? '표준세액공제 (특별공제보다 유리)' : '특별공제 항목별 적용'],
-        ['국민연금 / 건강·고용보험', `${won(r.pensionPaid)} / ${won(r.insurancePaid)}${r.pensionEstimated || r.insuranceEstimated ? ' · 추정' : ''}`],
+        ['적용 방식', r.method === 'standard' ? '표준세액공제' : '항목별 특별공제'],
+        [`국민연금${r.pensionEstimated ? ' (추정)' : ''}`, won(r.pensionPaid)],
+        [`건강·고용보험${r.insuranceEstimated ? ' (추정)' : ''}`, won(r.insurancePaid)],
       ]);
 
       const tip = $<HTMLElement>('out-tip');
@@ -258,8 +261,3 @@ const man = (n: number) => `${(n / 10_000).toLocaleString('ko-KR')}만원`;
   </script>
 </Base>
 
-<style>
-  .form-h { margin: 0 0 4px; font-size: 1.05rem; }
-  #calc-form details { border-bottom: none; border-top: 1px solid var(--line); margin-top: 16px; padding-top: 12px; }
-  #calc-form summary { font-size: 1rem; }
-</style>

@@ -12,57 +12,59 @@ const relatedGuides = GUIDES.filter((g) => ['age-and-date-guide', 'annual-leave-
   <h1>날짜 계산기</h1>
   <p class="lead">D-day, 두 날짜 사이 일수, 며칠 뒤 날짜, 만 나이를 계산해요.</p>
 
-  <form id="calc-form" class="card" onsubmit="return false;">
-    <label>계산 종류</label>
-    <label class="check"><input type="radio" name="mode" value="period" checked /> 기간·D-day 계산</label>
-    <label class="check"><input type="radio" name="mode" value="add" /> 날짜 더하기·빼기</label>
-    <label class="check"><input type="radio" name="mode" value="age" /> 만 나이 계산</label>
+  <div class="calc-layout">
+    <form id="calc-form" class="card" onsubmit="return false;">
+      <label>계산 종류</label>
+      <label class="check"><input type="radio" name="mode" value="period" checked /> 기간·D-day 계산</label>
+      <label class="check"><input type="radio" name="mode" value="add" /> 날짜 더하기·빼기</label>
+      <label class="check"><input type="radio" name="mode" value="age" /> 만 나이 계산</label>
 
-    <div id="fields-period">
-      <label for="start">시작일</label>
-      <input id="start" type="date" />
-      <label for="end">종료일</label>
-      <input id="end" type="date" />
-      <div class="hint">D-day를 구하려면 시작일을 오늘로, 종료일을 목표일로 두세요.</div>
-    </div>
+      <div id="fields-period">
+        <label for="start">시작일</label>
+        <input id="start" type="date" />
+        <label for="end">종료일</label>
+        <input id="end" type="date" />
+        <div class="hint">D-day를 구하려면 시작일을 오늘로, 종료일을 목표일로 두세요.</div>
+      </div>
 
-    <div id="fields-add" hidden>
-      <label for="base">기준일</label>
-      <input id="base" type="date" />
-      <label for="amount">더할 값 (빼려면 음수)</label>
-      <input id="amount" type="number" inputmode="numeric" step="1" value="100" />
-      <label for="unit">단위</label>
-      <select id="unit">
-        <option value="day" selected>일</option>
-        <option value="week">주</option>
-        <option value="month">개월</option>
-        <option value="year">년</option>
-      </select>
-    </div>
+      <div id="fields-add" hidden>
+        <label for="base">기준일</label>
+        <input id="base" type="date" />
+        <label for="amount">더할 값 (빼려면 음수)</label>
+        <input id="amount" type="number" inputmode="numeric" step="1" value="100" />
+        <label for="unit">단위</label>
+        <select id="unit">
+          <option value="day" selected>일</option>
+          <option value="week">주</option>
+          <option value="month">개월</option>
+          <option value="year">년</option>
+        </select>
+      </div>
 
-    <div id="fields-age" hidden>
-      <label for="birth">생년월일</label>
-      <input id="birth" type="date" value="1995-06-15" />
-      <label for="ref">기준일</label>
-      <input id="ref" type="date" />
-    </div>
+      <div id="fields-age" hidden>
+        <label for="birth">생년월일</label>
+        <input id="birth" type="date" value="1995-06-15" />
+        <label for="ref">기준일</label>
+        <input id="ref" type="date" />
+      </div>
 
-    <div class="hint">
-      <button type="button" class="link-btn" id="set-today">날짜를 오늘로 맞추기</button>
-    </div>
-  </form>
+      <div class="hint">
+        <button type="button" class="link-btn" id="set-today">날짜를 오늘로 맞추기</button>
+      </div>
+    </form>
 
-  <div class="card" data-history-results>
-    <div class="result-main">
-      <div class="label" id="out-main-label">-</div>
-      <div class="big" id="out-main">-</div>
+    <div class="receipt" data-history-results>
+      <div class="result-main">
+        <div class="label" id="out-main-label">-</div>
+        <div class="big" id="out-main">-</div>
+      </div>
+      <table>
+        <tbody id="out-rows"></tbody>
+      </table>
     </div>
-    <table>
-      <tbody id="out-rows"></tbody>
-    </table>
+    <SaveHistory calc="date-calculator" title="날짜계산" />
   </div>
 
-  <SaveHistory calc="date-calculator" title="날짜계산" />
 
   <h2>계산 방법</h2>
   <h3>두 날짜 사이 일수</h3>
@@ -216,6 +218,6 @@ const relatedGuides = GUIDES.filter((g) => ['age-and-date-guide', 'annual-leave-
 <style>
   .link-btn {
     background: none; border: none; padding: 0; margin-top: 8px; font: inherit; font-size: 0.85rem;
-    color: var(--accent); text-decoration: underline; cursor: pointer;
+    color: var(--blue); text-decoration: underline; cursor: pointer;
   }
 </style>

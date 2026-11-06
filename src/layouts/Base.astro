@@ -1,6 +1,9 @@
 ---
 import { RATES } from '../rates/2026';
 import { SITE } from '../site';
+import { CALC_GROUPS } from '../calculators';
+import Icon from '../components/Icon.astro';
+import '../styles/global.css';
 
 interface Props {
   title: string;
@@ -24,7 +27,11 @@ const canonical = new URL(Astro.url.pathname.replace(/\.html$/, '').replace(/(.)
     <meta property="og:type" content={ogType} />
     <meta property="og:site_name" content={SITE.name} />
     <meta property="og:url" content={canonical} />
-    <meta name="theme-color" content="#1f6feb" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1b2129" media="(prefers-color-scheme: dark)" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet" />
     {SITE.naverSiteVerification && <meta name="naver-site-verification" content={SITE.naverSiteVerification} />}
     {SITE.googleSiteVerification && <meta name="google-site-verification" content={SITE.googleSiteVerification} />}
     {SITE.gaMeasurementId && (
@@ -52,19 +59,36 @@ const canonical = new URL(Astro.url.pathname.replace(/\.html$/, '').replace(/(.)
   <body>
     <header class="site-header">
       <div class="wrap">
-        <a class="brand" href="/">{SITE.name}</a>
-        <nav>
-          <a href="/salary">실수령액</a>
-          <a href="/year-end-tax">연말정산</a>
-          <a href="/weekly-holiday-pay">주휴수당</a>
-          <a href="/severance-pay">퇴직금</a>
-          <a href="/annual-leave">연차</a>
-          <a href="/unemployment-benefit">실업급여</a>
-          <a href="/freelancer-tax">3.3%</a>
-          <a href="/rent-conversion">전월세</a>
-          <a href="/date-calculator">날짜</a>
+        <a class="brand" href="/" aria-label={`${SITE.name} 홈`}>
+          <span class="seal" aria-hidden="true">바로</span>
+          <span class="brand-name">{SITE.name}</span>
+        </a>
+        <div class="header-actions">
+          <details class="menu" id="calc-menu">
+            <summary>
+              계산기
+              <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+            </summary>
+            <nav class="menu-panel" aria-label="계산기 목록">
+              {CALC_GROUPS.map((g) => (
+                <div class="menu-group">
+                  <p class="menu-title">{g.name}</p>
+                  <ul>
+                    {g.items.map((c) => (
+                      <li>
+                        <a href={c.href}>
+                          <Icon name={c.icon} size={20} />
+                          {c.name}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </nav>
+          </details>
           <a href="/guide">가이드</a>
-        </nav>
+        </div>
       </div>
     </header>
 
@@ -88,79 +112,22 @@ const canonical = new URL(Astro.url.pathname.replace(/\.html$/, '').replace(/(.)
         <p>© {RATES.year} {SITE.name}</p>
       </div>
     </footer>
+
+    <script is:inline>
+      // 계산기 메뉴: 바깥을 누르거나 Esc를 누르면 닫기
+      (function () {
+        var menu = document.getElementById('calc-menu');
+        if (!menu) return;
+        document.addEventListener('click', function (e) {
+          if (menu.open && !menu.contains(e.target)) menu.open = false;
+        });
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape' && menu.open) {
+            menu.open = false;
+            menu.querySelector('summary').focus();
+          }
+        });
+      })();
+    </script>
   </body>
 </html>
-
-<style is:global>
-  :root {
-    --bg: #f6f8fa;
-    --card: #fff;
-    --text: #1f2328;
-    --muted: #656d76;
-    --line: #d8dee4;
-    --accent: #1f6feb;
-    --accent-soft: #e8f0fe;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.65;
-  }
-  .wrap { max-width: 720px; margin: 0 auto; padding: 0 16px; }
-  .site-header { background: var(--card); border-bottom: 1px solid var(--line); }
-  .site-header .wrap { display: flex; align-items: center; justify-content: space-between; height: 56px; }
-  .brand { font-weight: 800; color: var(--accent); text-decoration: none; font-size: 1.1rem; }
-  .brand { flex-shrink: 0; margin-right: 8px; }
-  nav { display: flex; min-width: 0; overflow-x: auto; white-space: nowrap; }
-  label.check { display: flex; align-items: center; gap: 8px; font-weight: 500; }
-  label.check input { width: 18px; height: 18px; }
-  nav a { margin-left: 14px; color: var(--text); text-decoration: none; font-size: 0.95rem; }
-  nav a:hover { color: var(--accent); }
-  main { padding-top: 24px; padding-bottom: 48px; }
-  h1 { font-size: 1.6rem; line-height: 1.3; margin: 0 0 8px; }
-  h2 { font-size: 1.25rem; margin: 32px 0 12px; }
-  .lead { color: var(--muted); margin: 0 0 20px; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
-  label { display: block; font-weight: 600; margin: 14px 0 6px; font-size: 0.95rem; }
-  label:first-child { margin-top: 0; }
-  input[type='number'],
-  input[type='date'],
-  select {
-    width: 100%; padding: 12px; font-size: 1rem; border: 1px solid var(--line);
-    border-radius: 8px; background: #fff;
-  }
-  input:focus { outline: 2px solid var(--accent); border-color: transparent; }
-  .hint { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
-  .result-main { text-align: center; padding: 12px 0 4px; }
-  .result-main .label { color: var(--muted); font-size: 0.9rem; }
-  .result-main .big { font-size: 2rem; font-weight: 800; color: var(--accent); }
-  table { width: 100%; border-collapse: collapse; }
-  th, td { padding: 10px 4px; border-bottom: 1px solid var(--line); text-align: left; font-size: 0.95rem; }
-  td:last-child, th:last-child { text-align: right; }
-  tr.total td { font-weight: 700; }
-  .notice { background: var(--accent-soft); border-radius: 8px; padding: 12px 14px; font-size: 0.88rem; color: #0b3d91; }
-  .site-footer { border-top: 1px solid var(--line); padding: 20px 0 40px; color: var(--muted); font-size: 0.85rem; }
-  ul.links { list-style: none; padding: 0; margin: 0; }
-  ul.links li { margin-bottom: 12px; }
-  ul.links a { display: block; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; text-decoration: none; color: var(--text); }
-  ul.links a strong { display: block; color: var(--accent); }
-  ul.links a span { color: var(--muted); font-size: 0.9rem; }
-  .site-footer .footer-links { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-bottom: 8px; overflow: visible; white-space: normal; }
-  .site-footer .footer-links a { margin: 0; color: var(--muted); }
-  .prose h2 { margin-top: 36px; }
-  .prose h3 { font-size: 1.05rem; margin: 24px 0 8px; }
-  .prose p, .prose li { font-size: 1rem; }
-  .prose ul, .prose ol { padding-left: 20px; }
-  .prose .table-scroll { overflow-x: auto; }
-  .prose table th, .prose table td { white-space: nowrap; }
-  .meta { color: var(--muted); font-size: 0.88rem; margin: 0 0 20px; }
-  .breadcrumb { font-size: 0.85rem; color: var(--muted); margin-bottom: 8px; }
-  .breadcrumb a { color: var(--muted); }
-  .cta { display: block; text-align: center; background: var(--accent); color: #fff; text-decoration: none; font-weight: 700; border-radius: 10px; padding: 14px; margin: 24px 0; }
-  .cta:hover { opacity: 0.92; }
-  details { border-bottom: 1px solid var(--line); padding: 12px 0; }
-  summary { cursor: pointer; font-weight: 600; }
-</style>

@@ -18,51 +18,53 @@ const relatedGuides = GUIDES.filter((g) => ['unemployment-benefit-guide'].includ
   <h1>{RATES.year}년 실업급여 계산기</h1>
   <p class="lead">최근 3개월 급여, 나이, 고용보험 가입기간으로 받을 수 있는 실업급여를 계산해요.</p>
 
-  <form id="calc-form" class="card" onsubmit="return false;">
-    <label for="end">마지막 근무일</label>
-    <input id="end" type="date" value="2026-09-30" />
+  <div class="calc-layout">
+    <form id="calc-form" class="card" onsubmit="return false;">
+      <label for="end">마지막 근무일</label>
+      <input id="end" type="date" value="2026-09-30" />
 
-    <label for="pay3">퇴사 전 3개월 급여 총액 (원)</label>
-    <input id="pay3" type="number" inputmode="numeric" min="0" step="10000" value="9000000" />
-    <div class="hint">세전 금액으로, 기본급과 각종 수당을 모두 더한 3개월 합계예요.</div>
+      <label for="pay3">퇴사 전 3개월 급여 총액 (원)</label>
+      <input id="pay3" type="number" inputmode="numeric" min="0" step="10000" value="9000000" />
+      <div class="hint">세전 금액으로, 기본급과 각종 수당을 모두 더한 3개월 합계예요.</div>
 
-    <label for="age">퇴사일 기준 만 나이</label>
-    <input id="age" type="number" inputmode="numeric" min="15" max="100" step="1" value="35" />
+      <label for="age">퇴사일 기준 만 나이</label>
+      <input id="age" type="number" inputmode="numeric" min="15" max="100" step="1" value="35" />
 
-    <label for="period">고용보험 가입기간</label>
-    <select id="period">
-      <option value="under1">1년 미만</option>
-      <option value="1to3" selected>1년 이상 3년 미만</option>
-      <option value="3to5">3년 이상 5년 미만</option>
-      <option value="5to10">5년 이상 10년 미만</option>
-      <option value="over10">10년 이상</option>
-    </select>
-    <div class="hint">여러 회사에서 가입한 기간을 합산할 수 있어요 (이전 실업급여 수급 전 기간은 제외).</div>
+      <label for="period">고용보험 가입기간</label>
+      <select id="period">
+        <option value="under1">1년 미만</option>
+        <option value="1to3" selected>1년 이상 3년 미만</option>
+        <option value="3to5">3년 이상 5년 미만</option>
+        <option value="5to10">5년 이상 10년 미만</option>
+        <option value="over10">10년 이상</option>
+      </select>
+      <div class="hint">여러 회사에서 가입한 기간을 합산할 수 있어요 (이전 실업급여 수급 전 기간은 제외).</div>
 
-    <label for="hours">1일 소정근로시간</label>
-    <input id="hours" type="number" inputmode="decimal" min="1" max="8" step="0.5" value="8" />
-    <div class="hint">단시간 근로자는 하한액이 근로시간에 비례해서 낮아져요. 8시간을 넘으면 8시간으로 계산해요.</div>
+      <label for="hours">1일 소정근로시간</label>
+      <input id="hours" type="number" inputmode="decimal" min="1" max="8" step="0.5" value="8" />
+      <div class="hint">단시간 근로자는 하한액이 근로시간에 비례해서 낮아져요. 8시간을 넘으면 8시간으로 계산해요.</div>
 
-    <label class="check"><input id="disabled" type="checkbox" /> 장애인 (50세 이상 기준 적용)</label>
-  </form>
+      <label class="check"><input id="disabled" type="checkbox" /> 장애인 (50세 이상 기준 적용)</label>
+    </form>
 
-  <div class="card" data-history-results>
-    <div class="result-main">
-      <div class="label">총 예상 실업급여</div>
-      <div class="big" id="out-total">-</div>
+    <div class="receipt" data-history-results>
+      <div class="result-main">
+        <div class="label">총 예상 실업급여</div>
+        <div class="big" id="out-total">-</div>
+      </div>
+      <table>
+        <tbody>
+          <tr><th>1일 구직급여액</th><td id="out-daily">-</td></tr>
+          <tr><th>월 환산 (30일)</th><td id="out-monthly">-</td></tr>
+          <tr><th>받는 기간 (소정급여일수)</th><td id="out-days">-</td></tr>
+          <tr><th>1일 평균임금</th><td id="out-avg">-</td></tr>
+          <tr><th>상·하한 적용</th><td id="out-limit">-</td></tr>
+        </tbody>
+      </table>
     </div>
-    <table>
-      <tbody>
-        <tr><th>1일 구직급여액</th><td id="out-daily">-</td></tr>
-        <tr><th>월 환산 (30일)</th><td id="out-monthly">-</td></tr>
-        <tr><th>받는 기간 (소정급여일수)</th><td id="out-days">-</td></tr>
-        <tr><th>1일 평균임금</th><td id="out-avg">-</td></tr>
-        <tr><th>상·하한 적용</th><td id="out-limit">-</td></tr>
-      </tbody>
-    </table>
+    <SaveHistory calc="unemployment-benefit" title="실업급여" />
   </div>
 
-  <SaveHistory calc="unemployment-benefit" title="실업급여" />
 
   <p class="notice">
     수급 자격(퇴사 전 18개월 동안 고용보험 가입일수 180일 이상, 권고사직·계약만료 등 비자발적 퇴사, 적극적인 구직활동)은

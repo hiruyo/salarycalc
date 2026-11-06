@@ -16,43 +16,45 @@ const relatedGuides = GUIDES.filter((g) => ['salary-table-2026', 'social-insuran
   <h1>{RATES.year}년 연봉 실수령액 계산기</h1>
   <p class="lead">연봉을 입력하면 4대보험과 소득세를 뺀 월 실수령액을 바로 보여드려요.</p>
 
-  <form id="calc-form" class="card" onsubmit="return false;">
-    <label for="salary">세전 연봉 (만원)</label>
-    <input id="salary" type="number" inputmode="numeric" min="0" step="100" value="4000" />
-    <div class="hint">퇴직금 별도 기준 연봉을 입력하세요. 예: 4,000만원 → 4000</div>
+  <div class="calc-layout">
+    <form id="calc-form" class="card" onsubmit="return false;">
+      <label for="salary">세전 연봉 (만원)</label>
+      <input id="salary" type="number" inputmode="numeric" min="0" step="100" value="4000" />
+      <div class="hint">퇴직금 별도 기준 연봉을 입력하세요. 예: 4,000만원 → 4000</div>
 
-    <label for="nontax">월 비과세 금액 (원)</label>
-    <input id="nontax" type="number" inputmode="numeric" min="0" step="10000" value="200000" />
-    <div class="hint">식대 등. 식대 비과세 한도는 월 {RATES.mealAllowanceExemptMax.toLocaleString('ko-KR')}원입니다.</div>
+      <label for="nontax">월 비과세 금액 (원)</label>
+      <input id="nontax" type="number" inputmode="numeric" min="0" step="10000" value="200000" />
+      <div class="hint">식대 등. 식대 비과세 한도는 월 {RATES.mealAllowanceExemptMax.toLocaleString('ko-KR')}원입니다.</div>
 
-    <label for="family">공제대상가족 수 (본인·배우자 포함)</label>
-    <input id="family" type="number" inputmode="numeric" min="1" step="1" value="1" />
+      <label for="family">공제대상가족 수 (본인·배우자 포함)</label>
+      <input id="family" type="number" inputmode="numeric" min="1" step="1" value="1" />
 
-    <label for="children">8세 이상 20세 이하 자녀 수</label>
-    <input id="children" type="number" inputmode="numeric" min="0" step="1" value="0" />
-  </form>
+      <label for="children">8세 이상 20세 이하 자녀 수</label>
+      <input id="children" type="number" inputmode="numeric" min="0" step="1" value="0" />
+    </form>
 
-  <div class="card" data-history-results>
-    <div class="result-main">
-      <div class="label">월 예상 실수령액</div>
-      <div class="big" data-out="netMonthly">-</div>
+    <div class="receipt" data-history-results>
+      <div class="result-main">
+        <div class="label">월 예상 실수령액</div>
+        <div class="big" data-out="netMonthly">-</div>
+      </div>
+      <table>
+        <tbody>
+          <tr><th>월 급여 (세전)</th><td data-out="grossMonthly">-</td></tr>
+          <tr><th>국민연금</th><td data-out="pension">-</td></tr>
+          <tr><th>건강보험</th><td data-out="health">-</td></tr>
+          <tr><th>장기요양보험</th><td data-out="longTermCare">-</td></tr>
+          <tr><th>고용보험</th><td data-out="employment">-</td></tr>
+          <tr><th>소득세</th><td data-out="incomeTax">-</td></tr>
+          <tr><th>지방소득세</th><td data-out="localIncomeTax">-</td></tr>
+          <tr class="total"><th>공제 합계</th><td data-out="deductionTotal">-</td></tr>
+          <tr class="total"><th>연 환산 실수령액</th><td data-out="netAnnual">-</td></tr>
+        </tbody>
+      </table>
     </div>
-    <table>
-      <tbody>
-        <tr><th>월 급여 (세전)</th><td data-out="grossMonthly">-</td></tr>
-        <tr><th>국민연금</th><td data-out="pension">-</td></tr>
-        <tr><th>건강보험</th><td data-out="health">-</td></tr>
-        <tr><th>장기요양보험</th><td data-out="longTermCare">-</td></tr>
-        <tr><th>고용보험</th><td data-out="employment">-</td></tr>
-        <tr><th>소득세</th><td data-out="incomeTax">-</td></tr>
-        <tr><th>지방소득세</th><td data-out="localIncomeTax">-</td></tr>
-        <tr class="total"><th>공제 합계</th><td data-out="deductionTotal">-</td></tr>
-        <tr class="total"><th>연 환산 실수령액</th><td data-out="netAnnual">-</td></tr>
-      </tbody>
-    </table>
+    <SaveHistory calc="salary" title="연봉실수령액" />
   </div>
 
-  <SaveHistory calc="salary" title="연봉실수령액" />
 
   <p class="notice">
     소득세는 근로소득 간이세액표(소득세법 시행령 별표 2, 2026.2.27 개정)로 계산해요. 회사의 급여명세서와 같은 방식이지만,
@@ -121,6 +123,10 @@ const relatedGuides = GUIDES.filter((g) => ['salary-table-2026', 'social-insuran
         el.textContent = won(result[key]);
       });
     }
+
+    // 홈 빠른 계산에서 넘어온 연봉 값 (?salary=4000)
+    const fromQuery = Number(new URLSearchParams(location.search).get('salary'));
+    if (fromQuery > 0) (document.getElementById('salary') as HTMLInputElement).value = String(fromQuery);
 
     document.getElementById('calc-form')!.addEventListener('input', render);
     render();

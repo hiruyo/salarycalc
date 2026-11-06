@@ -17,6 +17,9 @@ npm run build    # dist/ 생성 → Cloudflare Pages / Vercel에 배포
 ```
 src/
   site.ts                사이트 설정 (이메일, 애드센스 ID)
+  calculators.ts         계산기 목록 (메뉴·홈에서 사용, 새 계산기는 여기에 추가)
+  styles/global.css      디자인 토큰(색·글꼴)과 공통 스타일
+  components/Icon.astro  계산기 아이콘
   guides.ts              가이드 글 목록
   rates/2026.ts          연도별 4대보험 요율 상수 (매년 갱신)
   rates/withholding2026.ts 근로소득 간이세액표 데이터 (PDF에서 자동 생성)

@@ -18,43 +18,45 @@ const relatedGuides = GUIDES.filter((g) => ['rent-conversion-guide', 'year-end-t
   <h1>전월세 전환 계산기</h1>
   <p class="lead">전세를 월세로, 월세를 전세로 바꾸면 얼마인지 계산해요. 법정 전환율 상한도 확인할 수 있어요.</p>
 
-  <form id="calc-form" class="card" onsubmit="return false;">
-    <label>계산 방향</label>
-    <label class="check"><input type="radio" name="mode" value="toWolse" checked /> 전세 → 월세</label>
-    <label class="check"><input type="radio" name="mode" value="toJeonse" /> 월세 → 전세</label>
+  <div class="calc-layout">
+    <form id="calc-form" class="card" onsubmit="return false;">
+      <label>계산 방향</label>
+      <label class="check"><input type="radio" name="mode" value="toWolse" checked /> 전세 → 월세</label>
+      <label class="check"><input type="radio" name="mode" value="toJeonse" /> 월세 → 전세</label>
 
-    <div id="fields-toWolse">
-      <label for="jeonse">전세 보증금 (만원)</label>
-      <input id="jeonse" type="number" inputmode="numeric" min="0" step="500" value="30000" />
-      <label for="newDeposit">바꿀 월세 보증금 (만원)</label>
-      <input id="newDeposit" type="number" inputmode="numeric" min="0" step="500" value="10000" />
-    </div>
+      <div id="fields-toWolse">
+        <label for="jeonse">전세 보증금 (만원)</label>
+        <input id="jeonse" type="number" inputmode="numeric" min="0" step="500" value="30000" />
+        <label for="newDeposit">바꿀 월세 보증금 (만원)</label>
+        <input id="newDeposit" type="number" inputmode="numeric" min="0" step="500" value="10000" />
+      </div>
 
-    <div id="fields-toJeonse" hidden>
-      <label for="deposit">월세 보증금 (만원)</label>
-      <input id="deposit" type="number" inputmode="numeric" min="0" step="500" value="5000" />
-      <label for="rent">월세 (만원)</label>
-      <input id="rent" type="number" inputmode="decimal" min="0" step="5" value="100" />
-    </div>
+      <div id="fields-toJeonse" hidden>
+        <label for="deposit">월세 보증금 (만원)</label>
+        <input id="deposit" type="number" inputmode="numeric" min="0" step="500" value="5000" />
+        <label for="rent">월세 (만원)</label>
+        <input id="rent" type="number" inputmode="decimal" min="0" step="5" value="100" />
+      </div>
 
-    <label for="rate">전환율 (연 %)</label>
-    <input id="rate" type="number" inputmode="decimal" min="0.1" max="20" step="0.1" value={Number((legal * 100).toFixed(2))} />
-    <div class="hint">
-      기본값은 법정 상한 {pct(legal)}(기준금리 {pct(r.baseRate)} + 2%)예요. 실제 시장 전환율은 지역마다 달라요.
-    </div>
-  </form>
+      <label for="rate">전환율 (연 %)</label>
+      <input id="rate" type="number" inputmode="decimal" min="0.1" max="20" step="0.1" value={Number((legal * 100).toFixed(2))} />
+      <div class="hint">
+        기본값은 법정 상한 {pct(legal)}(기준금리 {pct(r.baseRate)} + 2%)예요. 실제 시장 전환율은 지역마다 달라요.
+      </div>
+    </form>
 
-  <div class="card" data-history-results>
-    <div class="result-main">
-      <div class="label" id="out-main-label">월세</div>
-      <div class="big" id="out-main">-</div>
+    <div class="receipt" data-history-results>
+      <div class="result-main">
+        <div class="label" id="out-main-label">월세</div>
+        <div class="big" id="out-main">-</div>
+      </div>
+      <table>
+        <tbody id="out-rows"></tbody>
+      </table>
     </div>
-    <table>
-      <tbody id="out-rows"></tbody>
-    </table>
+    <SaveHistory calc="rent-conversion" title="전월세전환" />
   </div>
 
-  <SaveHistory calc="rent-conversion" title="전월세전환" />
 
   <p class="notice">
     법정 전환율 상한은 계약 기간 중이나 갱신할 때 보증금을 월세로 바꾸는 경우에 적용돼요. 새로 맺는 계약에는 적용되지 않아 시장 전환율이 더 높을 수 있어요.

@@ -13,42 +13,44 @@ const relatedGuides = GUIDES.filter((g) => ['severance-pay-guide'].includes(g.sl
   <h1>퇴직금 계산기</h1>
   <p class="lead">입사일, 마지막 근무일, 최근 3개월 급여만 있으면 예상 퇴직금을 알 수 있어요.</p>
 
-  <form id="calc-form" class="card" onsubmit="return false;">
-    <label for="start">입사일</label>
-    <input id="start" type="date" value="2022-01-01" />
+  <div class="calc-layout">
+    <form id="calc-form" class="card" onsubmit="return false;">
+      <label for="start">입사일</label>
+      <input id="start" type="date" value="2022-01-01" />
 
-    <label for="end">마지막 근무일</label>
-    <input id="end" type="date" value="2025-12-31" />
+      <label for="end">마지막 근무일</label>
+      <input id="end" type="date" value="2025-12-31" />
 
-    <label for="pay3">퇴직 전 3개월 급여 총액 (원)</label>
-    <input id="pay3" type="number" inputmode="numeric" min="0" step="10000" value="9000000" />
-    <div class="hint">세전 금액으로, 기본급과 각종 수당을 모두 더한 3개월 합계를 입력하세요.</div>
+      <label for="pay3">퇴직 전 3개월 급여 총액 (원)</label>
+      <input id="pay3" type="number" inputmode="numeric" min="0" step="10000" value="9000000" />
+      <div class="hint">세전 금액으로, 기본급과 각종 수당을 모두 더한 3개월 합계를 입력하세요.</div>
 
-    <label for="bonus">연간 상여금 총액 (원)</label>
-    <input id="bonus" type="number" inputmode="numeric" min="0" step="10000" value="0" />
-    <div class="hint">퇴직 전 1년간 받은 상여금 합계예요. 3/12만 반영돼요.</div>
+      <label for="bonus">연간 상여금 총액 (원)</label>
+      <input id="bonus" type="number" inputmode="numeric" min="0" step="10000" value="0" />
+      <div class="hint">퇴직 전 1년간 받은 상여금 합계예요. 3/12만 반영돼요.</div>
 
-    <label for="leave">연차수당 (원)</label>
-    <input id="leave" type="number" inputmode="numeric" min="0" step="10000" value="0" />
-    <div class="hint">퇴직 전 1년간 받은 연차수당이에요. 3/12만 반영돼요.</div>
-  </form>
+      <label for="leave">연차수당 (원)</label>
+      <input id="leave" type="number" inputmode="numeric" min="0" step="10000" value="0" />
+      <div class="hint">퇴직 전 1년간 받은 연차수당이에요. 3/12만 반영돼요.</div>
+    </form>
 
-  <div class="card" data-history-results>
-    <div class="result-main">
-      <div class="label">예상 퇴직금 (세전)</div>
-      <div class="big" id="out-pay">-</div>
+    <div class="receipt" data-history-results>
+      <div class="result-main">
+        <div class="label">예상 퇴직금 (세전)</div>
+        <div class="big" id="out-pay">-</div>
+      </div>
+      <table>
+        <tbody>
+          <tr><th>퇴직금 지급 대상</th><td id="out-eligible">-</td></tr>
+          <tr><th>재직일수</th><td id="out-tenure">-</td></tr>
+          <tr><th>퇴직 전 3개월 일수</th><td id="out-days3">-</td></tr>
+          <tr><th>1일 평균임금</th><td id="out-avg">-</td></tr>
+        </tbody>
+      </table>
     </div>
-    <table>
-      <tbody>
-        <tr><th>퇴직금 지급 대상</th><td id="out-eligible">-</td></tr>
-        <tr><th>재직일수</th><td id="out-tenure">-</td></tr>
-        <tr><th>퇴직 전 3개월 일수</th><td id="out-days3">-</td></tr>
-        <tr><th>1일 평균임금</th><td id="out-avg">-</td></tr>
-      </tbody>
-    </table>
+    <SaveHistory calc="severance-pay" title="퇴직금" />
   </div>
 
-  <SaveHistory calc="severance-pay" title="퇴직금" />
 
   <p class="notice">
     퇴직소득세는 반영하지 않은 세전 금액이에요. 평균임금이 통상임금보다 낮은 경우(통상임금 적용)도 반영하지 않으니,

@@ -13,34 +13,36 @@ const relatedGuides = GUIDES.filter((g) => ['weekly-holiday-pay-guide', 'minimum
   <h1>{RATES.year}년 주휴수당 계산기</h1>
   <p class="lead">시급과 주 소정근로시간만 입력하면 주휴수당과 월 환산 급여가 나와요.</p>
 
-  <form id="calc-form" class="card" onsubmit="return false;">
-    <label for="wage">시급 (원)</label>
-    <input id="wage" type="number" inputmode="numeric" min="0" step="10" value={RATES.minWageHourly} />
-    <div class="hint">{RATES.year}년 최저시급은 {RATES.minWageHourly.toLocaleString('ko-KR')}원입니다.</div>
+  <div class="calc-layout">
+    <form id="calc-form" class="card" onsubmit="return false;">
+      <label for="wage">시급 (원)</label>
+      <input id="wage" type="number" inputmode="numeric" min="0" step="10" value={RATES.minWageHourly} />
+      <div class="hint">{RATES.year}년 최저시급은 {RATES.minWageHourly.toLocaleString('ko-KR')}원입니다.</div>
 
-    <label for="hours">1주 소정근로시간</label>
-    <input id="hours" type="number" inputmode="decimal" min="0" max="52" step="0.5" value="40" />
-    <div class="hint">1주 개근한 경우를 기준으로 계산합니다.</div>
-  </form>
+      <label for="hours">1주 소정근로시간</label>
+      <input id="hours" type="number" inputmode="decimal" min="0" max="52" step="0.5" value="40" />
+      <div class="hint">1주 개근한 경우를 기준으로 계산합니다.</div>
+    </form>
 
-  <div class="card" data-history-results>
-    <div class="result-main">
-      <div class="label">주휴수당 (1주)</div>
-      <div class="big" id="out-weekly">-</div>
+    <div class="receipt" data-history-results>
+      <div class="result-main">
+        <div class="label">주휴수당 (1주)</div>
+        <div class="big" id="out-weekly">-</div>
+      </div>
+      <table>
+        <tbody>
+          <tr><th>주휴수당 지급 대상</th><td id="out-eligible">-</td></tr>
+          <tr><th>주휴시간</th><td id="out-hours">-</td></tr>
+          <tr><th>주휴수당 (월 환산)</th><td id="out-monthly-holiday">-</td></tr>
+          <tr><th>월 환산 근로시간 (주휴 포함)</th><td id="out-paid-hours">-</td></tr>
+          <tr class="total"><th>월 환산 급여 (주휴수당 포함)</th><td id="out-monthly-total">-</td></tr>
+          <tr><th>최저시급 충족</th><td id="out-minwage">-</td></tr>
+        </tbody>
+      </table>
     </div>
-    <table>
-      <tbody>
-        <tr><th>주휴수당 지급 대상</th><td id="out-eligible">-</td></tr>
-        <tr><th>주휴시간</th><td id="out-hours">-</td></tr>
-        <tr><th>주휴수당 (월 환산)</th><td id="out-monthly-holiday">-</td></tr>
-        <tr><th>월 환산 근로시간 (주휴 포함)</th><td id="out-paid-hours">-</td></tr>
-        <tr class="total"><th>월 환산 급여 (주휴수당 포함)</th><td id="out-monthly-total">-</td></tr>
-        <tr><th>최저시급 충족</th><td id="out-minwage">-</td></tr>
-      </tbody>
-    </table>
+    <SaveHistory calc="weekly-holiday-pay" title="주휴수당" />
   </div>
 
-  <SaveHistory calc="weekly-holiday-pay" title="주휴수당" />
 
   <h2>계산 방법</h2>
   <p>
