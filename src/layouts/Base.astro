@@ -27,6 +27,18 @@ const canonical = new URL(Astro.url.pathname.replace(/\.html$/, '').replace(/(.)
     <meta name="theme-color" content="#1f6feb" />
     {SITE.naverSiteVerification && <meta name="naver-site-verification" content={SITE.naverSiteVerification} />}
     {SITE.googleSiteVerification && <meta name="google-site-verification" content={SITE.googleSiteVerification} />}
+    {SITE.gaMeasurementId && (
+      <>
+        <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${SITE.gaMeasurementId}`}></script>
+        <script is:inline define:vars={{ gaId: SITE.gaMeasurementId }}>
+          window.dataLayer = window.dataLayer || [];
+          function gtag() { dataLayer.push(arguments); }
+          window.gtag = gtag;
+          gtag('js', new Date());
+          gtag('config', gaId);
+        </script>
+      </>
+    )}
     {SITE.adsenseClient && (
       <script
         is:inline
