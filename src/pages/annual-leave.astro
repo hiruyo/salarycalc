@@ -1,0 +1,219 @@
+---
+import Base from '../layouts/Base.astro';
+import SaveHistory from '../components/SaveHistory.astro';
+import { leaveDaysForYear } from '../lib/annualLeave';
+
+// 2년 단위 구간 (1~2년, 3~4년, …, 19~20년) + 21년 이상
+const table = [
+  ...Array.from({ length: 10 }, (_, i) => 2 * i + 1).map((n) => ({ label: `${n}~${n + 1}년`, days: leaveDaysForYear(n) })),
+  { label: '21년 이상', days: leaveDaysForYear(21) },
+];
+---
+
+<Base
+  title="연차 계산기 (입사일 기준 발생 연차·연차수당)"
+  description="입사일만 넣으면 지금까지 발생한 연차, 다음 연차 발생일, 근속연수별 연차 일수, 미사용 연차수당을 계산합니다. 1년 미만 월 연차와 단시간 근로자도 반영해요."
+>
+  <h1>연차 계산기</h1>
+  <p class="lead">입사일 기준으로 지금까지 생긴 연차와 다음 연차 발생일, 미사용 연차수당을 계산해요.</p>
+
+  <form id="calc-form" class="card" onsubmit="return false;">
+    <label for="start">입사일</label>
+    <input id="start" type="date" value="2024-03-04" />
+
+    <label for="ref">기준일</label>
+    <input id="ref" type="date" />
+    <div class="hint">보통 오늘이에요. 퇴사 예정이라면 마지막 근무일을 넣으세요.</div>
+
+    <label for="weekly">1주 소정근로시간</label>
+    <input id="weekly" type="number" inputmode="decimal" min="0" max="52" step="0.5" value="40" />
+    <div class="hint">40시간 미만이면 연차를 시간으로 비례 계산하고, 15시간 미만이면 연차가 없어요.</div>
+
+    <label for="wage">통상시급 (원, 연차수당 계산용)</label>
+    <input id="wage" type="number" inputmode="numeric" min="0" step="10" value="0" />
+    <div class="hint">월급제라면 월 통상임금 ÷ 209 (주 40시간 기준). 모르면 비워 두세요.</div>
+
+    <label for="unused">미사용 연차 (일)</label>
+    <input id="unused" type="number" inputmode="decimal" min="0" step="0.5" value="0" />
+  </form>
+
+  <div class="card" data-history-results>
+    <div class="result-main">
+      <div class="label" id="out-main-label">올해 연차</div>
+      <div class="big" id="out-main">-</div>
+    </div>
+    <table>
+      <tbody id="out-rows"></tbody>
+    </table>
+  </div>
+
+  <SaveHistory calc="annual-leave" title="연차" />
+
+  <div class="card">
+    <h2 style="margin-top:0">내 연차 일정</h2>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>구분</th><th>발생일</th><th>연차</th></tr></thead>
+        <tbody id="schedule"></tbody>
+      </table>
+    </div>
+    <p class="hint">매월 개근, 매년 80% 이상 출근을 가정한 일정이에요.</p>
+  </div>
+
+  <p class="notice">
+    상시 5인 미만 사업장은 법정 연차가 적용되지 않아요(회사 규정이 있으면 그에 따라요). 회계연도(1월 1일) 기준으로 연차를 주는 회사는
+    일수가 다르게 보일 수 있지만, 퇴사할 때는 입사일 기준보다 불리하지 않게 정산해야 해요.
+  </p>
+
+  <h2>연차 발생 기준</h2>
+  <ul>
+    <li><strong>1년 미만</strong>: 1개월 개근할 때마다 1일, 최대 11일이에요. 한 달을 다 채운 <strong>다음 날</strong>에 생겨요.</li>
+    <li><strong>1년 이상</strong>: 1년간 80% 이상 출근하면 15일이에요. 1년을 채운 다음 날(입사 366일째)에 생겨요.</li>
+    <li><strong>3년 이상</strong>: 2년마다 1일씩 늘어나고, 최대 25일이에요.</li>
+  </ul>
+
+  <h2>근속연수별 연차 일수</h2>
+  <div class="card table-scroll">
+    <table>
+      <thead><tr><th>근속연수</th><th>연차</th></tr></thead>
+      <tbody>
+        <tr><td>1년 미만</td><td>매월 1일 (최대 11일)</td></tr>
+        {table.map(({ label, days }) => (
+          <tr><td>{label}</td><td>{days}일</td></tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <h2>1년 근무하고 퇴사하면 연차가 몇 개인가요</h2>
+  <p>
+    2021년 대법원 판결 이후 고용노동부 해석에 따르면, 15일 연차는 1년 근로를 마친 <strong>다음 날에도 재직</strong>해야 생겨요.
+    그래서 정확히 1년(365일) 일하고 퇴사하면 1년 미만 연차 <strong>최대 11일</strong>만 생기고,
+    366일째까지 재직하면 15일이 추가로 생겨 <strong>최대 26일분</strong>의 미사용 수당을 청구할 수 있어요. 1년 계약직도 같은 기준이에요.
+  </p>
+
+  <h2>단시간 근로자(아르바이트)의 연차</h2>
+  <p>
+    주 15시간 이상 40시간 미만으로 일하면 연차를 시간으로 계산해요.
+    <strong>연차 시간 = 통상 근로자 연차일수 × 내 주 소정근로시간 ÷ 40 × 8시간</strong>이고, 1시간 미만은 1시간으로 봐요.
+    예를 들어 주 20시간 일하고 1년 이상 근무했다면 15일 × 20 ÷ 40 × 8 = 60시간이에요.
+  </p>
+
+  <h2>연차수당</h2>
+  <p>
+    1년 안에 쓰지 못한 연차는 수당으로 받을 수 있어요(회사가 법에 따른 사용 촉진을 했다면 제외될 수 있어요).
+    <strong>연차수당 = 미사용 연차 시간 × 통상시급</strong>이에요. 주 40시간 근무자는 1일이 8시간이라 "미사용 일수 × 8 × 통상시급"과 같아요.
+  </p>
+
+  <h2>자주 묻는 질문</h2>
+  <details>
+    <summary>1년 미만일 때 쓴 연차를 2년차 15일에서 빼나요?</summary>
+    <p>아니요. 2018년 법 개정으로 1년 미만 기간의 연차(최대 11일)와 1년이 지나 생기는 15일은 따로 계산해요. 다만 1년 미만 연차는 입사 후 1년 안에 써야 해요.</p>
+  </details>
+  <details>
+    <summary>회사가 연차를 1월 1일 기준으로 줘요.</summary>
+    <p>회계연도 기준도 허용되지만, 퇴사 시점에 입사일 기준으로 계산한 연차보다 적으면 그 차이를 정산해야 해요. 이 계산기는 입사일 기준 결과를 보여줘요.</p>
+  </details>
+
+  <script>
+    import { calcAnnualLeave } from '../lib/annualLeave';
+
+    const $ = <T extends HTMLElement = HTMLInputElement>(id: string) => document.getElementById(id) as T;
+    const num = (id: string) => Number($(id).value) || 0;
+    const comma = (n: number) => n.toLocaleString('ko-KR');
+    const won = (n: number) => `${comma(n)}원`;
+
+    function todayYMD(): string {
+      const d = new Date();
+      const p = (n: number) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+    }
+
+    function fillRows(tbodyId: string, items: string[][]) {
+      const tbody = $<HTMLElement>(tbodyId);
+      tbody.innerHTML = '';
+      for (const cells of items) {
+        const tr = document.createElement('tr');
+        cells.forEach((c, i) => {
+          const el = document.createElement(i === 0 && cells.length === 2 ? 'th' : 'td');
+          el.textContent = c;
+          tr.append(el);
+        });
+        tbody.append(tr);
+      }
+    }
+
+    function render() {
+      const weekly = $('weekly').value === '' ? 40 : num('weekly');
+      const r = calcAnnualLeave({
+        startDate: $('start').value,
+        refDate: $('ref').value,
+        weeklyHours: weekly,
+        hourlyWage: num('wage'),
+        unusedDays: num('unused'),
+      });
+      const label = $<HTMLElement>('out-main-label');
+      const main = $<HTMLElement>('out-main');
+
+      if (!r.valid) {
+        label.textContent = '지금까지 발생한 연차';
+        main.textContent = '-';
+        fillRows('out-rows', [['확인', '입사일이 기준일보다 앞서야 해요']]);
+        fillRows('schedule', []);
+        return;
+      }
+      if (!r.eligible) {
+        label.textContent = '지금까지 발생한 연차';
+        main.textContent = '0일';
+        fillRows('out-rows', [['적용 대상', '아니에요 (주 15시간 미만)']]);
+        fillRows('schedule', []);
+        return;
+      }
+
+      const partTime = r.hoursPerDay < 8;
+      const days = (d: number) =>
+        partTime ? `${comma(d)}일 (${comma(Math.ceil(d * r.hoursPerDay - 1e-9))}시간)` : `${comma(d)}일`;
+
+      if (r.latestYearGrant) {
+        label.textContent = `올해 연차 (근속 ${r.latestYearGrant.index}년, ${r.latestYearGrant.date} 발생)`;
+        main.textContent = days(r.latestYearGrant.days);
+      } else {
+        label.textContent = '지금까지 발생한 연차 (입사 1년 미만)';
+        main.textContent = days(r.monthlyLeaveDays);
+      }
+
+      const items: string[][] = [
+        ['근속기간', `${r.yearsCompleted}년 (재직 ${comma(r.tenureDays)}일째)`],
+        ['1년 미만 월 연차', `${r.monthlyLeaveDays}일 / 최대 11일`],
+        ['입사 후 발생한 연차 합계', days(r.totalAccruedDays)],
+      ];
+      if (r.nextGrant) {
+        const what = r.nextGrant.kind === 'month' ? `월 연차 ${r.nextGrant.days}일` : `연차 ${r.nextGrant.days}일 (근속 ${r.nextGrant.index}년)`;
+        items.push(['다음 연차 발생', `${r.nextGrant.date} · ${what}`]);
+      }
+      if (partTime) items.push(['연차 1일', `${Number(r.hoursPerDay.toFixed(2))}시간`]);
+      if (num('wage') > 0 && num('unused') > 0) {
+        items.push(['미사용 연차수당', `${won(r.allowance)} (${comma(r.unusedHours)}시간 × ${won(num('wage'))})`]);
+      }
+      fillRows('out-rows', items);
+
+      const start = $('start').value;
+      const ref = $('ref').value;
+      const monthRows: string[][] = [];
+      // 1년 미만 월 연차 (요약 1줄)
+      monthRows.push(['1년 미만 (1~11개월)', `${start.slice(0, 7)} ~`, '매월 1일씩, 최대 11일']);
+      const yearRows = r.schedule.slice(0, 12).map((g) => [
+        `근속 ${g.index}년${g.date <= ref ? ' ✓' : ''}`,
+        g.date,
+        partTime ? `${g.days}일 (${Math.ceil(g.days * r.hoursPerDay - 1e-9)}시간)` : `${g.days}일`,
+      ]);
+      if (r.schedule.length > 12) yearRows.push(['…', '', `근속 ${r.schedule.at(-1)!.index}년부터 매년 25일`]);
+      fillRows('schedule', [...monthRows, ...yearRows]);
+    }
+
+    if (!$('ref').value) $('ref').value = todayYMD();
+    $<HTMLFormElement>('calc-form').addEventListener('input', render);
+    $<HTMLFormElement>('calc-form').addEventListener('change', render);
+    render();
+  </script>
+</Base>

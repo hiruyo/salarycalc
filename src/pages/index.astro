@@ -6,7 +6,7 @@ import { GUIDES } from '../guides';
 
 <Base
   title={`월급계산소 - ${RATES.year}년 연봉 실수령액·주휴수당 계산기`}
-  description={`${RATES.year}년 4대보험 요율을 반영한 연봉 실수령액 계산기, 주휴수당·퇴직금·실업급여, 프리랜서 3.3%·전월세 전환·날짜 계산기. 회원가입 없이 바로 계산하세요.`}
+  description={`${RATES.year}년 4대보험 요율을 반영한 연봉 실수령액 계산기, 주휴수당·퇴직금·연차·실업급여, 프리랜서 3.3%·전월세 전환·날짜 계산기. 회원가입 없이 바로 계산하세요.`}
 >
   <h1>월급계산소</h1>
   <p class="lead">{RATES.year}년 기준 요율로 바로 계산해 보세요. 입력한 값은 서버로 전송되지 않습니다.</p>
@@ -28,6 +28,12 @@ import { GUIDES } from '../guides';
       <a href="/severance-pay">
         <strong>퇴직금 계산기</strong>
         <span>입사일·퇴사일·최근 3개월 급여로 예상 퇴직금 계산</span>
+      </a>
+    </li>
+    <li>
+      <a href="/annual-leave">
+        <strong>연차 계산기</strong>
+        <span>입사일 기준 발생 연차, 다음 연차 발생일, 미사용 연차수당</span>
       </a>
     </li>
     <li>

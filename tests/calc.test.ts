@@ -8,6 +8,7 @@ import { calcUnemployment } from '../src/lib/unemployment.ts';
 import { freelancerFromGross, freelancerFromNet } from '../src/lib/freelancer.ts';
 import { loadAll, listFor, save, remove, toCSV, MAX_PER_CALC, STORAGE_KEY, type StorageLike } from '../src/lib/history.ts';
 import { period, addToDate, age, parseYMD } from '../src/lib/dateCalc.ts';
+import { calcAnnualLeave, leaveDaysForYear, leaveHours } from '../src/lib/annualLeave.ts';
 import { legalConversionRate, jeonseToWolse, wolseToJeonse, impliedConversionRate } from '../src/lib/rentConversion.ts';
 
 // ---- 간이세액표 (소득세법 시행령 별표 2, 2026.2.27 개정) 원본 값과 대조 ----
@@ -409,4 +410,64 @@ test('날짜: 2월 29일생은 평년에 3월 1일부터 나이 증가', () => {
   assert.equal(age('2000-02-29', '2027-03-01').manAge, 27);
   assert.equal(age('2000-02-29', '2028-02-29').manAge, 28);
   assert.equal(age('2000-02-29', '2026-11-05').nextBirthday, '2027-03-01');
+});
+
+// ---- 연차 ----
+
+test('연차: 근속연수별 일수 (15일, 2년마다 1일 가산, 25일 상한)', () => {
+  assert.deepEqual([1, 2, 3, 4, 5, 6, 10, 20, 21, 30].map(leaveDaysForYear), [15, 15, 16, 16, 17, 17, 19, 24, 25, 25]);
+  assert.equal(leaveDaysForYear(0), 0);
+});
+
+test('연차: 1년 미만은 1개월 근로를 마친 다음 날 1일씩 (1/1~7/31 개근 → 6일)', () => {
+  const r = calcAnnualLeave({ startDate: '2026-01-01', refDate: '2026-07-31' });
+  assert.equal(r.monthlyLeaveDays, 6);
+  assert.equal(r.nextGrant?.date, '2026-08-01');
+  assert.equal(r.totalAccruedDays, 6);
+  assert.equal(r.latestYearGrant, null);
+});
+
+test('연차: 365일 근무 후 퇴사는 11일, 366일째 재직하면 15일 추가 (총 26일)', () => {
+  const r365 = calcAnnualLeave({ startDate: '2026-01-01', refDate: '2026-12-31' });
+  assert.equal(r365.tenureDays, 365);
+  assert.equal(r365.monthlyLeaveDays, 11);
+  assert.equal(r365.totalAccruedDays, 11);
+  assert.equal(r365.nextGrant?.days, 15);
+  assert.equal(r365.nextGrant?.date, '2027-01-01');
+  const r366 = calcAnnualLeave({ startDate: '2026-01-01', refDate: '2027-01-01' });
+  assert.equal(r366.yearsCompleted, 1);
+  assert.equal(r366.latestYearGrant?.days, 15);
+  assert.equal(r366.totalAccruedDays, 26);
+});
+
+test('연차: 3년차 16일, 일정은 25일 도달(21년)까지', () => {
+  const r = calcAnnualLeave({ startDate: '2020-03-02', refDate: '2026-11-06' });
+  assert.equal(r.yearsCompleted, 6);
+  assert.equal(r.latestYearGrant?.days, 17); // 6년 근속 → 17일
+  assert.equal(r.nextGrant?.date, '2027-03-02');
+  assert.equal(r.nextGrant?.days, 18);
+  assert.equal(r.schedule.length, 21);
+  assert.equal(r.schedule.at(-1)?.days, 25);
+  // 11 + 15 + 15 + 16 + 16 + 17 + 17
+  assert.equal(r.totalAccruedDays, 107);
+});
+
+test('연차: 단시간 근로자는 시간 비례 (15일 × 20/40 × 8 = 60시간), 1시간 미만 올림', () => {
+  assert.equal(leaveHours(15, 20), 60);
+  assert.equal(leaveHours(1, 15), 3); // 1 × 15/40 × 8 = 3
+  assert.equal(leaveHours(1, 17), 4); // 3.4 → 4
+  assert.equal(leaveHours(1, 50), 8); // 40시간 초과는 40으로
+  const r = calcAnnualLeave({ startDate: '2026-01-01', refDate: '2027-01-01', weeklyHours: 20 });
+  assert.equal(r.hoursPerDay, 4);
+});
+
+test('연차: 주 15시간 미만은 미적용, 연차수당 계산', () => {
+  const r = calcAnnualLeave({ startDate: '2025-01-01', refDate: '2026-11-06', weeklyHours: 14 });
+  assert.equal(r.eligible, false);
+  assert.equal(r.totalAccruedDays, 0);
+  assert.equal(r.nextGrant, null);
+  const pay = calcAnnualLeave({ startDate: '2025-01-01', refDate: '2026-11-06', hourlyWage: 15_000, unusedDays: 5 });
+  assert.equal(pay.unusedHours, 40);
+  assert.equal(pay.allowance, 600_000);
+  assert.equal(calcAnnualLeave({ startDate: '2027-01-01', refDate: '2026-01-01' }).valid, false);
 });
