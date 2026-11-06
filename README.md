@@ -40,10 +40,18 @@ src/
   lib/history.ts         계산 결과 저장·이력·CSV (저장소 교체 가능한 순수 로직)
   lib/historyUi.ts       저장 UI (입력·결과 자동 수집, 불러오기)
   components/SaveHistory.astro 계산기에 붙이는 '내 계산 기록' 영역
-  pages/                 계산기 10종, about, privacy, terms, contact
+  lib/shareState.ts      결과 공유 링크 (입력값을 주소 # 뒤에 담음, 서버 전송 없음)
+  lib/resultActions.ts   링크 공유·명세서 이미지 저장·계산 오류 제보(mailto)
+  components/ResultActions.astro 결과 영역 하단 버튼
+  lib/search.ts          사이트 검색 (계산기 keywords + 가이드 제목·설명)
+  lib/siteUi.ts          공통 UI: 검색창(/, Ctrl+K), 맨 위로, 최근 본·즐겨찾기(localStorage)
+  pages/                 계산기 10종, 404, about, privacy, terms, contact
   pages/guide/           가이드 글
 tests/calc.test.ts       계산 로직 테스트
+wrangler.jsonc           Cloudflare 정적 배포 설정 (없는 주소 → 404.html)
 ```
+
+새 계산기를 추가하면 `src/calculators.ts`에 `keywords`(검색어)도 함께 적어 주세요.
 
 ## 배포 전 TODO
 
