@@ -12,6 +12,9 @@ import { calcAnnualLeave, leaveDaysForYear, leaveHours } from '../src/lib/annual
 import { calcYearEnd, cardDeduction, earnedTaxCredit, childTaxCredit, earnedIncomeDeduction as yeEarnedDeduction } from '../src/lib/yearEndTax.ts';
 import { calcEmployee, calcPayroll } from '../src/lib/payroll.ts';
 import { encodeState, decodeState, shareUrl } from '../src/lib/shareState.ts';
+import { search, normalize } from '../src/lib/search.ts';
+import { ALL_CALCS } from '../src/calculators.ts';
+import { GUIDES } from '../src/guides.ts';
 import { legalConversionRate, jeonseToWolse, wolseToJeonse, impliedConversionRate } from '../src/lib/rentConversion.ts';
 
 // ---- 간이세액표 (소득세법 시행령 별표 2, 2026.2.27 개정) 원본 값과 대조 ----
@@ -664,4 +667,27 @@ test('공유 링크: 이상한 키·너무 긴 값은 무시', () => {
   assert.deepEqual(decodeState(''), {});
   assert.deepEqual(decodeState('#'), {});
   assert.ok(encodeState({ k: 'v'.repeat(5000) }).length <= 1500);
+});
+
+// ---- 사이트 검색 ----
+
+const SEARCH_ITEMS = [
+  ...ALL_CALCS.map((c) => ({ href: c.href, title: c.name, desc: c.desc, keywords: c.keywords, kind: 'calc' as const })),
+  ...GUIDES.map((g) => ({ href: `/guide/${g.slug}`, title: g.title, desc: g.description, kind: 'guide' as const })),
+];
+
+test('검색: 계산기 이름·동의어·붙여쓰기', () => {
+  assert.equal(search(SEARCH_ITEMS, '퇴직금')[0].href, '/severance-pay');
+  assert.equal(search(SEARCH_ITEMS, '세후 월급')[0].href, '/salary');
+  assert.equal(search(SEARCH_ITEMS, '13월의 월급')[0].href, '/year-end-tax');
+  assert.equal(search(SEARCH_ITEMS, 'd-day')[0].href, '/date-calculator');
+  assert.ok(search(SEARCH_ITEMS, '알바 야간').some((h) => h.href === '/guide/part-time-pay-guide'));
+  assert.ok(search(SEARCH_ITEMS, '육아휴직').some((h) => h.href === '/guide/parental-leave-guide'));
+});
+
+test('검색: 빈 검색어·없는 단어', () => {
+  assert.deepEqual(search(SEARCH_ITEMS, ''), []);
+  assert.deepEqual(search(SEARCH_ITEMS, '   '), []);
+  assert.deepEqual(search(SEARCH_ITEMS, '비트코인 시세'), []);
+  assert.equal(normalize(' 3.3% 세금 '), '33세금');
 });

@@ -43,6 +43,13 @@ const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
     </form>
   </section>
 
+  <section class="calc-index my-calcs wide" id="my-calcs" hidden aria-label="내 계산기">
+    <div class="calc-group">
+      <h2>내 계산기</h2>
+      <ul></ul>
+    </div>
+  </section>
+
   <section class="calc-index wide" aria-label="계산기 목록">
     {CALC_GROUPS.map((g) => (
       <div class="calc-group">
@@ -99,7 +106,7 @@ const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
   </script>
 </Base>
 
-<style>
+<style is:global>
   .hero { display: grid; gap: 24px; align-items: center; margin: 8px 0 44px; }
   .hero h1 { font-size: 2.45rem; line-height: 1.22; letter-spacing: -0.035em; margin-bottom: 14px; }
   .hero .lead { max-width: 30em; margin: 0; }
@@ -114,6 +121,11 @@ const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
   .quick-more { display: inline-block; margin-top: 10px; font-weight: 500; font-size: 0.95rem; }
 
   .calc-index { display: grid; gap: 8px 40px; }
+  .my-calcs { margin-bottom: 28px; }
+  .my-calcs[hidden] { display: none; }
+  .my-calcs .calc-group { grid-column: 1 / -1; }
+  .my-calcs ul { display: grid; gap: 0 40px; }
+  @media (min-width: 900px) { .my-calcs ul { grid-template-columns: repeat(3, 1fr); } }
   @media (min-width: 900px) { .calc-index { grid-template-columns: repeat(3, 1fr); } }
   .calc-group h2 { font-size: 0.95rem; color: var(--muted); font-weight: 500; margin: 12px 0 4px; }
   .calc-group ul { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--line); }

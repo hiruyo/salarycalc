@@ -1,0 +1,61 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import { CALC_GROUPS } from '../calculators';
+---
+
+<Base title="페이지를 찾을 수 없어요 - 바로계산소" description="요청한 페이지가 없어요. 계산기 목록이나 검색으로 찾아보세요.">
+  <div class="nf">
+    <p class="nf-code">404</p>
+    <h1>페이지를 찾을 수 없어요</h1>
+    <p class="lead">주소가 바뀌었거나 없는 페이지예요. 찾는 계산기를 검색하거나 아래 목록에서 골라 주세요.</p>
+    <div class="nf-actions">
+      <button type="button" class="nf-search" data-open-search>계산기·가이드 검색</button>
+      <a href="/">홈으로 가기</a>
+    </div>
+  </div>
+
+  <section class="calc-index wide" aria-label="계산기 목록">
+    {CALC_GROUPS.map((g) => (
+      <div class="calc-group">
+        <h2>{g.name}</h2>
+        <ul>
+          {g.items.map((c) => (
+            <li>
+              <a href={c.href}>
+                <span class="calc-icon"><Icon name={c.icon} /></span>
+                <span class="calc-text">
+                  <strong>{c.name}</strong>
+                  <span>{c.desc}</span>
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))}
+  </section>
+</Base>
+
+<style is:global>
+  .nf { margin: 16px 0 40px; }
+  .nf-code { font-size: 3.4rem; font-weight: 700; letter-spacing: -0.04em; color: var(--seal); margin: 0; line-height: 1; transform: rotate(-4deg); display: inline-block; }
+  .nf-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .nf-search {
+    min-height: 46px; padding: 0 18px; font: inherit; font-weight: 700; color: #fff; background: var(--blue);
+    border: none; border-radius: 10px; cursor: pointer;
+  }
+  .nf-actions a { font-weight: 500; }
+  @media (prefers-color-scheme: dark) { .nf-search { color: #10162b; } }
+  .calc-index { display: grid; gap: 8px 40px; }
+  @media (min-width: 900px) { .calc-index { grid-template-columns: repeat(3, 1fr); } }
+  .calc-group h2 { font-size: 0.95rem; color: var(--muted); font-weight: 500; margin: 12px 0 4px; }
+  .calc-group ul { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--line); }
+  .calc-group li { margin: 0; border-bottom: 1px solid var(--line); }
+  .calc-group a { display: flex; align-items: center; gap: 14px; padding: 14px 4px; text-decoration: none; color: var(--ink); }
+  .calc-group a:hover strong { color: var(--blue); }
+  .calc-icon { display: grid; place-items: center; flex-shrink: 0; width: 42px; height: 42px; border-radius: 10px; background: var(--blue-soft); color: var(--blue); }
+  .calc-text { display: flex; flex-direction: column; min-width: 0; }
+  .calc-text strong { font-weight: 700; font-size: 1.02rem; }
+  .calc-text span { color: var(--muted); font-size: 0.88rem; }
+</style>

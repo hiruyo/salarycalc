@@ -308,6 +308,28 @@ export function mountResultActions(root: HTMLElement) {
     }
   });
 
+  // 오류 제보: 페이지·입력값(공유 링크)·결과를 담은 메일 작성 창을 엶 (서버로 전송하지 않음)
+  root.querySelector('[data-act="report"]')?.addEventListener('click', () => {
+    const email = root.dataset.email;
+    if (!email) return;
+    const link = form ? shareUrl(location.origin, location.pathname, collectState(form)) : location.href;
+    const r = receipt ? readReceipt(receipt) : { label: '', value: '', rows: [] as Row[] };
+    const lines = [
+      `페이지: ${title}`,
+      `입력값이 담긴 링크: ${link}`,
+      '',
+      '[사이트 계산 결과]',
+      `${r.label}: ${r.value}`,
+      ...r.rows.map((x) => `- ${x.label}: ${x.value}`),
+      '',
+      '[실제 금액이나 이상한 점을 적어 주세요]',
+      '',
+    ];
+    const subject = `[바로계산소] 계산 오류 제보: ${title}`;
+    location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join('\n').slice(0, 1200))}`;
+    track('report_open', { calc });
+  });
+
   imageBtn?.addEventListener('click', async () => {
     if (!receipt) return;
     imageBtn.disabled = true;

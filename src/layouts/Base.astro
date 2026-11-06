@@ -1,7 +1,8 @@
 ---
 import { RATES } from '../rates/2026';
 import { SITE } from '../site';
-import { CALC_GROUPS } from '../calculators';
+import { CALC_GROUPS, ALL_CALCS } from '../calculators';
+import { GUIDES } from '../guides';
 import Icon from '../components/Icon.astro';
 import '../styles/global.css';
 
@@ -11,6 +12,12 @@ interface Props {
   ogType?: 'website' | 'article';
 }
 const { title, description, ogType = 'website' } = Astro.props;
+// 검색·즐겨찾기용 데이터 (브라우저에서 읽음)
+const siteData = JSON.stringify({
+  calcs: ALL_CALCS.map((c) => ({ href: c.href, name: c.name, desc: c.desc, icon: c.icon, keywords: c.keywords })),
+  guides: GUIDES.map((g) => ({ href: `/guide/${g.slug}`, title: g.title, desc: g.description })),
+});
+const iconNames = [...new Set(ALL_CALCS.map((c) => c.icon))];
 const canonical = new URL(Astro.url.pathname.replace(/\.html$/, '').replace(/(.)\/$/, '$1'), Astro.site);
 ---
 
@@ -68,6 +75,10 @@ const canonical = new URL(Astro.url.pathname.replace(/\.html$/, '').replace(/(.)
           <span class="brand-name">{SITE.name}</span>
         </a>
         <div class="header-actions">
+          <button type="button" class="search-btn" data-open-search aria-label="검색 (단축키 /)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+            <span class="search-label">검색</span>
+          </button>
           <details class="menu" id="calc-menu">
             <summary>
               계산기
@@ -116,6 +127,29 @@ const canonical = new URL(Astro.url.pathname.replace(/\.html$/, '').replace(/(.)
         <p>© {RATES.year} {SITE.name}</p>
       </div>
     </footer>
+
+    <dialog id="search-dialog" class="search-dialog" aria-label="사이트 검색">
+      <div class="search-box">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+        <input id="search-input" type="search" placeholder="계산기·가이드 검색" autocomplete="off" aria-controls="search-results" />
+        <button type="button" id="search-close" class="search-close">닫기</button>
+      </div>
+      <ul id="search-results" class="search-results" role="listbox" aria-label="검색 결과"></ul>
+    </dialog>
+
+    <button type="button" id="to-top" class="to-top" aria-label="맨 위로">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
+    </button>
+
+    <template id="calc-icons">
+      {iconNames.map((n) => <span data-icon={n}><Icon name={n} size={20} /></span>)}
+    </template>
+    <script is:inline type="application/json" id="site-data" set:html={siteData} />
+
+    <script>
+      import { mountSiteUi } from '../lib/siteUi';
+      mountSiteUi();
+    </script>
 
     <script is:inline>
       // 계산기 메뉴: 바깥을 누르거나 Esc를 누르면 닫기

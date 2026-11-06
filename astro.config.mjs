@@ -10,6 +10,7 @@ export default defineConfig({
   build: { format: 'file' },
   integrations: [
     sitemap({
+      filter: (page) => !/\/404(\.html)?$/.test(page),
       // 사이트맵 주소도 끝 슬래시 없이 (홈 '/'는 유지)
       serialize(item) {
         const u = new URL(item.url);

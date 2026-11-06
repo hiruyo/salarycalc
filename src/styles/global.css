@@ -103,6 +103,57 @@ ul, ol { padding-left: 20px; margin: 0 0 16px; }
   .brand-name { font-size: 1.02rem; }
 }
 
+/* ---------- 검색 ---------- */
+.search-btn {
+  display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 12px; font: inherit; font-size: 0.97rem; font-weight: 500;
+  color: var(--ink); background: none; border: none; border-radius: 8px; cursor: pointer;
+}
+.search-btn:hover { background: var(--blue-soft); }
+@media (max-width: 480px) { .search-label { display: none; } .search-btn { padding: 0 10px; } }
+.search-dialog {
+  width: min(600px, calc(100vw - 24px)); max-height: min(70vh, 560px); margin: 72px auto auto; padding: 0;
+  border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink);
+  box-shadow: 0 24px 60px -20px rgb(20 30 50 / 45%);
+}
+.search-dialog::backdrop { background: rgb(15 22 35 / 40%); }
+.search-box { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--line); color: var(--muted); }
+.search-box input { flex: 1; height: 44px; border: none; outline: none; font: inherit; font-size: 1.08rem; color: var(--ink); background: transparent; }
+.search-box input::-webkit-search-cancel-button { display: none; }
+.search-close { font: inherit; font-size: 0.86rem; color: var(--muted); background: none; border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+.search-results { list-style: none; margin: 0; padding: 8px; overflow-y: auto; max-height: calc(min(70vh, 560px) - 70px); }
+.search-results li { margin: 0; }
+.search-results a { display: grid; grid-template-columns: auto 1fr; gap: 0 10px; padding: 10px 12px; border-radius: 8px; text-decoration: none; color: var(--ink); }
+.search-results a:hover, .search-results a.active { background: var(--blue-soft); }
+.search-kind { grid-row: span 2; align-self: start; margin-top: 2px; font-size: 0.75rem; color: var(--blue); border: 1px solid var(--blue); border-radius: 4px; padding: 0 6px; }
+.search-results strong { font-weight: 700; }
+.search-desc { color: var(--muted); font-size: 0.86rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.search-hint { color: var(--muted); font-size: 0.92rem; padding: 14px 12px; }
+
+/* ---------- 맨 위로 ---------- */
+.to-top {
+  position: fixed; right: 20px; bottom: 24px; z-index: 30; width: 46px; height: 46px; display: grid; place-items: center;
+  color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 50%;
+  box-shadow: 0 8px 20px -10px rgb(20 30 50 / 40%); cursor: pointer;
+  opacity: 0; visibility: hidden; transform: translateY(8px); transition: opacity 0.2s, transform 0.2s, visibility 0.2s;
+}
+.to-top.show { opacity: 1; visibility: visible; transform: none; }
+.to-top:hover { color: var(--blue); border-color: var(--blue); }
+
+/* ---------- 즐겨찾기 ---------- */
+.title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.title-row h1 { margin-bottom: 10px; }
+.fav-toggle {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 0 12px; margin-top: 4px; flex-shrink: 0;
+  font: inherit; font-size: 0.9rem; font-weight: 500; color: var(--muted); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 999px; cursor: pointer;
+}
+.fav-toggle:hover { color: var(--ink); border-color: var(--ink); }
+.fav-toggle[aria-pressed='true'] { color: #b7791f; border-color: #e3c48a; background: #fff8e8; }
+@media (prefers-color-scheme: dark) { .fav-toggle[aria-pressed='true'] { color: #f0c46a; border-color: #6b5627; background: #2a2416; } }
+.menu-group.favs { grid-column: 1 / -1; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+.menu-group.favs ul { display: flex; flex-wrap: wrap; gap: 0 14px; }
+.menu-group.favs li a { margin: 0; }
+
 /* ---------- 계산 영역: 입력(왼쪽) + 명세서(오른쪽) ---------- */
 .calc-layout { display: grid; gap: 20px; align-items: start; margin-bottom: 8px; }
 @media (min-width: 900px) {
@@ -170,6 +221,8 @@ label.check input { width: 20px; height: 20px; accent-color: var(--blue); margin
 .ra-buttons button:disabled { opacity: 0.5; cursor: wait; }
 .ra-msg { font-size: 0.84rem; color: var(--muted); margin: 8px 0 0; min-height: 1em; }
 .ra-msg:empty { display: none; }
+.ra-report { display: block; margin: 10px auto 0; font: inherit; font-size: 0.82rem; color: var(--muted); background: none; border: none; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.ra-report:hover { color: var(--ink); }
 
 /* 일반 표 (글 속 표) */
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 20px; margin: 0 0 16px; }

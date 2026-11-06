@@ -1,4 +1,6 @@
 ---
+import { SITE } from '../site';
+
 interface Props {
   /** 계산기 식별자 (GA 이벤트용) */
   calc: string;
@@ -8,7 +10,7 @@ interface Props {
 const { calc, share = true } = Astro.props;
 ---
 
-<div class="result-actions" data-result-actions data-calc={calc}>
+<div class="result-actions" data-result-actions data-calc={calc} data-email={SITE.contactEmail}>
   <div class="ra-buttons">
     {share && (
       <button type="button" data-act="share">
@@ -22,6 +24,7 @@ const { calc, share = true } = Astro.props;
     </button>
   </div>
   <p class="ra-msg" data-msg aria-live="polite"></p>
+  <button type="button" class="ra-report" data-act="report">계산이 이상한가요? 알려주세요</button>
 </div>
 
 <script>
