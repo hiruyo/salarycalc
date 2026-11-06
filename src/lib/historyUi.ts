@@ -18,7 +18,7 @@ function track(event: string, params: Record<string, string>) {
 function getStore(): StorageLike | null {
   try {
     const s = window.localStorage;
-    const k = '__sembiseo_test__';
+    const k = '__barogyesanso_test__';
     s.setItem(k, '1');
     s.removeItem(k);
     return s;
@@ -202,7 +202,7 @@ export function mountHistory(section: HTMLElement) {
     const d = new Date();
     const stamp = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
     // 한글 파일명은 일부 브라우저에서 무시되어 'download'로 저장되므로 영문 id 사용
-    download(`sembiseo-${calc}-${stamp}.csv`, toCSV([...items].reverse()));
+    download(`barogyesanso-${calc}-${stamp}.csv`, toCSV([...items].reverse()));
     say('CSV 파일을 내려받았어요. 엑셀에서 열 수 있어요.');
     track('history_export', { calc });
   });

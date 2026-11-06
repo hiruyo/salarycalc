@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://sembiseo.com/sitemap-index.xml
+Sitemap: https://barogyesanso.com/sitemap-index.xml

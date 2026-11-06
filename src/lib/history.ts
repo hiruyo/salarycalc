@@ -23,7 +23,7 @@ export interface Snapshot {
   results: ResultEntry[];
 }
 
-export const STORAGE_KEY = 'sembiseo:history:v1';
+export const STORAGE_KEY = 'barogyesanso:history:v1';
 export const MAX_PER_CALC = 30;
 
 function isSnapshot(x: unknown): x is Snapshot {
