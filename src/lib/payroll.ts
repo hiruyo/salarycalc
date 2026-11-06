@@ -3,8 +3,10 @@
  * 직원 1인당: 세전 급여 + 회사 부담 4대보험(국민연금·건강·장기요양·고용·산재) + 퇴직금 적립(1/12)
  *
  * - 4대보험 기준 보수는 비과세(식대 등)를 뺀 금액
- * - 주 15시간 미만(월 60시간 미만) 근로자는 국민연금·건강보험·고용보험 적용 제외로 보고 산재보험만 계산
- * - 국민연금 60세 이상 미가입, 두루누리 등 정부 지원, 근로자 수 산정 특례는 반영하지 않음
+ * - 주 15시간 미만(월 60시간 미만) 근로자는 국민연금·건강보험 적용 제외.
+ *   고용보험은 생업 목적으로 3개월 이상 계속 근로하면 적용(고용보험법 시행령 제3조) → shortTermInsured 옵션
+ * - 국민연금 60세 이상 미가입, 월 60시간 미만이라도 월 소득 220만원 이상 등 국민연금 예외,
+ *   두루누리 등 정부 지원, 임금채권부담금·석면피해구제분담금은 반영하지 않음
  */
 import { RATES } from '../rates/2026.ts';
 import { calcNetPay } from './netpay.ts';
@@ -24,6 +26,8 @@ export interface Employee {
   hourlyWage?: number;
   /** 시급제: 1주 소정근로시간 */
   weeklyHours?: number;
+  /** 주 15시간 미만이어도 생업 목적으로 3개월 이상 계속 근무 → 고용보험 적용 (기본 true) */
+  shortTermInsured?: boolean;
 }
 
 export interface PayrollOptions {
@@ -47,10 +51,12 @@ export interface EmployeeResult {
   gross: number;
   /** 4대보험 기준 보수 (비과세 제외) */
   taxable: number;
-  /** 국민연금·건강·고용보험 가입 대상 여부 */
+  /** 국민연금·건강보험 가입 대상 여부 (주 15시간 이상) */
   insured: boolean;
+  /** 고용보험 가입 대상 여부 */
+  employmentInsured: boolean;
   employer: EmployerInsurance;
-  /** 퇴직금 적립 (월 급여의 1/12) */
+  /** 퇴직금 적립 (월 급여의 1/12, 주 15시간 미만이면 0) */
   severanceReserve: number;
   /** 회사가 쓰는 월 총 인건비 */
   totalCost: number;
@@ -85,28 +91,34 @@ export function calcEmployee(e: Employee, opt: PayrollOptions): EmployeeResult {
   let employment = 0;
   let employeeDeduction: number;
 
+  const stability = RATES.employment.stabilityRates[opt.companySize] ?? RATES.employment.stabilityRates.u150;
+  const employmentInsured = gross > 0 && (insured || e.shortTermInsured !== false);
+
   if (insured && gross > 0) {
     // 국민연금·건강·장기요양은 근로자와 회사가 같은 금액
     const np = calcNetPay({ annualSalary: gross * 12, nonTaxableMonthly: nonTaxable, familyCount: 1 });
     pension = np.pension;
     health = np.health;
     longTermCare = np.longTermCare;
-    const stability = RATES.employment.stabilityRates[opt.companySize] ?? RATES.employment.stabilityRates.u150;
     employment = floor10(taxable * (RATES.employment.employerRate + stability));
     employeeDeduction = np.deductionTotal;
   } else {
     const tax = monthlyIncomeTax(taxable, 1, 0);
-    employeeDeduction = tax + floor10(tax * RATES.localIncomeTaxRate);
+    const employeeEmployment = employmentInsured ? floor10(taxable * RATES.employment.employeeRate) : 0;
+    if (employmentInsured) employment = floor10(taxable * (RATES.employment.employerRate + stability));
+    employeeDeduction = employeeEmployment + tax + floor10(tax * RATES.localIncomeTaxRate);
   }
   const industrial = floor10(taxable * Math.max(0, opt.industrialRate));
   const employerTotal = pension + health + longTermCare + employment + industrial;
-  const severanceReserve = Math.floor(gross / 12);
+  // 퇴직금은 4주 평균 주 15시간 이상 근로자만 대상
+  const severanceReserve = insured ? Math.floor(gross / 12) : 0;
 
   return {
     name: e.name?.trim() || '',
     gross,
     taxable,
     insured,
+    employmentInsured,
     employer: { pension, health, longTermCare, employment, industrial, total: employerTotal },
     severanceReserve,
     totalCost: gross + employerTotal + severanceReserve,

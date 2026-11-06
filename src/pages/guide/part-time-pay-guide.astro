@@ -14,6 +14,8 @@ const monthlyNight = Math.floor(nightPremiumWeek * RATES.weeksPerMonth);
 const overtime2h = Math.floor(w * 1.5 * 2);
 // 휴일 예시: 휴일 10시간 근무 → 8시간 × 150% + 2시간 × 200%
 const holiday10h = Math.floor(w * 1.5 * 8 + w * 2 * 2);
+// 근로자 4대보험 합계 요율 (국민연금 + 건강 + 장기요양 + 고용)
+const insRate = ((RATES.pension.rate / 2 + RATES.health.rate / 2 + (RATES.health.rate * RATES.longTermCare.rateOfHealthPremium) / 2 + RATES.employment.employeeRate) * 100).toFixed(1);
 ---
 
 <Article slug="part-time-pay-guide">
@@ -70,7 +72,7 @@ const holiday10h = Math.floor(w * 1.5 * 8 + w * 2 * 2);
 
   <h2>급여에서 빠지는 돈</h2>
   <ul>
-    <li><strong>4대보험</strong>: 주 15시간 이상이면 국민연금·건강보험·고용보험을 내요(월급의 약 9.4%).</li>
+    <li><strong>4대보험</strong>: 주 15시간 이상이면 국민연금·건강보험·고용보험으로 월급의 약 {insRate}%를 내요. 그보다 짧아도 3개월 이상 계속 일하면 고용보험(0.9%)은 내요.</li>
     <li><strong>3.3%로 받는 경우</strong>: 근로자인데도 3.3%를 떼는 곳이 있어요. 이 경우 5월에 종합소득세 신고로 돌려받을 수 있는 경우가 많아요.</li>
     <li>4대보험도 3.3%도 떼지 않는 경우라도 소득이 적으면 세금이 거의 없어요.</li>
   </ul>

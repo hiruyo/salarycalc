@@ -1,0 +1,11 @@
+{
+  "name": "바로계산소",
+  "short_name": "바로계산소",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "theme_color": "#ffffff",
+  "background_color": "#eef2f6",
+  "display": "browser"
+}

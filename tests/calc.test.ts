@@ -608,10 +608,19 @@ test('인건비: 시급제는 주휴수당 포함 월급, 주 15시간 미만은
   const full = calcEmployee({ payType: 'hourly', hourlyWage: 10_320, weeklyHours: 40 }, opt);
   assert.equal(full.gross, 2_156_880);
   assert.equal(full.insured, true);
+  // 주 15시간 미만: 국민연금·건강보험 제외. 3개월 이상 계속 근무(기본)면 고용보험은 적용
   const short = calcEmployee({ payType: 'hourly', hourlyWage: 12_000, weeklyHours: 14 }, opt);
   assert.equal(short.insured, false);
-  assert.equal(short.employer.pension + short.employer.health + short.employer.employment, 0);
+  assert.equal(short.employmentInsured, true);
+  assert.equal(short.employer.pension + short.employer.health, 0);
+  assert.equal(short.employer.employment, Math.floor((short.taxable * 0.0115) / 10 + 1e-6) * 10);
   assert.ok(short.employer.industrial > 0);
+  const shortTemp = calcEmployee({ payType: 'hourly', hourlyWage: 12_000, weeklyHours: 14, shortTermInsured: false }, opt);
+  assert.equal(shortTemp.employer.employment, 0);
+  assert.equal(shortTemp.employer.total, shortTemp.employer.industrial);
+  // 주 15시간 미만은 퇴직금 대상 아님
+  assert.equal(short.severanceReserve, 0);
+  assert.equal(full.severanceReserve, Math.floor(2_156_880 / 12));
 });
 
 test('인건비: 여러 명 합계', () => {

@@ -1,5 +1,6 @@
 ---
 import Article from '../../layouts/Article.astro';
+import { RATES } from '../../rates/2026';
 import { calcNetPay } from '../../lib/netpay';
 
 const won = (n: number) => n.toLocaleString('ko-KR');
@@ -13,6 +14,8 @@ const rows = bases.map((b) => {
 });
 const ex = rows.find((r) => r.b === 5000)!;
 const grossDiff10 = Math.round((5000 * 0.1 * 10_000) / 12);
+// 근로자 4대보험 합계 요율 (국민연금 + 건강 + 장기요양 + 고용)
+const insRate = ((RATES.pension.rate / 2 + RATES.health.rate / 2 + (RATES.health.rate * RATES.longTermCare.rateOfHealthPremium) / 2 + RATES.employment.employeeRate) * 100).toFixed(1);
 ---
 
 <Article slug="raise-net-pay-guide">
@@ -46,7 +49,7 @@ const grossDiff10 = Math.round((5000 * 0.1 * 10_000) / 12);
     늘어난 금액에서 다음이 빠지기 때문이에요.
   </p>
   <ul>
-    <li><strong>4대보험</strong>: 국민연금·건강보험·장기요양·고용보험을 합쳐 월급의 약 9.4%가 늘어난 만큼 함께 늘어요.</li>
+    <li><strong>4대보험</strong>: 국민연금·건강보험·장기요양·고용보험을 합쳐 월급의 약 {insRate}%가 늘어난 만큼 함께 늘어요.</li>
     <li><strong>소득세</strong>: 소득세는 구간이 올라갈수록 세율이 높아져서(6% → 15% → 24% …), 늘어난 부분에는 기존 평균보다 높은 세율이 붙어요.</li>
     <li><strong>지방소득세</strong>: 소득세의 10%가 함께 붙어요.</li>
   </ul>
@@ -65,7 +68,7 @@ const grossDiff10 = Math.round((5000 * 0.1 * 10_000) / 12);
   <h2>자주 묻는 질문</h2>
   <details>
     <summary>연봉이 오르면 오히려 실수령액이 줄 수도 있나요?</summary>
-    <p>월급 기준으로는 그런 일이 없어요. 세율이 올라가는 건 구간을 넘는 부분에만 적용되기 때문에, 연봉이 오르면 실수령액도 반드시 늘어요.</p>
+    <p>월급 실수령액은 줄지 않아요. 세율이 올라가는 건 구간을 넘는 부분에만 적용되기 때문이에요. 다만 소득 기준이 있는 근로장려금이나 두루누리 사회보험료 지원 등은 연봉이 오르면 대상에서 빠질 수 있어요.</p>
   </details>
   <details>
     <summary>인상된 첫 달 월급이 생각보다 적어요.</summary>

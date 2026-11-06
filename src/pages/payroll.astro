@@ -67,7 +67,7 @@ const s = RATES.employment.stabilityRates;
   </div>
 
   <p class="notice">
-    국민연금 60세 이상 미가입, 두루누리 사회보험료 지원 같은 정부 지원, 업종별 산재 요율 차이는 반영하지 않은 예상치예요.
+    국민연금 60세 이상 미가입, 두루누리 사회보험료 지원 같은 정부 지원, 업종별 산재 요율 차이, 산재보험과 함께 걷는 임금채권부담금·석면피해구제분담금(소액)은 반영하지 않은 예상치예요.
     4대보험 금액은 매년 정산 결과에 따라 달라질 수 있어요.
   </p>
 
@@ -81,13 +81,14 @@ const s = RATES.employment.stabilityRates;
         <tr><td>장기요양보험</td><td>건강보험료의 {pct(RATES.longTermCare.rateOfHealthPremium)}의 절반 (직원과 같음)</td></tr>
         <tr><td>고용보험</td><td>실업급여 {pct(RATES.employment.employerRate)} + 고용안정 {pct(s.u150)}~{pct(s.o1000)}</td></tr>
         <tr><td>산재보험</td><td>업종별 (평균 {pct(RATES.industrialAccidentAvgRate)}), 전액 회사 부담</td></tr>
-        <tr><td>퇴직금 적립</td><td>월 급여의 1/12 (1년 이상 근무 시 지급)</td></tr>
+        <tr><td>퇴직금 적립</td><td>월 급여의 1/12 (1년 이상, 주 15시간 이상 근무 시 지급)</td></tr>
       </tbody>
     </table>
   </div>
   <p>
     4대보험은 비과세(식대 등)를 뺀 보수를 기준으로 계산하고, 국민연금은 기준소득월액 상·하한 안에서만 매겨요.
-    주 15시간 미만(월 60시간 미만)으로 일하는 직원은 국민연금·건강보험·고용보험 가입 대상이 아니어서 산재보험만 계산해요.
+    주 15시간 미만(월 60시간 미만)으로 일하는 직원은 국민연금·건강보험 가입 대상이 아니에요. 다만 생업 목적으로 3개월 이상 계속 일하면 고용보험은 가입해야 해서,
+    계산기에서 해당 여부를 고를 수 있어요(일용근로자도 고용보험 대상). 국민연금은 월 60시간 미만이라도 1개월 이상 일하고 월 소득이 220만원 이상이면 가입 대상이에요.
   </p>
 
   <h2>자주 묻는 질문</h2>
@@ -97,7 +98,7 @@ const s = RATES.employment.stabilityRates;
   </details>
   <details>
     <summary>아르바이트도 4대보험에 가입해야 하나요?</summary>
-    <p>주 15시간 이상(월 60시간 이상) 일하면 국민연금·건강보험·고용보험 가입 대상이에요. 산재보험은 근무 시간과 관계없이 모든 근로자에게 적용돼요.</p>
+    <p>주 15시간 이상(월 60시간 이상) 일하면 국민연금·건강보험·고용보험 가입 대상이에요. 그보다 짧아도 3개월 이상 계속 일하면 고용보험은 가입해야 하고, 산재보험은 근무 시간과 관계없이 모든 근로자에게 적용돼요.</p>
   </details>
 
   <h2>관련 가이드</h2>
@@ -129,6 +130,7 @@ const s = RATES.employment.stabilityRates;
       <div class="s-hourly" hidden>
         <label>시급 (원)<input class="s-wage" type="number" inputmode="numeric" min="0" step="10" value={RATES.minWageHourly} /></label>
         <label>주 근로시간<input class="s-hours" type="number" inputmode="decimal" min="0" max="52" step="0.5" value="20" /></label>
+        <label class="check s-long"><input class="s-longterm" type="checkbox" checked /> 주 15시간 미만이어도 3개월 이상 계속 근무 (고용보험 적용)</label>
       </div>
     </fieldset>
   </template>
@@ -163,6 +165,7 @@ const s = RATES.employment.stabilityRates;
         if (data.nonTaxable !== undefined) (node.querySelector('.s-nontax') as HTMLInputElement).value = String(data.nonTaxable);
         if (data.hourlyWage !== undefined) (node.querySelector('.s-wage') as HTMLInputElement).value = String(data.hourlyWage);
         if (data.weeklyHours !== undefined) (node.querySelector('.s-hours') as HTMLInputElement).value = String(data.weeklyHours);
+        if (data.shortTermInsured === false) (node.querySelector('.s-longterm') as HTMLInputElement).checked = false;
       }
       node.querySelector('.s-remove')!.addEventListener('click', () => {
         node.remove();
@@ -176,6 +179,7 @@ const s = RATES.employment.stabilityRates;
         const hourly = (f.querySelector('.s-type input:checked') as HTMLInputElement)?.value === 'hourly';
         (f.querySelector('.s-monthly') as HTMLElement).hidden = hourly;
         (f.querySelector('.s-hourly') as HTMLElement).hidden = !hourly;
+        (f.querySelector('.s-long') as HTMLElement).hidden = !(hourly && (Number((f.querySelector('.s-hours') as HTMLInputElement).value) || 0) < 15);
         const num = (sel: string) => Number((f.querySelector(sel) as HTMLInputElement).value) || 0;
         return {
           name: (f.querySelector('.s-name') as HTMLInputElement).value,
@@ -184,6 +188,7 @@ const s = RATES.employment.stabilityRates;
           nonTaxable: num('.s-nontax'),
           hourlyWage: num('.s-wage'),
           weeklyHours: num('.s-hours'),
+          shortTermInsured: (f.querySelector('.s-longterm') as HTMLInputElement).checked,
         };
       });
     }
@@ -265,7 +270,7 @@ const s = RATES.employment.stabilityRates;
         const cells = [
           e.name || `직원 ${i + 1}`,
           won(e.gross),
-          won(e.employer.total) + (e.insured ? '' : ' (산재만)'),
+          won(e.employer.total) + (e.insured ? '' : e.employmentInsured ? ' (고용·산재)' : ' (산재만)'),
           won(e.severanceReserve),
           won(e.totalCost),
           won(e.net),
@@ -329,6 +334,8 @@ const s = RATES.employment.stabilityRates;
   .staff label:not(.check) { font-size: 0.88rem; margin: 12px 0 0; }
   .staff label:not(.check) input { margin-top: 6px; height: 44px; font-size: 1rem; }
   @media (max-width: 480px) { .s-monthly, .s-hourly { grid-template-columns: 1fr; } }
+  .s-long { margin-top: 12px !important; font-size: 0.86rem !important; grid-column: 1 / -1; }
+  .s-long[hidden] { display: none; }
   .add-btn {
     width: 100%; min-height: 46px; font: inherit; font-weight: 500; color: var(--blue); background: var(--blue-soft);
     border: 1px dashed var(--blue); border-radius: 10px; cursor: pointer;
