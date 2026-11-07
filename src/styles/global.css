@@ -304,3 +304,4 @@ tr.plus td { color: var(--blue); }
 .receipt tr[hidden] { display: none; }
 .receipt .big.neg { color: var(--seal); }
 fieldset.trade { border: 0; padding: 0; margin: 0; min-width: 0; }
+.receipt .sim-h { margin: 22px 0 4px; padding-top: 14px; border-top: 1px dashed var(--line); font-weight: 700; font-size: 0.95rem; }

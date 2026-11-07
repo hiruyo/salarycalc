@@ -1,0 +1,98 @@
+---
+import Article from '../../layouts/Article.astro';
+import { YEAR_END as Y } from '../../rates/yearEnd2026';
+import { cardDeduction } from '../../lib/yearEndTax';
+
+const C = Y.card;
+const won = (n: number) => n.toLocaleString('ko-KR');
+const man = (n: number) => `${(n / 10_000).toLocaleString('ko-KR')}만원`;
+const pct = (r: number) => `${Math.round(r * 100)}%`;
+const salary = 40_000_000;
+const base = { salary, creditCard: 0, debitCash: 0, culture: 0, market: 0, transit: 0, childrenUnder20: 0 };
+const cases = [
+  { name: '전부 신용카드 2,000만원', ...base, creditCard: 20_000_000 },
+  { name: '신용 1,000만 + 체크 1,000만', ...base, creditCard: 10_000_000, debitCash: 10_000_000 },
+  { name: '전부 체크카드 2,000만원', ...base, debitCash: 20_000_000 },
+  { name: '신용 1,000만 + 체크 1,000만 + 대중교통 100만', ...base, creditCard: 10_000_000, debitCash: 10_000_000, transit: 1_000_000 },
+].map((c) => ({ name: c.name, r: cardDeduction(c) }));
+// 과세표준 15% 구간 + 지방소득세 → 소득공제 1원당 0.165원 절세
+const save = (d: number) => Math.floor(d * 0.165);
+---
+
+<Article slug="card-deduction-guide">
+  <p>
+    신용카드 소득공제는 1년 동안 쓴 카드·현금영수증 금액 중 <strong>총급여의 {pct(C.minSpendRatio)}를 넘는 부분</strong>에만 적용돼요.
+    문턱을 넘은 뒤에는 결제수단에 따라 공제율이 2배 이상 차이 나서, 연말에 어떤 카드를 쓰느냐로 환급액이 달라져요.
+  </p>
+
+  <h2>1. 최저사용금액: 총급여의 {pct(C.minSpendRatio)}</h2>
+  <p>
+    총급여 4,000만원이면 {man(salary * C.minSpendRatio)}을 넘게 써야 공제가 시작돼요. 이 문턱은 공제율이 낮은 신용카드 사용분부터 먼저 채운 것으로 계산해요.
+    그래서 <strong>문턱까지는 혜택(포인트·할인)이 좋은 신용카드</strong>를 쓰고, <strong>넘은 뒤에는 체크카드·현금영수증</strong>을 쓰는 게 유리해요.
+  </p>
+
+  <h2>2. 결제수단별 공제율</h2>
+  <div class="card table-scroll">
+    <table>
+      <thead><tr><th>구분</th><th>공제율</th></tr></thead>
+      <tbody>
+        <tr><td>신용카드</td><td>{pct(C.rates.credit)}</td></tr>
+        <tr><td>체크카드·현금영수증</td><td>{pct(C.rates.debitCash)}</td></tr>
+        <tr><td>도서·공연·박물관·미술관·영화·신문·체육시설 (총급여 {man(C.cultureSalaryMax)} 이하)</td><td>{pct(C.rates.culture)}</td></tr>
+        <tr><td>전통시장</td><td>{pct(C.rates.market)}</td></tr>
+        <tr><td>대중교통</td><td>{pct(C.rates.transit)}</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>3. 공제 한도 ({Y.year}년 사용분부터 자녀 수별 상향)</h2>
+  <div class="card table-scroll">
+    <table>
+      <thead><tr><th>총급여</th><th>자녀 0명</th><th>1명</th><th>2명 이상</th><th>추가한도</th></tr></thead>
+      <tbody>
+        <tr><td>{man(C.highSalary)} 이하</td>{C.baseLimitLow.map((v) => <td>{man(v)}</td>)}<td>{man(C.extraLimitLow)}</td></tr>
+        <tr><td>{man(C.highSalary)} 초과</td>{C.baseLimitHigh.map((v) => <td>{man(v)}</td>)}<td>{man(C.extraLimitHigh)}</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="hint">
+    자녀는 기본공제를 받는 20세 이하 자녀예요(장애인은 나이 무관). 추가한도는 기본한도를 넘었을 때 전통시장·대중교통(총급여 7천만원 이하는 문화체육 포함) 공제분으로만 더 받을 수 있어요.
+  </p>
+
+  <h2>4. 예시: 총급여 4,000만원, 1년 2,000만원 사용</h2>
+  <div class="card table-scroll">
+    <table>
+      <thead><tr><th>사용 방법</th><th>소득공제</th><th>절세액 (약)</th></tr></thead>
+      <tbody>
+        {cases.map((c) => (
+          <tr><td>{c.name}</td><td>{won(c.r.deduction)}원</td><td><strong>{won(save(c.r.deduction))}원</strong></td></tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <p class="hint">
+    절세액은 과세표준 15% 구간(지방소득세 포함 16.5%)으로 가정한 값이에요. 소득과 다른 공제에 따라 달라져요. 기본한도는 {man(C.baseLimitLow[0])}(자녀 없음)이에요.
+  </p>
+  <p>
+    같은 2,000만원을 써도 문턱을 넘은 1,000만원을 체크카드로 쓰면 공제가 2배가 돼요. 다만 한도({man(C.baseLimitLow[0])})를 넘으면 더 써도 공제가 늘지 않으니, 한도를 채운 뒤에는 다시 혜택 좋은 신용카드를 써도 돼요.
+  </p>
+
+  <h2>5. 공제되지 않는 사용액</h2>
+  <ul>
+    <li>세금·공과금(국세·지방세·전기·수도·가스·아파트관리비), 통신비</li>
+    <li>자동차 구입비(중고차는 구입금액의 10%만 인정), 보험료, 상품권 등 유가증권 구입</li>
+    <li>해외 사용액, 면세점 사용액</li>
+    <li>현금서비스, 이미 세액공제를 받는 교육비 등 (의료비는 카드 공제와 중복 가능)</li>
+  </ul>
+
+  <h2>연말에 확인할 것</h2>
+  <ol>
+    <li>카드사 앱이나 홈택스 '연말정산 미리보기'에서 올해 사용액을 확인해요.</li>
+    <li>총급여의 25%를 넘었는지, 기본한도까지 얼마 남았는지 계산해요.</li>
+    <li>문턱을 넘었고 한도가 남았다면 12월 31일까지 체크카드·현금영수증 위주로 써요.</li>
+  </ol>
+
+  <p class="notice">
+    {Y.year}년 귀속(2027년 1~2월 연말정산) 기준이에요. 실제 공제액은 국세청 간소화 자료와 회사 연말정산 결과를 기준으로 확인하세요.
+  </p>
+</Article>

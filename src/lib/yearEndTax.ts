@@ -315,3 +315,60 @@ export function calcYearEnd(input: YearEndInput): YearEndResult {
     refund: prepaidTax + prepaidLocalTax - decidedTax - decidedLocalTax,
   };
 }
+
+/* ───────── 연말까지 환급 늘리기 시뮬레이션 ───────── */
+
+export interface YearEndPlan {
+  /** 지금 입력 기준 환급액 */
+  refund: number;
+  /** 결정세액(소득세)이 이미 0원이면 공제를 더 받아도 환급이 늘지 않음 */
+  taxAlreadyZero: boolean;
+  /** 카드 추가 사용 금액 */
+  cardExtra: number;
+  /** 신용카드로 추가 사용 시 환급 증가액 */
+  creditGain: number;
+  /** 체크카드·현금영수증으로 추가 사용 시 환급 증가액 */
+  debitGain: number;
+  /** 연금저축·IRP 추가 납입 금액 (한도 안으로 자른 값) */
+  pensionExtra: number;
+  /** 연금계좌 추가 납입 시 환급 증가액 */
+  pensionGain: number;
+  /** 연금계좌 세액공제 한도까지 남은 금액 */
+  pensionRoom: number;
+  /** 남은 한도를 다 채우면 환급 증가액 */
+  pensionFillGain: number;
+}
+
+/** 연금 추가 납입분을 연금저축(600만원 한도) → IRP 순으로 배분 */
+function addPension(input: YearEndInput, extra: number): YearEndInput {
+  const p = Y.pension;
+  const savings = n0(input.pensionSavings);
+  const irp = n0(input.irp);
+  const toSavings = Math.min(extra, Math.max(0, p.savingsLimit - savings));
+  return { ...input, pensionSavings: savings + toSavings, irp: irp + (extra - toSavings) };
+}
+
+export function pensionRoom(input: YearEndInput): number {
+  const p = Y.pension;
+  const used = Math.min(Math.min(n0(input.pensionSavings), p.savingsLimit) + n0(input.irp), p.totalLimit);
+  return p.totalLimit - used;
+}
+
+export function planYearEnd(input: YearEndInput, cardExtra: number, pensionExtra: number): YearEndPlan {
+  const now = calcYearEnd(input);
+  const card = Math.floor(n0(cardExtra));
+  const room = pensionRoom(input);
+  const pension = Math.min(Math.floor(n0(pensionExtra)), room);
+  const gain = (alt: YearEndInput) => calcYearEnd(alt).refund - now.refund;
+  return {
+    refund: now.refund,
+    taxAlreadyZero: now.decidedTax === 0,
+    cardExtra: card,
+    creditGain: card ? gain({ ...input, creditCard: n0(input.creditCard) + card }) : 0,
+    debitGain: card ? gain({ ...input, debitCash: n0(input.debitCash) + card }) : 0,
+    pensionExtra: pension,
+    pensionGain: pension ? gain(addPension(input, pension)) : 0,
+    pensionRoom: room,
+    pensionFillGain: room ? gain(addPension(input, room)) : 0,
+  };
+}

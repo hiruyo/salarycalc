@@ -5,7 +5,7 @@ import SaveHistory from '../components/SaveHistory.astro';
 import { YEAR_END as Y } from '../rates/yearEnd2026';
 import { GUIDES } from '../guides';
 
-const relatedGuides = GUIDES.filter((g) => ['year-end-tax-guide', 'withholding-tax', 'salary-table-2026'].includes(g.slug));
+const relatedGuides = GUIDES.filter((g) => ['year-end-tax-guide', 'card-deduction-guide', 'pension-tax-credit-guide', 'monthly-rent-credit-guide', 'withholding-tax'].includes(g.slug));
 const man = (n: number) => `${(n / 10_000).toLocaleString('ko-KR')}만원`;
 ---
 
@@ -100,6 +100,15 @@ const man = (n: number) => `${(n / 10_000).toLocaleString('ko-KR')}만원`;
         <label for="insPaid">건강·장기요양·고용보험료 합계 (만원)</label>
         <input id="insPaid" type="number" inputmode="decimal" min="0" step="1" placeholder="비우면 총급여로 추정" />
       </details>
+
+      <details open>
+        <summary>연말까지 환급 늘리기 시뮬레이션 (만원)</summary>
+        <label for="simCard">12월 31일까지 카드로 더 쓸 금액</label>
+        <input id="simCard" type="number" inputmode="decimal" min="0" step="10" value="100" />
+        <label for="simPension">12월 31일까지 연금저축·IRP에 더 넣을 금액</label>
+        <input id="simPension" type="number" inputmode="decimal" min="0" step="50" value="300" />
+        <div class="hint">위에 넣은 올해 사용·납입액에 이 금액을 더했을 때 환급이 얼마나 늘어나는지 계산해요. 연금은 연금저축(연 600만원)부터 채우고 나머지를 IRP에 넣는다고 봐요.</div>
+      </details>
     </form>
 
     <div class="receipt" data-history-results>
@@ -111,6 +120,11 @@ const man = (n: number) => `${(n / 10_000).toLocaleString('ko-KR')}만원`;
         <tbody id="out-rows"></tbody>
       </table>
       <p class="hint" id="out-tip"></p>
+      <p class="sim-h">연말까지 이렇게 하면</p>
+      <table>
+        <tbody id="sim-rows"></tbody>
+      </table>
+      <p class="hint" id="sim-tip"></p>
       <ResultActions calc="year-end-tax" />
     </div>
     <SaveHistory calc="year-end-tax" title="연말정산" />
@@ -152,7 +166,7 @@ const man = (n: number) => `${(n / 10_000).toLocaleString('ko-KR')}만원`;
   </ul>
 
   <script>
-    import { calcYearEnd } from '../lib/yearEndTax';
+    import { calcYearEnd, planYearEnd, type YearEndInput } from '../lib/yearEndTax';
 
     const MAN = 10_000;
     const $ = <T extends HTMLElement = HTMLInputElement>(id: string) => document.getElementById(id) as T;
@@ -161,8 +175,8 @@ const man = (n: number) => `${(n / 10_000).toLocaleString('ko-KR')}만원`;
     const opt = (id: string) => ($(id).value.trim() === '' ? undefined : (Number($(id).value) || 0) * MAN);
     const won = (n: number) => `${Math.round(n).toLocaleString('ko-KR')}원`;
 
-    function rows(items: [string, string][]) {
-      const tbody = $<HTMLElement>('out-rows');
+    function rows(items: [string, string][], id = 'out-rows') {
+      const tbody = $<HTMLElement>(id);
       tbody.innerHTML = '';
       for (const [k, v] of items) {
         const tr = document.createElement('tr');
@@ -176,7 +190,7 @@ const man = (n: number) => `${(n / 10_000).toLocaleString('ko-KR')}만원`;
     }
 
     function render() {
-      const r = calcYearEnd({
+      const input: YearEndInput = {
         salary: num('salary'),
         dependents: Math.max(1, intv('dependents')),
         seniors70: intv('seniors'),
@@ -202,7 +216,8 @@ const man = (n: number) => `${(n / 10_000).toLocaleString('ko-KR')}만원`;
         prepaidTax: opt('prepaid'),
         pensionPaid: opt('pensionPaid'),
         insurancePaid: opt('insPaid'),
-      });
+      };
+      const r = calcYearEnd(input);
 
       const label = $<HTMLElement>('out-main-label');
       const main = $<HTMLElement>('out-main');
@@ -210,7 +225,9 @@ const man = (n: number) => `${(n / 10_000).toLocaleString('ko-KR')}만원`;
         label.textContent = '예상 환급액';
         main.textContent = '-';
         rows([['확인', '총급여를 입력해 주세요']]);
+        rows([], 'sim-rows');
         $<HTMLElement>('out-tip').textContent = '';
+        $<HTMLElement>('sim-tip').textContent = '';
         return;
       }
 
@@ -255,6 +272,38 @@ const man = (n: number) => `${(n / 10_000).toLocaleString('ko-KR')}만원`;
         tip.textContent = `카드 공제 기본한도(${won(r.card.baseLimit)})를 다 채웠어요. 전통시장·대중교통 사용분은 추가한도로 더 공제받을 수 있어요.`;
       }
       if (r.prepaidEstimated) tip.textContent += ' 기납부세액은 간이세액표로 추정한 값이라, 급여명세서의 실제 소득세 합계를 넣으면 더 정확해요.';
+
+      renderPlan(input);
+    }
+
+    const plus = (n: number) => (n > 0 ? `+${won(n)}` : '변화 없음');
+
+    function renderPlan(input: YearEndInput) {
+      const p = planYearEnd(input, num('simCard'), num('simPension'));
+      const man = (n: number) => `${(n / MAN).toLocaleString('ko-KR')}만원`;
+      const items: [string, string][] = [];
+      if (p.cardExtra) {
+        items.push([`신용카드로 ${man(p.cardExtra)} 더 쓰면`, plus(p.creditGain)]);
+        items.push([`체크카드·현금으로 ${man(p.cardExtra)} 더 쓰면`, plus(p.debitGain)]);
+      }
+      if (p.pensionExtra) {
+        const rate = p.pensionGain / p.pensionExtra;
+        items.push([`연금저축·IRP에 ${man(p.pensionExtra)} 더 넣으면`, p.pensionGain > 0 ? `${plus(p.pensionGain)} (${(rate * 100).toFixed(1)}%)` : '변화 없음']);
+      }
+      items.push(['연금계좌 공제 한도까지 남은 금액', won(p.pensionRoom)]);
+      if (p.pensionRoom) items.push(['남은 한도를 다 채우면', plus(p.pensionFillGain)]);
+      rows(items, 'sim-rows');
+
+      const t: string[] = [];
+      if (p.taxAlreadyZero) {
+        t.push('결정세액이 이미 0원이라 공제를 더 받아도 환급이 늘지 않아요.');
+      } else {
+        if (p.cardExtra && p.creditGain === 0 && p.debitGain === 0) t.push('카드는 총급여의 25%를 넘게 써야 공제가 시작되고, 기본한도를 다 채웠다면 더 써도 공제가 늘지 않아요.');
+        if (p.pensionRoom && p.pensionFillGain < Math.round(p.pensionRoom * 0.132)) t.push('낼 세금이 0원이 되면 그 이상은 공제받지 못해서, 한도를 다 채워도 환급이 납입액만큼 늘지 않아요.');
+      }
+      if (p.pensionRoom === 0) t.push('연금계좌 세액공제 한도(연 900만원)를 다 채웠어요.');
+      t.push('카드는 12월 31일 사용분, 연금은 12월 31일 납입분까지 올해 공제에 들어가요.');
+      $<HTMLElement>('sim-tip').textContent = t.join(' ');
     }
 
     $<HTMLFormElement>('calc-form').addEventListener('input', render);

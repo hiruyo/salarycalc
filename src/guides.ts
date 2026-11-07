@@ -13,6 +13,30 @@ export interface GuideMeta {
 
 export const GUIDES: GuideMeta[] = [
   {
+    slug: 'card-deduction-guide',
+    title: '신용카드 소득공제 계산법: 25% 넘으면 체크카드',
+    description: '총급여 25% 문턱, 결제수단별 공제율(15·30·40%), 자녀 수별 한도와 연말에 어떤 카드를 쓰면 유리한지 예시로 정리했습니다.',
+    published: '2026-11-07',
+    updated: '2026-11-07',
+    calculator: { href: '/year-end-tax', label: '내 카드 공제·환급 계산하기' },
+  },
+  {
+    slug: 'pension-tax-credit-guide',
+    title: '연금저축·IRP 세액공제 한도와 환급액 표',
+    description: '연금저축 600만원, IRP 합산 900만원 한도와 총급여별 공제율(16.5%·13.2%), 납입액별 환급액과 주의할 점을 정리했습니다.',
+    published: '2026-11-07',
+    updated: '2026-11-07',
+    calculator: { href: '/year-end-tax', label: '연금 더 넣으면 환급 얼마? 계산하기' },
+  },
+  {
+    slug: 'monthly-rent-credit-guide',
+    title: '월세 세액공제 조건과 환급액 (2026년 귀속)',
+    description: '총급여 8천만원 이하 무주택 세대주의 월세 세액공제 요건, 공제율 15·17%, 연 1,000만원 한도, 서류와 놓쳤을 때 방법을 정리했습니다.',
+    published: '2026-11-07',
+    updated: '2026-11-07',
+    calculator: { href: '/year-end-tax', label: '월세 포함 환급 계산하기' },
+  },
+  {
     slug: 'stock-tax-guide',
     title: '2026년 주식 세금 총정리: 거래세·배당세·양도세',
     description: '국내 주식 증권거래세(코스피·코스닥 0.20%), 배당소득세 15.4%, 대주주·해외주식 양도소득세를 한 번에 정리했습니다.',

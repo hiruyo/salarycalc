@@ -9,7 +9,7 @@ import { freelancerFromGross, freelancerFromNet } from '../src/lib/freelancer.ts
 import { loadAll, listFor, save, remove, toCSV, MAX_PER_CALC, STORAGE_KEY, type StorageLike } from '../src/lib/history.ts';
 import { period, addToDate, age, parseYMD } from '../src/lib/dateCalc.ts';
 import { calcAnnualLeave, leaveDaysForYear, leaveHours } from '../src/lib/annualLeave.ts';
-import { calcYearEnd, cardDeduction, earnedTaxCredit, childTaxCredit, earnedIncomeDeduction as yeEarnedDeduction } from '../src/lib/yearEndTax.ts';
+import { calcYearEnd, cardDeduction, earnedTaxCredit, childTaxCredit, planYearEnd, pensionRoom, earnedIncomeDeduction as yeEarnedDeduction } from '../src/lib/yearEndTax.ts';
 import { calcEmployee, calcPayroll } from '../src/lib/payroll.ts';
 import { encodeState, decodeState, shareUrl } from '../src/lib/shareState.ts';
 import { search, normalize } from '../src/lib/search.ts';
@@ -770,4 +770,24 @@ test('가이드 제목 40자·설명 80자 이내 (네이버 서치어드바이�
     assert.ok([...g.title].length <= 40, `제목 길이 초과: ${g.title}`);
     assert.ok([...g.description].length <= 80, `설명 길이 초과: ${g.description}`);
   }
+});
+
+test('연말정산 시뮬레이션: 카드·연금 추가 시 환급 증가', () => {
+  const base = { salary: 50_000_000, creditCard: 15_000_000, debitCash: 5_000_000, transit: 600_000 };
+  const p = planYearEnd(base, 1_000_000, 3_000_000);
+  // 과표 15% 구간: 신용카드 100만 × 15% × 16.5% / 체크 100만 × 30% × 16.5%
+  assert.equal(p.creditGain, 24_750);
+  assert.equal(p.debitGain, 49_500);
+  // 총급여 5,500만원 이하: 연금 300만 × 16.5%
+  assert.equal(p.pensionGain, 495_000);
+  assert.equal(p.pensionRoom, 9_000_000);
+  // 25% 문턱 미달이면 카드 추가 사용 효과 0
+  const low = planYearEnd({ salary: 30_000_000 }, 1_000_000, 0);
+  assert.equal(low.creditGain, 0);
+  // 한도 계산: 연금저축 700만(600만 인정) + IRP 200만 → 100만 남음
+  assert.equal(pensionRoom({ salary: 50_000_000, pensionSavings: 7_000_000, irp: 2_000_000 }), 1_000_000);
+  // 추가 납입은 남은 한도까지만
+  const capped = planYearEnd({ ...base, pensionSavings: 5_000_000, irp: 3_500_000 }, 0, 3_000_000);
+  assert.equal(capped.pensionExtra, 500_000);
+  assert.equal(capped.pensionGain, 82_500);
 });
