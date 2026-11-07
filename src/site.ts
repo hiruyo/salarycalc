@@ -12,6 +12,12 @@ export const SITE = {
    * 비워두면 광고 스크립트를 넣지 않습니다. 애드센스 신청 시 사이트 확인용으로 먼저 채워야 합니다.
    */
   adsenseClient: 'ca-pub-6312236457001645',
+  /**
+   * 카카오 JavaScript 키 (developers.kakao.com → 내 애플리케이션 → 앱 키).
+   * 비워두면 카카오톡 공유는 휴대폰 기본 공유창으로 대신합니다.
+   * 카카오 앱 설정 → 플랫폼 → Web에 https://barogyesanso.com 등록 필요.
+   */
+  kakaoJsKey: '',
   /** 개인정보처리방침·이용약관 시행일 */
   policyEffectiveDate: '2026-11-07',
   /** 네이버 서치어드바이저 사이트 소유 확인 (HTML 태그 content 값) */

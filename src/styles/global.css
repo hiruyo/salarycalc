@@ -318,3 +318,22 @@ tr.plus td { color: var(--blue); }
 .receipt .big.neg { color: var(--seal); }
 fieldset.trade { border: 0; padding: 0; margin: 0; min-width: 0; }
 .receipt .sim-h { margin: 22px 0 4px; padding-top: 14px; border-top: 1px dashed var(--line); font-weight: 700; font-size: 0.95rem; }
+
+/* 카카오톡 공유 버튼 */
+.ra-buttons button.ra-kakao { color: #191600; background: #fee500; }
+.ra-buttons button.ra-kakao:hover { border-color: #191600; }
+.ra-buttons button[hidden] { display: none; }
+/* 가이드 글 공유 */
+.share-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 18px 0 4px; }
+.share-bar .share-label { font-size: 0.88rem; color: var(--muted); margin-right: 4px; }
+.share-bar button {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 0 14px;
+  font: inherit; font-size: 0.88rem; font-weight: 500; border-radius: 999px; cursor: pointer;
+  color: var(--ink); background: var(--surface); border: 1px solid var(--line);
+}
+.share-bar button:hover { border-color: var(--ink); }
+.share-bar button[hidden] { display: none; }
+.share-bar .sb-kakao { background: #fee500; border-color: #fee500; color: #191600; }
+.share-bar .sb-naver { background: #03c75a; border-color: #03c75a; color: #fff; }
+.share-bar .sb-msg { flex-basis: 100%; font-size: 0.84rem; color: var(--muted); margin: 2px 0 0; }
+.share-bar .sb-msg:empty { display: none; }

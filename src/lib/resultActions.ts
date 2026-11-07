@@ -2,6 +2,7 @@
  * 결과 공유 링크 + 명세서 이미지 저장 (브라우저 전용). ResultActions.astro에서 사용.
  */
 import { decodeState, shareUrl, type FormState } from './shareState';
+import { kakaoAvailable, kakaoKey, loadKakao, shareKakao } from './share';
 
 function track(event: string, params: Record<string, string>) {
   try {
@@ -309,6 +310,27 @@ export function mountResultActions(root: HTMLElement) {
       say('주소창의 링크를 복사해서 공유하세요.');
     }
   });
+
+  // 카카오톡 공유: 결과 요약 + 입력값이 담긴 링크 (키가 없으면 휴대폰 기본 공유창)
+  const kakaoBtn = root.querySelector<HTMLButtonElement>('[data-act="kakao"]');
+  if (kakaoBtn && kakaoAvailable()) {
+    kakaoBtn.hidden = false;
+    if (kakaoKey()) {
+      // 클릭 즉시 공유창이 열리도록 미리 불러옴
+      const pre = () => void loadKakao();
+      'requestIdleCallback' in window ? (window as unknown as { requestIdleCallback: (f: () => void) => void }).requestIdleCallback(pre) : setTimeout(pre, 1500);
+    }
+    kakaoBtn.addEventListener('click', async () => {
+      const url = form ? shareUrl(location.origin, location.pathname, collectState(form)) : location.href;
+      const r = receipt ? readReceipt(receipt) : { label: '', value: '', rows: [] as Row[] };
+      const summary = [r.label && r.value && r.value !== '-' ? `${r.label} ${r.value}` : '', ...r.rows.slice(0, 2).map((x) => `${x.label} ${x.value}`)]
+        .filter(Boolean)
+        .join(' · ');
+      const res = await shareKakao({ title: `${title} 결과`, description: summary || '바로계산소에서 바로 계산해 보세요.', url, buttonTitle: '결과 보기' });
+      if (res === 'kakao' || res === 'native') track('share_kakao', { calc, via: res });
+      else if (res === null) say('카카오톡 공유를 열지 못했어요. 링크 공유를 이용해 주세요.');
+    });
+  }
 
   // 오류 제보: 페이지·입력값(공유 링크)·결과를 담은 메일 작성 창을 엶 (서버로 전송하지 않음)
   root.querySelector('[data-act="report"]')?.addEventListener('click', () => {

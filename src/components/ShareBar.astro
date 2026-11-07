@@ -1,0 +1,55 @@
+---
+/** 가이드 글 등 페이지 공유 버튼 (카카오톡 · 네이버 · 링크 복사) */
+interface Props {
+  title: string;
+  description: string;
+  /** GA 이벤트용 식별자 */
+  id: string;
+}
+const { title, description, id } = Astro.props;
+---
+
+<div class="share-bar" data-share-bar data-title={title} data-desc={description} data-id={id}>
+  <span class="share-label">이 글 공유하기</span>
+  <button type="button" class="sb-kakao" data-act="kakao" hidden>
+    <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.9 5.3 4.7 6.7l-.9 3.4c-.1.3.3.6.6.4l4-2.6c.5.1 1 .1 1.6.1 5.5 0 10-3.6 10-8S17.5 3 12 3z" /></svg>
+    카카오톡
+  </button>
+  <button type="button" class="sb-naver" data-act="naver"><strong aria-hidden="true">N</strong> 네이버</button>
+  <button type="button" data-act="copy">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1.1 1.1" /><path d="M14 11a5 5 0 0 0-7.1 0l-3 3a5 5 0 0 0 7.1 7.1l1.1-1.1" /></svg>
+    링크 복사
+  </button>
+  <p class="sb-msg" data-msg aria-live="polite"></p>
+</div>
+
+<script>
+  import { kakaoAvailable, kakaoKey, loadKakao, shareKakao, shareNaver, copyLink, track } from '../lib/share';
+
+  document.querySelectorAll<HTMLElement>('[data-share-bar]').forEach((bar) => {
+    const title = bar.dataset.title ?? document.title;
+    const desc = bar.dataset.desc ?? '';
+    const id = bar.dataset.id ?? location.pathname;
+    const url = location.origin + location.pathname;
+    const msg = bar.querySelector<HTMLElement>('[data-msg]')!;
+    const kakao = bar.querySelector<HTMLButtonElement>('[data-act="kakao"]')!;
+
+    if (kakaoAvailable()) {
+      kakao.hidden = false;
+      if (kakaoKey()) setTimeout(() => void loadKakao(), 1500);
+    }
+    kakao.addEventListener('click', async () => {
+      const r = await shareKakao({ title, description: desc, url, buttonTitle: '글 읽기' });
+      if (r === 'kakao' || r === 'native') track('share_kakao', { page: id, via: r });
+      else if (r === null) msg.textContent = '카카오톡 공유를 열지 못했어요. 링크 복사를 이용해 주세요.';
+    });
+    bar.querySelector('[data-act="naver"]')!.addEventListener('click', () => {
+      shareNaver(url, title);
+      track('share_naver', { page: id });
+    });
+    bar.querySelector('[data-act="copy"]')!.addEventListener('click', async () => {
+      msg.textContent = (await copyLink(url)) ? '링크를 복사했어요.' : `이 주소를 복사하세요: ${url}`;
+      track('share_copy', { page: id });
+    });
+  });
+</script>
