@@ -4,9 +4,11 @@ import ResultActions from '../components/ResultActions.astro';
 import SaveHistory from '../components/SaveHistory.astro';
 import { RATES } from '../rates/2026';
 import { GUIDES } from '../guides';
+import { SALARY_PAGE_AMOUNTS, manLabel } from '../lib/salaryPages';
 
 const pct = (n: number) => `${Number((n * 100).toFixed(3))}%`;
 const man = (n: number) => `${(n / 10000).toLocaleString('ko-KR')}만원`;
+const shortMan = (m: number) => (m >= 10_000 ? manLabel(m).replace('만원', '만').replace('억원', '억') : m.toLocaleString('ko-KR'));
 const relatedGuides = GUIDES.filter((g) => ['salary-table-2026', 'social-insurance-2026', 'withholding-tax'].includes(g.slug));
 ---
 
@@ -93,6 +95,14 @@ const relatedGuides = GUIDES.filter((g) => ['salary-table-2026', 'social-insuran
     <p>회사마다 4대보험 정산 시점, 비과세 항목, 공제 항목, 연말정산 반영 방식이 달라 차이가 생길 수 있어요. 이 계산기는 참고용 예상치입니다.</p>
   </details>
 
+
+  <h2 id="salary-pages">연봉별 실수령액 바로 보기</h2>
+  <p>연봉을 누르면 공제 내역, 부양가족별 실수령액, 인상 효과, 회사 부담 인건비까지 한 페이지에서 볼 수 있어요. (단위: 만원)</p>
+  <ul class="amount-grid">
+    {SALARY_PAGE_AMOUNTS.map((m) => (
+      <li><a href={`/salary/${m}`} aria-label={`연봉 ${manLabel(m)} 실수령액`}>{shortMan(m)}</a></li>
+    ))}
+  </ul>
 
   <h2>관련 가이드</h2>
   <ul class="links">

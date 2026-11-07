@@ -1,0 +1,218 @@
+---
+/**
+ * 연봉별 실수령액 페이지: /salary/2000 ~ /salary/15000 (빌드할 때 정적 생성)
+ * 금액 목록·계산은 src/lib/salaryPages.ts
+ */
+import Base from '../../layouts/Base.astro';
+import { RATES } from '../../rates/2026';
+import { SITE } from '../../site';
+import { GUIDES } from '../../guides';
+import {
+  SALARY_PAGE_AMOUNTS,
+  salaryPageData,
+  manLabel,
+  minWageMonthly,
+  DEFAULT_MEAL,
+  MONTHLY_HOURS,
+} from '../../lib/salaryPages';
+
+export function getStaticPaths() {
+  return SALARY_PAGE_AMOUNTS.map((man) => ({ params: { man: String(man) } }));
+}
+
+const man = Number(Astro.params.man);
+const d = salaryPageData(man);
+const r = d.base;
+const label = manLabel(man);
+const won = (n: number) => n.toLocaleString('ko-KR');
+const signed = (n: number) => (n > 0 ? `+${won(n)}` : n < 0 ? `−${won(-n)}` : '0');
+const manWon = (n: number) => `${Math.round(n / 10_000).toLocaleString('ko-KR')}만원`;
+const calcLink = `/salary#salary=${man}`;
+
+// 검색어 형태("연봉 4500 실수령액")를 제목 앞에, 결과 금액을 뒤에
+const title = `연봉 ${man} 실수령액 ${RATES.year}년 · 월 ${won(r.netMonthly)}원`;
+const description = `${RATES.year}년 기준 연봉 ${label}의 월 실수령액은 ${won(r.netMonthly)}원이에요. 국민연금 ${won(r.pension)}원, 건강보험 ${won(r.health)}원, 소득세 ${won(r.incomeTax)}원 등 공제 내역과 부양가족별 실수령액을 정리했습니다.`;
+
+const canonical = new URL(`/salary/${man}`, Astro.site).toString();
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: '홈', item: new URL('/', Astro.site).toString() },
+    { '@type': 'ListItem', position: 2, name: '연봉 실수령액 계산기', item: new URL('/salary', Astro.site).toString() },
+    { '@type': 'ListItem', position: 3, name: `연봉 ${label} 실수령액`, item: canonical },
+  ],
+};
+
+const fam3 = d.family[2];
+const relatedGuides = GUIDES.filter((g) => ['salary-table-2026', 'raise-net-pay-guide', 'withholding-tax'].includes(g.slug));
+---
+
+<Base title={title} description={description}>
+  <script is:inline slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+  <div class="breadcrumb"><a href="/">홈</a> › <a href="/salary">연봉 실수령액</a> › 연봉 {label}</div>
+  <h1>연봉 {label} 실수령액 ({RATES.year}년)</h1>
+  <p class="lead">
+    연봉 {label}이면 한 달에 <strong>{won(r.netMonthly)}원</strong>을 받아요.
+    세전 월급 {won(r.grossMonthly)}원에서 4대보험과 세금 {won(r.deductionTotal)}원({d.deductionRate}%)이 빠진 금액입니다.
+  </p>
+
+  <div class="receipt">
+    <div class="result-main">
+      <div class="label">월 예상 실수령액</div>
+      <div class="big">{won(r.netMonthly)}원</div>
+    </div>
+    <table>
+      <tbody>
+        <tr><th>월 급여 (세전)</th><td>{won(r.grossMonthly)}원</td></tr>
+        <tr><th>국민연금</th><td>{won(r.pension)}원</td></tr>
+        <tr><th>건강보험</th><td>{won(r.health)}원</td></tr>
+        <tr><th>장기요양보험</th><td>{won(r.longTermCare)}원</td></tr>
+        <tr><th>고용보험</th><td>{won(r.employment)}원</td></tr>
+        <tr><th>소득세</th><td>{won(r.incomeTax)}원</td></tr>
+        <tr><th>지방소득세</th><td>{won(r.localIncomeTax)}원</td></tr>
+        <tr class="total"><th>공제 합계</th><td>{won(r.deductionTotal)}원</td></tr>
+        <tr class="total"><th>연 환산 실수령액</th><td>{won(r.netAnnual)}원</td></tr>
+      </tbody>
+    </table>
+    <p class="hint">식대 {won(DEFAULT_MEAL)}원 비과세, 공제대상가족 1명(본인), 퇴직금 별도 연봉 기준</p>
+  </div>
+
+  <a class="cta" href={calcLink}>내 조건(식대·부양가족)으로 다시 계산하기</a>
+
+  {d.belowMinWage && (
+    <p class="notice">
+      주 40시간 전일제라면 세전 월급 {won(r.grossMonthly)}원은 {RATES.year}년 최저임금 월 환산액({won(RATES.minWageHourly)}원 × {MONTHLY_HOURS}시간 = {won(minWageMonthly)}원)보다 낮아요.
+      단시간 근로이거나 연봉에 들어가지 않은 수당이 있을 수 있으니 근로계약서를 확인해 보세요.
+      <a href="/guide/minimum-wage-2026">{RATES.year}년 최저임금 정리 보기</a>
+    </p>
+  )}
+
+  <h2>부양가족에 따라 달라지는 실수령액</h2>
+  <p>
+    4대보험은 가족 수와 상관없이 같지만, 소득세는 공제대상가족과 8세 이상 20세 이하 자녀가 많을수록 줄어요.
+    연봉 {label}에 배우자와 자녀 1명이 있으면 소득세가 {won(r.incomeTax)}원에서 {won(fam3.incomeTax)}원으로 바뀌어
+    {fam3.diff > 0 ? <>매달 {won(fam3.diff)}원을 더 받습니다.</> : <>실수령액 차이는 없습니다.</>}
+  </p>
+  <div class="card table-scroll">
+    <table>
+      <thead>
+        <tr><th>가족 구성</th><th>소득세</th><th>월 실수령액</th></tr>
+      </thead>
+      <tbody>
+        {d.family.map((f) => (
+          <tr>
+            <td>{f.label}</td>
+            <td>{won(f.incomeTax)}원</td>
+            <td><strong>{won(f.netMonthly)}원</strong>{f.diff !== 0 && <span class="hint"> ({signed(f.diff)})</span>}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <p class="hint">자녀는 8세 이상 20세 이하 기준. 연말정산에서 실제 공제를 반영하면 1년 치 세금은 다시 정해집니다.</p>
+
+  <h2>식대 비과세가 없으면</h2>
+  <p>
+    회사가 식대를 비과세로 주지 않으면 월 {won(DEFAULT_MEAL)}원에도 4대보험과 소득세가 붙어서
+    월 실수령액이 {won(r.netMonthly)}원에서 {won(d.noMeal.netMonthly)}원으로 {won(r.netMonthly - d.noMeal.netMonthly)}원 줄어요.
+    1년이면 {won((r.netMonthly - d.noMeal.netMonthly) * 12)}원 차이입니다.
+  </p>
+
+  <h2>연봉이 오르면 얼마나 더 받을까</h2>
+  <p>
+    연봉 {label}에서 100만원이 오르면 월 실수령액은 {won(d.raise100.netMonthlyDiff)}원,
+    1년에 {won(d.raise100.netAnnualDiff)}원 늘어요. 인상분의 약 {d.raise100.keepRate}%가 손에 남는 셈입니다.
+    {d.pensionCapped
+      ? <>이 구간은 국민연금이 기준소득월액 상한({won(RATES.pension.upper)}원)에 걸려 더 늘지 않지만, 소득세 세율이 높아 인상분 중 세금 비중이 커요.</>
+      : <>연봉이 높아질수록 소득세 누진 구조 때문에 손에 남는 비율이 조금씩 줄어듭니다.</>}
+  </p>
+  <div class="card table-scroll">
+    <table>
+      <thead>
+        <tr><th>연봉</th><th>월 실수령액</th><th>{label} 대비</th></tr>
+      </thead>
+      <tbody>
+        {d.neighbors.map((n) => (
+          <tr class={n.current ? 'total' : undefined}>
+            <td>
+              {n.current ? <strong>{manLabel(n.man)}</strong> : n.hasPage ? <a href={`/salary/${n.man}`}>{manLabel(n.man)}</a> : manLabel(n.man)}
+            </td>
+            <td>{won(n.netMonthly)}원</td>
+            <td>{n.current ? '-' : `${signed(n.diff)}원`}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <h2>퇴직금 포함 연봉 {label}이라면</h2>
+  <p>
+    계약서의 연봉에 퇴직금이 포함되어 있다면 13으로 나눈 금액이 한 달 급여예요.
+    퇴직금 포함 {label}은 실제 연봉 약 {manWon(d.withSeverance.realAnnual)}에 해당하고,
+    월 실수령액은 {won(d.withSeverance.result.netMonthly)}원으로 퇴직금 별도일 때보다 {won(r.netMonthly - d.withSeverance.result.netMonthly)}원 적어요.
+    퇴직금을 월급에 나눠 주는 방식은 원칙적으로 퇴직금 지급으로 인정되지 않으니 계약 조건을 꼭 확인하세요.
+  </p>
+
+  <h2>시급으로 환산하면</h2>
+  <p>
+    주 40시간 근무 기준(주휴 포함 월 {MONTHLY_HOURS}시간)으로 나누면 세전 시급은 약 {won(d.hourlyGross)}원이에요.
+    {RATES.year}년 최저시급 {won(RATES.minWageHourly)}원의 {Math.round((d.hourlyGross / RATES.minWageHourly) * 100) / 100}배입니다.
+    연장·야간근로 수당을 계산할 때의 통상시급은 기본급과 고정 수당만으로 정하므로 이 값과 다를 수 있어요.
+  </p>
+
+  <h2>회사가 실제로 쓰는 돈</h2>
+  <p>
+    회사는 월급 {won(r.grossMonthly)}원 외에 국민연금·건강·장기요양·고용·산재보험의 회사 부담분 약 {won(d.employer.employerInsurance)}원과
+    퇴직금 적립분 {won(d.employer.severanceReserve)}원을 더 씁니다. 직원 한 명에 매달 약 <strong>{won(d.employer.totalCost)}원</strong>,
+    1년에 약 {manWon(d.employer.totalCost * 12)}이 드는 셈이에요.
+  </p>
+  <p class="hint">상시근로자 150인 미만, 산재보험 평균 요율 {Math.round(RATES.industrialAccidentAvgRate * 10000) / 100}% 기준. <a href="/payroll">인건비 계산기에서 업종·규모별로 계산하기</a></p>
+
+  <h2>자주 묻는 질문</h2>
+  <details>
+    <summary>연봉 {label} 실수령액이 회사 급여명세서와 다른 이유는?</summary>
+    <p>
+      비과세 항목(식대 외 자가운전보조금·보육수당 등), 공제대상가족 수, 원천징수 비율(80·100·120%), 4대보험 정산 시점에 따라 달라요.
+      이 페이지는 간이세액표 100% 기준입니다. 입사 첫 달은 건강보험료가 다음 달부터 빠지는 등 금액이 다를 수 있어요.
+    </p>
+  </details>
+  <details>
+    <summary>연봉 {label}의 연간 세금과 4대보험은 모두 얼마인가요?</summary>
+    <p>
+      매달 4대보험 {won(r.insuranceTotal)}원, 소득세·지방소득세 {won(r.taxTotal)}원을 내서 1년이면 4대보험 {won(r.insuranceTotal * 12)}원,
+      세금 {won(r.taxTotal * 12)}원(원천징수 기준)이에요. 세금은 연말정산에서 최종 확정되어 일부를 돌려받거나 더 낼 수 있습니다.
+    </p>
+  </details>
+  <details>
+    <summary>{RATES.year}년 요율은 어떻게 적용했나요?</summary>
+    <p>
+      국민연금 본인 {(RATES.pension.rate * 50).toFixed(2)}%(기준소득월액 상한 {won(RATES.pension.upper)}원), 건강보험 본인 {(RATES.health.rate * 50).toFixed(3)}%,
+      장기요양보험 건강보험료의 {(RATES.longTermCare.rateOfHealthPremium * 100).toFixed(2)}%(절반 본인 부담), 고용보험 {(RATES.employment.employeeRate * 100).toFixed(1)}%이고,
+      소득세는 국세청 근로소득 간이세액표(2026.2.27 개정)로 구했어요.
+    </p>
+  </details>
+
+  <nav class="salary-pager" aria-label="다른 연봉 보기">
+    {d.prev ? <a href={`/salary/${d.prev}`}>‹ 연봉 {manLabel(d.prev)}</a> : <span></span>}
+    <a href="/salary#salary-pages">전체 연봉 목록</a>
+    {d.next ? <a href={`/salary/${d.next}`}>연봉 {manLabel(d.next)} ›</a> : <span></span>}
+  </nav>
+
+  <h2>관련 가이드</h2>
+  <ul class="links">
+    {relatedGuides.map((g) => (
+      <li>
+        <a href={`/guide/${g.slug}`}>
+          <strong>{g.title}</strong>
+          <span>{g.description}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+
+  <p class="notice">
+    {SITE.name}의 계산 결과는 {RATES.year}년 요율과 간이세액표를 적용한 참고용 예상치이며, 실제 급여는 회사의 급여 구성과 정산 방식에 따라 다를 수 있습니다.
+  </p>
+</Base>

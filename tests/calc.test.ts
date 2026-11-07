@@ -16,6 +16,7 @@ import { search, normalize } from '../src/lib/search.ts';
 import { ALL_CALCS } from '../src/calculators.ts';
 import { GUIDES } from '../src/guides.ts';
 import { legalConversionRate, jeonseToWolse, wolseToJeonse, impliedConversionRate } from '../src/lib/rentConversion.ts';
+import { SALARY_PAGE_AMOUNTS, salaryPageData, manLabel, minWageMonthly } from '../src/lib/salaryPages.ts';
 import { calcAverage, sharesForTarget, calcTrade, calcOverseasTax, calcDividend, investmentForMonthly, dividendTax } from '../src/lib/stock.ts';
 
 // ---- 간이세액표 (소득세법 시행령 별표 2, 2026.2.27 개정) 원본 값과 대조 ----
@@ -770,4 +771,57 @@ test('가이드 제목 40자·설명 80자 이내 (네이버 서치어드바이�
     assert.ok([...g.title].length <= 40, `제목 길이 초과: ${g.title}`);
     assert.ok([...g.description].length <= 80, `설명 길이 초과: ${g.description}`);
   }
+});
+
+// ---- 연봉별 실수령액 페이지 (/salary/4500) ----
+
+test('연봉별 페이지: 금액 목록 (2,000~1억 100만 간격 + 1.5억까지 500만 간격, 중복 없음)', () => {
+  assert.equal(SALARY_PAGE_AMOUNTS.length, 91);
+  assert.equal(SALARY_PAGE_AMOUNTS[0], 2000);
+  assert.equal(SALARY_PAGE_AMOUNTS.at(-1), 15000);
+  assert.equal(new Set(SALARY_PAGE_AMOUNTS).size, SALARY_PAGE_AMOUNTS.length);
+  assert.ok(SALARY_PAGE_AMOUNTS.includes(4500) && SALARY_PAGE_AMOUNTS.includes(10000) && SALARY_PAGE_AMOUNTS.includes(10500));
+});
+
+test('연봉별 페이지: 기본 결과는 연봉 계산기(식대 20만, 가족 1명)와 같음', () => {
+  for (const man of [2000, 4000, 4500, 10000, 15000]) {
+    const d = salaryPageData(man);
+    const c = calcNetPay({ annualSalary: man * 10_000, nonTaxableMonthly: 200_000, familyCount: 1 });
+    assert.deepEqual(d.base, c);
+    assert.equal(d.family[0].netMonthly, c.netMonthly);
+    assert.equal(d.family[0].diff, 0);
+  }
+});
+
+test('연봉별 페이지: 부양가족이 늘면 실수령액이 줄지 않음, 식대 없으면 줄어듦', () => {
+  for (const man of SALARY_PAGE_AMOUNTS) {
+    const d = salaryPageData(man);
+    for (let i = 1; i < d.family.length; i++) assert.ok(d.family[i].netMonthly >= d.family[i - 1].netMonthly, `${man} ${i}`);
+    assert.ok(d.noMeal.netMonthly < d.base.netMonthly, `${man} 식대`);
+    assert.ok(d.raise100.netMonthlyDiff > 0 && d.raise100.netAnnualDiff < 1_000_000, `${man} 인상`);
+    assert.ok(d.withSeverance.result.netMonthly < d.base.netMonthly, `${man} 퇴직금 포함`);
+    assert.ok(d.employer.totalCost > d.base.grossMonthly, `${man} 인건비`);
+    assert.equal(d.neighbors.filter((n) => n.current).length, 1);
+  }
+});
+
+test('연봉별 페이지: 최저임금·국민연금 상한·이전/다음', () => {
+  assert.equal(minWageMonthly, 10_320 * 209);
+  assert.equal(salaryPageData(2500).belowMinWage, true); // 월 2,083,333원 < 2,156,880원
+  assert.equal(salaryPageData(2600).belowMinWage, false); // 월 2,166,666원
+  assert.equal(salaryPageData(8000).pensionCapped, false); // 비과세 제외 6,466,666원 < 659만
+  assert.equal(salaryPageData(8100).pensionCapped, false); // 6,550,000원
+  assert.equal(salaryPageData(8200).pensionCapped, true); // 6,633,333원 > 659만
+  const d = salaryPageData(10000);
+  assert.equal(d.prev, 9900);
+  assert.equal(d.next, 10500);
+  assert.equal(salaryPageData(2000).prev, null);
+  assert.equal(salaryPageData(15000).next, null);
+});
+
+test('연봉별 페이지: 금액 표기', () => {
+  assert.equal(manLabel(4500), '4,500만원');
+  assert.equal(manLabel(10000), '1억원');
+  assert.equal(manLabel(10500), '1억 500만원');
+  assert.equal(manLabel(15000), '1억 5,000만원');
 });

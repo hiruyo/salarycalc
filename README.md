@@ -25,6 +25,8 @@ src/
   rates/withholding2026.ts 근로소득 간이세액표 데이터 (PDF에서 자동 생성)
   rates/yearEnd2026.ts   연말정산 공제 기준 (2026년 귀속)
   lib/netpay.ts          실수령액 계산
+  lib/salaryPages.ts     연봉별 실수령액 페이지 데이터 (/salary/2000 ~ /salary/15000, 91개 정적 생성)
+  pages/salary/[man].astro 연봉별 실수령액 페이지 템플릿 (목록은 /salary 하단 '연봉별 실수령액 바로 보기')
   lib/withholding.ts     간이세액표 조회
   lib/weeklyHolidayPay.ts 주휴수당 계산
   layouts/Base.astro     공통 레이아웃 (SEO 메타, 푸터 링크, 애드센스 코드)

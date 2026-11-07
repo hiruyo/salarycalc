@@ -49,7 +49,7 @@ const deductionRate = (r: ReturnType<typeof calcNetPay>) => ((r.deductionTotal /
       <tbody>
         {rows.map(({ man, r }) => (
           <tr>
-            <td>{won(man)}만원</td>
+            <td><a href={`/salary/${man}`}>{won(man)}만원</a></td>
             <td>{won(r.grossMonthly)}</td>
             <td>{won(r.insuranceTotal)}</td>
             <td>{won(r.taxTotal)}</td>
