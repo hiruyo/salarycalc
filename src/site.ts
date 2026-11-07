@@ -17,7 +17,7 @@ export const SITE = {
    * 비워두면 카카오톡 공유는 휴대폰 기본 공유창으로 대신합니다.
    * 카카오 앱 설정 → 플랫폼 → Web에 https://barogyesanso.com 등록 필요.
    */
-  kakaoJsKey: '',
+  kakaoJsKey: '0d38585ecb250b1b2b3b3bcf51fbfe65',
   /** 개인정보처리방침·이용약관 시행일 */
   policyEffectiveDate: '2026-11-07',
   /** 네이버 서치어드바이저 사이트 소유 확인 (HTML 태그 content 값) */
