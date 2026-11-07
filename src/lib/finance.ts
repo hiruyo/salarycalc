@@ -189,7 +189,7 @@ export function stampTax(amount: number): { total: number; borrower: number } {
   return { total: row.tax, borrower: row.tax / 2 };
 }
 
-/** 중도상환수수료 = 상환금액 × 수수료율 × (부과기간 − 경과기간) ÷ 부과기간 (부과기간 보통 3년) */
+/** 중도상환수수료 = 상환금액 × 수수료율 × (부과기간 − 경과기간) ÷ 부과기간. 부과기간은 3년, 대출기간이 더 짧으면 대출기간 */
 export function prepaymentFee(amount: number, feeRate: number, elapsedMonths: number, feeMonths: number = F.prepaymentFeeMonths): number {
   const left = Math.max(0, feeMonths - Math.floor(pos(elapsedMonths)));
   if (!left || !feeMonths) return 0;
@@ -233,7 +233,8 @@ export function calcRefinance(i: RefinanceInput): RefinanceResult {
   const nn = Math.floor(pos(i.newMonths ?? 0)) || n;
   const cur = calcLoan({ principal: i.balance, rate: i.currentRate, months: n, method: i.method });
   const nxt = calcLoan({ principal: i.balance, rate: i.newRate, months: nn, method: i.method });
-  const fee = prepaymentFee(i.balance, i.feeRate, i.elapsedMonths);
+  const loanTerm = Math.floor(pos(i.elapsedMonths)) + n;
+  const fee = prepaymentFee(i.balance, i.feeRate, i.elapsedMonths, Math.min(F.prepaymentFeeMonths, loanTerm));
   const st = stampTax(i.balance).borrower;
   const other = Math.round(pos(i.otherCosts));
   const totalCost = fee + st + other;

@@ -908,3 +908,9 @@ test('대출 갈아타기: 인지세·중도상환수수료·손익분기', () =
   // 금리가 오르면 손익분기 없음
   assert.equal(calcRefinance({ balance: 100_000_000, currentRate: 0.04, remainingMonths: 120, newRate: 0.045, method: 'equal-payment', feeRate: 0, elapsedMonths: 40, otherCosts: 0 }).breakEvenMonth, null);
 });
+
+test('중도상환수수료: 대출기간이 3년보다 짧으면 대출기간 기준', () => {
+  // 2년 대출, 6개월 경과, 18개월 남음 → 1억 × 1% × 18/24
+  const r = calcRefinance({ balance: 100_000_000, currentRate: 0.05, remainingMonths: 18, newRate: 0.04, method: 'bullet', feeRate: 0.01, elapsedMonths: 6, otherCosts: 0 });
+  assert.equal(r.prepaymentFee, 750_000);
+});
