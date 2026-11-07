@@ -1,0 +1,78 @@
+---
+import Article from '../../layouts/Article.astro';
+import { YEAR_END as Y } from '../../rates/yearEnd2026';
+
+const R = Y.rent;
+const won = (n: number) => n.toLocaleString('ko-KR');
+const man = (n: number) => `${(n / 10_000).toLocaleString('ko-KR')}만원`;
+const pct = (r: number) => `${Math.round(r * 100)}%`;
+const hi = R.highRate * (1 + Y.localTaxRate);
+const lo = R.lowRate * (1 + Y.localTaxRate);
+const monthly = [400_000, 600_000, 800_000, 1_000_000];
+---
+
+<Article slug="monthly-rent-credit-guide">
+  <p>
+    무주택 직장인이 낸 월세는 연말정산에서 1년 월세의 <strong>{pct(R.lowRate)} 또는 {pct(R.highRate)}</strong>(지방소득세까지 약 {+(lo * 100).toFixed(1)}~{+(hi * 100).toFixed(1)}%)를 세금에서 빼 줘요.
+    월세 60만원이면 1년에 100만원 넘게 돌려받을 수 있어, 조건만 맞으면 꼭 챙겨야 하는 공제예요.
+  </p>
+
+  <h2>누가 받을 수 있나</h2>
+  <ul>
+    <li><strong>총급여 {man(R.salaryMax)} 이하</strong> 근로자 (종합소득금액 7,000만원 이하)</li>
+    <li>12월 31일 기준 <strong>무주택 세대의 세대주</strong>. 세대주가 주택 관련 공제를 받지 않았다면 세대원도 가능해요.</li>
+    <li>집: <strong>국민주택규모(전용 85㎡) 이하 또는 기준시가 4억원 이하</strong> 주택·오피스텔·고시원</li>
+    <li>임대차계약서 주소와 주민등록 주소(전입신고)가 같아야 해요.</li>
+  </ul>
+
+  <h2>공제율과 한도</h2>
+  <div class="card table-scroll">
+    <table>
+      <thead><tr><th>총급여</th><th>공제율</th><th>지방세 포함</th><th>한도</th></tr></thead>
+      <tbody>
+        <tr><td>{man(R.highRateSalaryMax)} 이하</td><td>{pct(R.highRate)}</td><td>약 {+(hi * 100).toFixed(1)}%</td><td rowspan="2">연 월세 {man(R.limit)}</td></tr>
+        <tr><td>{man(R.highRateSalaryMax)} 초과 ~ {man(R.salaryMax)}</td><td>{pct(R.lowRate)}</td><td>약 {+(lo * 100).toFixed(1)}%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>월세별 환급액</h2>
+  <div class="card table-scroll">
+    <table>
+      <thead><tr><th>월세</th><th>1년 월세</th><th>총급여 {man(R.highRateSalaryMax)} 이하</th><th>{man(R.salaryMax)} 이하</th></tr></thead>
+      <tbody>
+        {monthly.map((m) => {
+          const y = Math.min(m * 12, R.limit);
+          return (
+            <tr><td>{man(m)}</td><td>{won(m * 12)}원</td><td><strong>{won(Math.floor(y * R.highRate * 1.1))}원</strong></td><td>{won(Math.floor(y * R.lowRate * 1.1))}원</td></tr>
+          );
+        })}
+      </tbody>
+    </table>
+  </div>
+  <p class="hint">
+    세액공제는 낼 세금(결정세액) 안에서만 받아요. 관리비는 빼고 순수 월세만 넣어요. 표는 지방소득세(공제액의 10%)를 포함한 값이에요.
+  </p>
+
+  <h2>필요한 서류</h2>
+  <ol>
+    <li>임대차계약서 사본</li>
+    <li>월세를 낸 증빙: 계좌이체 내역, 무통장 입금증 등</li>
+    <li>주민등록등본 (회사가 요구하는 경우)</li>
+  </ol>
+  <p>
+    월세는 연말정산 간소화 자료에 자동으로 나오지 않는 경우가 많아요. 회사에 서류를 직접 내거나, 홈택스에서 '월세 세액공제'를 직접 입력해요.
+    집주인 동의나 확정일자는 필요 없어요.
+  </p>
+
+  <h2>놓쳤다면</h2>
+  <ul>
+    <li><strong>5월 종합소득세 신고</strong> 때 추가로 공제받을 수 있어요.</li>
+    <li>그 뒤라도 <strong>5년 안에 경정청구</strong>를 하면 돌려받을 수 있어요. 지난 몇 년 치를 한 번에 신청할 수도 있어요.</li>
+    <li>현금영수증으로 신고한 월세는 카드 공제로 들어가는데, 세액공제 요건을 갖췄다면 월세 세액공제가 대부분 더 유리해요.</li>
+  </ul>
+
+  <p class="notice">
+    {Y.year}년 귀속 기준이에요. 계약자가 배우자인 경우, 세대 분리 상태 등 세부 요건은 국세청(126)이나 홈택스 안내로 확인하세요.
+  </p>
+</Article>
