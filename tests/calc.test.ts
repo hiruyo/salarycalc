@@ -824,6 +824,7 @@ test('연봉별 페이지: 금액 표기', () => {
   assert.equal(manLabel(10000), '1억원');
   assert.equal(manLabel(10500), '1억 500만원');
   assert.equal(manLabel(15000), '1억 5,000만원');
+});
 
 test('연말정산 시뮬레이션: 카드·연금 추가 시 환급 증가', () => {
   const base = { salary: 50_000_000, creditCard: 15_000_000, debitCash: 5_000_000, transit: 600_000 };
