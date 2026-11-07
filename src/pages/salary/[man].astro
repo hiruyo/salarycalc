@@ -31,7 +31,8 @@ const calcLink = `/salary#salary=${man}`;
 
 // 검색어 형태("연봉 4500 실수령액")를 제목 앞에, 결과 금액을 뒤에
 const title = `연봉 ${man} 실수령액 ${RATES.year}년 · 월 ${won(r.netMonthly)}원`;
-const description = `${RATES.year}년 기준 연봉 ${label}의 월 실수령액은 ${won(r.netMonthly)}원이에요. 국민연금 ${won(r.pension)}원, 건강보험 ${won(r.health)}원, 소득세 ${won(r.incomeTax)}원 등 공제 내역과 부양가족별 실수령액을 정리했습니다.`;
+// 네이버 권장 80자 이내
+const description = `${RATES.year}년 연봉 ${label} 월 실수령액은 ${won(r.netMonthly)}원. 국민연금·건강보험·소득세 공제 내역과 부양가족별 금액을 정리했어요.`;
 
 const canonical = new URL(`/salary/${man}`, Astro.site).toString();
 const jsonLd = {
