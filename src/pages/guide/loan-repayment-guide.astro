@@ -1,0 +1,89 @@
+---
+import Article from '../../layouts/Article.astro';
+import { calcLoan, type RepayMethod } from '../../lib/finance';
+
+const won = (n: number) => n.toLocaleString('ko-KR');
+const man = (n: number) => `${Math.round(n / 10_000).toLocaleString('ko-KR')}만원`;
+const methods: [RepayMethod, string][] = [
+  ['equal-payment', '원리금균등'],
+  ['equal-principal', '원금균등'],
+  ['bullet', '만기일시'],
+];
+const main = methods.map(([m, name]) => ({ name, r: calcLoan({ principal: 300_000_000, rate: 0.04, months: 360, method: m }) }));
+const rates = [0.035, 0.04, 0.045, 0.05, 0.055].map((rate) => ({ rate, r: calcLoan({ principal: 100_000_000, rate, months: 360, method: 'equal-payment' }) }));
+const terms = [10, 20, 30, 40].map((y) => ({ y, r: calcLoan({ principal: 100_000_000, rate: 0.04, months: y * 12, method: 'equal-payment' }) }));
+const ep = main[0].r;
+const firstYearInterestShare = ep.rows.slice(0, 12).reduce((a, x) => a + x.interest, 0) / ep.rows.slice(0, 12).reduce((a, x) => a + x.payment, 0);
+---
+
+<Article slug="loan-repayment-guide">
+  <p>
+    같은 금액을 같은 금리로 빌려도 <strong>어떻게 갚느냐</strong>에 따라 매달 내는 돈과 전체 이자가 크게 달라져요.
+    세 가지 상환 방식의 차이와 고르는 기준을 예시로 정리했어요.
+  </p>
+
+  <h2>3억원, 연 4%, 30년이면</h2>
+  <div class="card table-scroll">
+    <table>
+      <thead><tr><th>방식</th><th>첫 달</th><th>마지막 달</th><th>총 이자</th></tr></thead>
+      <tbody>
+        {main.map(({ name, r }) => (
+          <tr><td>{name}</td><td>{won(r.firstPayment)}원</td><td>{won(r.lastPayment)}원</td><td><strong>{man(r.totalInterest)}</strong></td></tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <p>
+    원금균등은 첫 달 부담이 원리금균등보다 약 {man(main[1].r.firstPayment - main[0].r.firstPayment)} 크지만, 30년 동안 이자를 약 {man(main[0].r.totalInterest - main[1].r.totalInterest)} 덜 내요.
+    만기일시는 매달 이자만 내서 월 부담이 가장 작지만 원금이 줄지 않아 이자가 가장 많아요.
+  </p>
+
+  <h2>방식별 특징</h2>
+  <h3>원리금균등: 매달 같은 금액</h3>
+  <p>
+    원금과 이자를 합친 상환액이 매달 같아요. 처음에는 이자 비중이 커서 위 예시의 첫 1년은 상환액의 약 {Math.round(firstYearInterestShare * 100)}%가 이자예요.
+    가계 계획을 세우기 쉬워 주택담보대출에서 가장 많이 써요.
+  </p>
+  <h3>원금균등: 처음이 가장 비싸고 갈수록 줄어요</h3>
+  <p>매달 같은 원금에 남은 원금의 이자를 더해 내요. 소득이 충분해 초반 부담을 감당할 수 있다면 총이자가 가장 적어요.</p>
+  <h3>만기일시: 이자만 내다 마지막에 원금</h3>
+  <p>전세대출·신용대출(마이너스통장 포함)에서 주로 써요. 만기에 원금을 한 번에 갚을 계획(전세보증금 반환, 목돈)이 있을 때 맞아요.</p>
+
+  <h2>금리별 월 상환액 (1억원, 30년, 원리금균등)</h2>
+  <div class="card table-scroll">
+    <table>
+      <thead><tr><th>금리</th><th>월 상환액</th><th>총 이자</th></tr></thead>
+      <tbody>
+        {rates.map(({ rate, r }) => (
+          <tr><td>{(rate * 100).toFixed(1)}%</td><td>{won(r.firstPayment)}원</td><td>{man(r.totalInterest)}</td></tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <p class="hint">금리 0.5%p 차이로 매달 약 3만원, 30년 총이자는 1,000만원 넘게 달라져요.</p>
+
+  <h2>기간별 월 상환액 (1억원, 연 4%, 원리금균등)</h2>
+  <div class="card table-scroll">
+    <table>
+      <thead><tr><th>기간</th><th>월 상환액</th><th>총 이자</th></tr></thead>
+      <tbody>
+        {terms.map(({ y, r }) => (
+          <tr><td>{y}년</td><td>{won(r.firstPayment)}원</td><td>{man(r.totalInterest)}</td></tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <p>기간을 늘리면 월 부담은 줄지만 총이자는 크게 늘어요. 30년에서 40년으로 늘리면 매달 약 {man(terms[2].r.firstPayment - terms[3].r.firstPayment)} 덜 내는 대신 이자를 {man(terms[3].r.totalInterest - terms[2].r.totalInterest)} 더 내요.</p>
+
+  <h2>어떤 방식을 고를까</h2>
+  <ul>
+    <li><strong>월 소득이 일정하고 계획이 중요하면</strong>: 원리금균등</li>
+    <li><strong>초반 여유가 있고 총이자를 줄이고 싶으면</strong>: 원금균등</li>
+    <li><strong>곧 목돈이 들어오거나 단기 대출이면</strong>: 만기일시</li>
+    <li>원리금균등을 고르더라도 여유 자금이 생길 때 <strong>중도상환</strong>하면 이자를 줄일 수 있어요. 대출일부터 3년이 지나면 보통 수수료가 없어요.</li>
+  </ul>
+
+  <p class="notice">
+    월 이자 = 남은 원금 × 연 금리 ÷ 12로 계산한 예시예요. 실제 대출은 일 단위 계산, 변동금리 변동, 우대금리 조건에 따라 달라질 수 있어요.
+  </p>
+</Article>

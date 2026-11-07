@@ -1,5 +1,5 @@
 /** 계산기 목록 (메뉴·홈·소개 페이지에서 공통 사용). 새 계산기를 만들면 여기에 추가하세요. */
-export type CalcIcon = 'banknote' | 'receipt' | 'clock' | 'briefcase' | 'sun' | 'umbrella' | 'percent' | 'house' | 'calendar' | 'store' | 'trend' | 'layers' | 'globe' | 'coins';
+export type CalcIcon = 'banknote' | 'receipt' | 'clock' | 'briefcase' | 'sun' | 'umbrella' | 'percent' | 'house' | 'calendar' | 'store' | 'trend' | 'layers' | 'globe' | 'coins' | 'bank' | 'piggy' | 'swap';
 
 export interface CalcMeta {
   href: string;
@@ -34,6 +34,14 @@ export const CALC_GROUPS: CalcGroup[] = [
       { href: '/stock-profit', name: '주식 수익률', desc: '수수료·거래세 뺀 실현손익과 본전 매도가', icon: 'trend', keywords: '주식수익률 수익률계산기 실현손익 증권거래세 거래세 수수료 매도 손익분기 코스피 코스닥' },
       { href: '/overseas-stock-tax', name: '해외주식 양도세', desc: '250만원 공제 후 22%, 환율 반영', icon: 'globe', keywords: '해외주식 미국주식 양도소득세 양도세 서학개미 250만원 22% 5월신고 환율 손익통산' },
       { href: '/dividend-calculator', name: '배당금', desc: '세후 배당금과 월배당에 필요한 투자금', icon: 'coins', keywords: '배당 배당금계산기 배당소득세 15.4% 월배당 배당수익률 금융소득종합과세 미국배당' },
+    ],
+  },
+  {
+    name: '대출과 저축',
+    items: [
+      { href: '/loan-interest', name: '대출 이자', desc: '원리금균등·원금균등·만기일시 월 상환액과 총이자', icon: 'bank', keywords: '대출이자 대출계산기 이자계산기 원리금균등 원금균등 만기일시 주택담보대출 주담대 신용대출 전세대출 월상환액 상환스케줄 거치' },
+      { href: '/savings-interest', name: '예금·적금 이자', desc: '세후 이자와 만기 수령액, 적금 실제 수익률', icon: 'piggy', keywords: '예금이자 적금이자 이자계산기 만기수령액 이자소득세 15.4% 비과세 세금우대 단리 복리 월복리 정기예금 정기적금 파킹통장' },
+      { href: '/loan-refinance', name: '대출 갈아타기', desc: '중도상환수수료·비용 빼고 이득인지 계산', icon: 'swap', keywords: '대출갈아타기 대환대출 대환 중도상환수수료 중도상환 금리인하 갈아타기계산기 인지세 손익분기' },
     ],
   },
   {

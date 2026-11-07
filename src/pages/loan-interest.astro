@@ -1,0 +1,207 @@
+---
+import Base from '../layouts/Base.astro';
+import ResultActions from '../components/ResultActions.astro';
+import SaveHistory from '../components/SaveHistory.astro';
+import { GUIDES } from '../guides';
+import { calcLoan } from '../lib/finance';
+const relatedGuides = GUIDES.filter((g) => ['loan-repayment-guide', 'savings-interest-guide'].includes(g.slug));
+const won = (n: number) => n.toLocaleString('ko-KR');
+const ex = (m: 'equal-payment' | 'equal-principal' | 'bullet') => calcLoan({ principal: 100_000_000, rate: 0.045, months: 360, method: m });
+const exP = ex('equal-payment');
+const exE = ex('equal-principal');
+const exB = ex('bullet');
+---
+
+<Base
+  title="대출 이자 계산기 - 원리금균등·원금균등·만기일시 비교"
+  description="대출금·금리·기간을 넣으면 원리금균등, 원금균등, 만기일시 상환의 월 상환액과 총이자, 월별 상환 스케줄을 계산합니다. 거치기간도 반영해요."
+>
+  <h1>대출 이자 계산기</h1>
+  <p class="lead">매달 얼마씩 갚는지, 이자는 총 얼마인지, 상환 방식별로 얼마나 차이 나는지 바로 계산해요.</p>
+
+  <div class="calc-layout">
+    <form id="calc-form" class="card" onsubmit="return false;">
+      <label for="principal">대출금 (만원)</label>
+      <input id="principal" type="number" inputmode="numeric" min="0" step="100" value="10000" />
+
+      <div class="pair">
+        <div>
+          <label for="rate">연 금리 (%)</label>
+          <input id="rate" type="number" inputmode="decimal" min="0" step="0.01" value="4.5" />
+        </div>
+        <div>
+          <label for="years">대출 기간 (년)</label>
+          <input id="years" type="number" inputmode="decimal" min="0" step="1" value="30" />
+        </div>
+      </div>
+
+      <label>상환 방식</label>
+      <div class="segmented" role="radiogroup">
+        <label class="check"><input type="radio" name="method" value="equal-payment" checked /> 원리금균등</label>
+        <label class="check"><input type="radio" name="method" value="equal-principal" /> 원금균등</label>
+        <label class="check"><input type="radio" name="method" value="bullet" /> 만기일시</label>
+      </div>
+      <div class="hint" id="method-hint"></div>
+
+      <label for="grace">거치기간 (개월, 선택)</label>
+      <input id="grace" type="number" inputmode="numeric" min="0" step="1" value="0" />
+      <div class="hint">거치기간에는 이자만 내고, 이후 남은 기간 동안 원금을 갚아요. 대출 기간에 포함돼요.</div>
+    </form>
+
+    <div class="receipt" data-history-results>
+      <div class="result-main">
+        <div class="label" id="main-label">월 상환액</div>
+        <div class="big" id="out-main">-</div>
+      </div>
+      <table>
+        <tbody>
+          <tr id="row-grace"><th>거치기간 월 이자</th><td id="out-grace">-</td></tr>
+          <tr id="row-last"><th>마지막 달 상환액</th><td id="out-last">-</td></tr>
+          <tr><th>대출금</th><td id="out-principal">-</td></tr>
+          <tr class="total"><th>총 이자</th><td id="out-interest">-</td></tr>
+          <tr><th>총 상환액</th><td id="out-total">-</td></tr>
+          <tr><th>원리금균등 총이자</th><td id="cmp-equal-payment">-</td></tr>
+          <tr><th>원금균등 총이자</th><td id="cmp-equal-principal">-</td></tr>
+          <tr><th>만기일시 총이자</th><td id="cmp-bullet">-</td></tr>
+        </tbody>
+      </table>
+      <ResultActions calc="loan-interest" />
+    </div>
+    <SaveHistory calc="loan-interest" title="대출이자" />
+  </div>
+
+  <details class="schedule card">
+    <summary>상환 스케줄 보기</summary>
+    <div class="table-scroll">
+      <table id="schedule">
+        <thead><tr><th>회차</th><th>상환액</th><th>원금</th><th>이자</th><th>남은 원금</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <button type="button" class="more" id="schedule-more" hidden>전체 보기</button>
+  </details>
+
+  <p class="notice">
+    매달 같은 날 갚는다고 보고 월 이자 = 남은 원금 × 연 금리 ÷ 12로 계산했어요. 실제 대출은 일 단위로 이자를 계산하거나 변동금리가 바뀌어 몇백 원~몇천 원 차이가 날 수 있어요.
+  </p>
+
+  <h2>상환 방식별 차이</h2>
+  <p>1억원을 연 4.5%로 30년 빌리면 이렇게 달라져요.</p>
+  <div class="card table-scroll">
+    <table>
+      <thead><tr><th>방식</th><th>첫 달</th><th>마지막 달</th><th>총 이자</th></tr></thead>
+      <tbody>
+        <tr><td>원리금균등</td><td>{won(exP.firstPayment)}원</td><td>{won(exP.lastPayment)}원</td><td>{won(exP.totalInterest)}원</td></tr>
+        <tr><td>원금균등</td><td>{won(exE.firstPayment)}원</td><td>{won(exE.lastPayment)}원</td><td>{won(exE.totalInterest)}원</td></tr>
+        <tr><td>만기일시</td><td>{won(exB.firstPayment)}원</td><td>{won(exB.lastPayment)}원</td><td>{won(exB.totalInterest)}원</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li><strong>원리금균등</strong>: 매달 같은 금액을 갚아요. 처음엔 이자 비중이 크고 갈수록 원금 비중이 커져요. 계획 세우기 쉬워 주택담보대출에서 가장 많이 써요.</li>
+    <li><strong>원금균등</strong>: 매달 같은 원금에 남은 원금의 이자를 더해 갚아요. 처음 부담이 크지만 총이자가 가장 적어요.</li>
+    <li><strong>만기일시</strong>: 매달 이자만 내고 원금은 만기에 한 번에 갚아요. 월 부담은 가장 작지만 총이자가 가장 커요. 신용대출·전세대출에서 많이 써요.</li>
+  </ul>
+
+  <h2>자주 묻는 질문</h2>
+  <details>
+    <summary>금리가 1%p 오르면 얼마나 늘어나나요?</summary>
+    <p>1억원 30년 원리금균등 기준으로 4.5%면 월 약 50.7만원, 5.5%면 약 56.8만원이에요. 매달 6만원 넘게, 30년간 총이자는 2천만원 넘게 늘어나요. 금리를 바꿔 넣어 직접 비교해 보세요.</p>
+  </details>
+  <details>
+    <summary>중간에 일부를 갚으면 얼마나 줄어드나요?</summary>
+    <p>남은 원금이 줄어든 만큼 이후 이자가 줄어요. 대출일부터 3년 안에 갚으면 중도상환수수료가 붙을 수 있어요. 갈아타기나 중도상환이 이득인지는 <a href="/loan-refinance">대출 갈아타기 계산기</a>로 확인하세요.</p>
+  </details>
+  <details>
+    <summary>전세대출은 어떤 방식으로 계산하나요?</summary>
+    <p>전세대출은 보통 만기일시 상환이라 매달 이자만 내요. 상환 방식을 만기일시로 고르면 월 이자를 바로 볼 수 있어요.</p>
+  </details>
+
+  <h2>관련 가이드</h2>
+  <ul class="links">
+    {relatedGuides.map((g) => (
+      <li>
+        <a href={`/guide/${g.slug}`}>
+          <strong>{g.title}</strong>
+          <span>{g.description}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+
+  <script>
+    import { calcLoan, type RepayMethod, type LoanRow } from '../lib/finance';
+
+    const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+    const num = (id: string) => Number($<HTMLInputElement>(id).value) || 0;
+    const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
+    const set = (id: string, text: string) => {
+      $(id).textContent = text;
+    };
+    const HINT: Record<RepayMethod, string> = {
+      'equal-payment': '매달 같은 금액(원금+이자)을 갚아요.',
+      'equal-principal': '매달 같은 원금을 갚고, 이자는 남은 원금만큼 줄어요.',
+      bullet: '매달 이자만 내고 원금은 만기에 한 번에 갚아요.',
+    };
+    const PREVIEW = 24;
+    let showAll = false;
+    let lastRows: LoanRow[] = [];
+
+    function method(): RepayMethod {
+      return (document.querySelector('input[name="method"]:checked') as HTMLInputElement).value as RepayMethod;
+    }
+
+    function renderSchedule() {
+      const tbody = $('schedule').querySelector('tbody')!;
+      const rows = showAll ? lastRows : lastRows.slice(0, PREVIEW);
+      tbody.innerHTML = rows
+        .map((r) => `<tr><td>${r.month}</td><td>${r.payment.toLocaleString('ko-KR')}</td><td>${r.principal.toLocaleString('ko-KR')}</td><td>${r.interest.toLocaleString('ko-KR')}</td><td>${r.balance.toLocaleString('ko-KR')}</td></tr>`)
+        .join('');
+      const more = $<HTMLButtonElement>('schedule-more');
+      more.hidden = lastRows.length <= PREVIEW;
+      more.textContent = showAll ? '처음 24회만 보기' : `전체 ${lastRows.length}회 보기`;
+    }
+
+    function render() {
+      const m = method();
+      set('method-hint', HINT[m]);
+      const base = { principal: num('principal') * 10_000, rate: num('rate') / 100, months: Math.round(num('years') * 12), graceMonths: Math.round(num('grace')) };
+      const r = calcLoan({ ...base, method: m });
+      const ok = r.rows.length > 0;
+      const g = Math.min(base.graceMonths, Math.max(0, base.months - 1));
+
+      if (m === 'bullet') {
+        set('main-label', '월 이자');
+        set('out-main', ok ? won(r.firstPayment) : '-');
+      } else if (m === 'equal-principal') {
+        set('main-label', '첫 달 상환액 (매달 줄어요)');
+        set('out-main', ok ? won(r.firstAmortPayment) : '-');
+      } else {
+        set('main-label', '월 상환액');
+        set('out-main', ok ? won(r.firstAmortPayment) : '-');
+      }
+      $('row-grace').hidden = !(ok && g > 0 && m !== 'bullet');
+      set('out-grace', `${won(r.firstPayment)} × ${g}개월`);
+      $('row-last').hidden = !(ok && m !== 'equal-payment');
+      set('out-last', won(r.lastPayment));
+      set('out-principal', won(Math.round(base.principal)));
+      set('out-interest', won(r.totalInterest));
+      set('out-total', won(r.totalPayment));
+      (['equal-payment', 'equal-principal', 'bullet'] as RepayMethod[]).forEach((k) => {
+        const c = calcLoan({ ...base, method: k });
+        set(`cmp-${k}`, won(c.totalInterest));
+        $(`cmp-${k}`).closest('tr')!.hidden = k === m || !ok;
+      });
+      lastRows = r.rows;
+      renderSchedule();
+    }
+
+    $('schedule-more').addEventListener('click', () => {
+      showAll = !showAll;
+      renderSchedule();
+    });
+    $('calc-form').addEventListener('input', render);
+    $('calc-form').addEventListener('change', render);
+    render();
+  </script>
+</Base>

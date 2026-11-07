@@ -1,0 +1,91 @@
+---
+import Article from '../../layouts/Article.astro';
+import { calcSavings, installmentAsDepositRate } from '../../lib/finance';
+
+const won = (n: number) => n.toLocaleString('ko-KR');
+const pct = (r: number) => `${(r * 100).toFixed(2)}%`;
+const deposits = [10_000_000, 30_000_000, 50_000_000, 100_000_000].map((a) => ({
+  a,
+  g: calcSavings({ kind: 'deposit', amount: a, rate: 0.03, months: 12, compounding: 'simple', taxType: 'general' }),
+  f: calcSavings({ kind: 'deposit', amount: a, rate: 0.03, months: 12, compounding: 'simple', taxType: 'free' }),
+}));
+const ins = [6, 12, 24, 36].map((n) => ({ n, rate: installmentAsDepositRate(0.05, n) }));
+const s5 = calcSavings({ kind: 'installment', amount: 500_000, rate: 0.05, months: 12, compounding: 'simple', taxType: 'general' });
+const types = (['general', 'mutual', 'free'] as const).map((t) => ({
+  t,
+  r: calcSavings({ kind: 'deposit', amount: 30_000_000, rate: 0.03, months: 12, compounding: 'simple', taxType: t }),
+}));
+const tname = { general: '일반과세 (15.4%)', mutual: '상호금융 세금우대 (1.4%)', free: '비과세 (0%)' } as const;
+---
+
+<Article slug="savings-interest-guide">
+  <p>
+    예금·적금 금리는 세금을 떼기 전 금리예요. 이자를 받을 때는 <strong>15.4%</strong>를 떼고, 적금은 금리만큼 이자를 다 받지도 못해요.
+    실제로 손에 쥐는 이자를 계산하는 법과 세금을 줄이는 통장을 정리했어요.
+  </p>
+
+  <h2>이자에는 15.4%가 붙어요</h2>
+  <p>이자소득세 14%에 지방소득세 1.4%를 더해 15.4%를 원천징수해요. 연 3% 예금이라도 세후로는 약 2.54%예요.</p>
+  <div class="card table-scroll">
+    <table>
+      <thead><tr><th>1년 예금 (연 3%)</th><th>세전 이자</th><th>세금</th><th>세후 이자</th></tr></thead>
+      <tbody>
+        {deposits.map(({ a, g }) => (
+          <tr><td>{won(a / 10_000)}만원</td><td>{won(g.interest)}원</td><td>{won(g.tax)}원</td><td><strong>{won(g.afterTaxInterest)}원</strong></td></tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <h2>적금 금리 5%의 진짜 의미</h2>
+  <p>
+    적금은 매달 돈을 넣기 때문에 마지막에 넣은 돈은 이자가 거의 붙지 않아요. 월 50만원을 연 5% 1년 적금에 넣으면 원금 600만원에 세전 이자는
+    {won(s5.interest)}원, 세후 {won(s5.afterTaxInterest)}원이에요. 600만원을 1년 내내 맡긴 것과 비교하면 약 {pct(installmentAsDepositRate(0.05, 12))} 예금과 같아요.
+  </p>
+  <div class="card table-scroll">
+    <table>
+      <thead><tr><th>적금 기간 (연 5%)</th><th>같은 이자를 주는 예금 금리</th></tr></thead>
+      <tbody>
+        {ins.map(({ n, rate }) => (
+          <tr><td>{n}개월</td><td>약 {pct(rate)}</td></tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <p class="hint">원금 합계 기준으로 비교한 값이에요. 매달 넣을 돈이 생기는 직장인에게는 적금이 저축 습관을 만드는 데 여전히 좋아요.</p>
+
+  <h2>세금을 줄이는 통장</h2>
+  <div class="card table-scroll">
+    <table>
+      <thead><tr><th>3,000만원 1년 예금 (연 3%)</th><th>세금</th><th>세후 이자</th></tr></thead>
+      <tbody>
+        {types.map(({ t, r }) => (
+          <tr><td>{tname[t]}</td><td>{won(r.tax)}원</td><td><strong>{won(r.afterTaxInterest)}원</strong></td></tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li><strong>상호금융 예탁금</strong>: 농협·수협·산림조합·신협·새마을금고의 조합원(준조합원)은 1인 3,000만원까지 이자소득세가 면제되고 농어촌특별세 1.4%만 내요. 2026년부터 총급여 7,000만원을 넘는 준조합원은 분리과세(2026년 5%, 2027년부터 9%)로 바뀌었어요.</li>
+    <li><strong>비과세종합저축</strong>: 만 65세 이상, 장애인, 독립유공자, 기초생활수급자 등은 1인 5,000만원까지 이자가 비과세예요.</li>
+    <li><strong>ISA</strong>: 예금·적금도 담을 수 있고, 순이익 200만원(서민형·농어민 400만원)까지 비과세, 넘는 부분은 9.9% 분리과세예요. 의무 가입기간은 3년이에요.</li>
+  </ul>
+
+  <h2>파킹통장과 비교할 때</h2>
+  <p>
+    파킹통장은 언제든 넣고 뺄 수 있는 대신 금리가 낮거나 우대 한도가 작은 경우가 많아요. 1년 이상 쓰지 않을 돈은 예금, 매달 생기는 돈은 적금,
+    비상금은 파킹통장으로 나눠 두면 이자와 유연성을 함께 챙길 수 있어요. 파킹통장 이자도 똑같이 15.4%가 원천징수돼요.
+  </p>
+
+  <h2>체크리스트</h2>
+  <ol>
+    <li>광고 금리가 기본금리인지, 조건을 다 채워야 받는 최고 금리인지 확인하기</li>
+    <li>적금이라면 실제 수익률은 광고 금리의 절반 정도로 생각하기</li>
+    <li>세금우대·비과세 자격이 있는지 먼저 확인하기</li>
+    <li>예금자보호 한도 안에서 나눠 맡기기 (2025년 9월부터 금융회사별 1억원)</li>
+  </ol>
+
+  <p class="notice">
+    단리 기준 예시이며 은행별 이자 계산 방식(일 단위, 월복리)과 우대금리에 따라 실제 금액은 달라질 수 있어요.
+  </p>
+</Article>

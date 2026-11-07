@@ -102,6 +102,27 @@ export const RATES = {
     dividend: { domesticIncomeTaxRate: 0.14, usWithholdingRate: 0.15, comprehensiveThreshold: 20_000_000, minWithholding: 1_000 },
   },
 
+  /**
+   * 금융 (예금·적금·대출)
+   * - 이자소득 원천징수: 소득세 14% + 지방소득세 1.4% = 15.4% (각각 10원 미만 절사)
+   * - 상호금융(농협·수협·신협·새마을금고 등) 예탁금 3,000만원까지: 이자소득세 면제, 농어촌특별세 1.4%만
+   *   (2026년부터 총급여 7,000만원 초과 준조합원은 분리과세 2026년 5%, 2027년부터 9%)
+   * - 대출 인지세: 5천만원 이하 비과세, 1억 이하 7만원, 10억 이하 15만원, 초과 35만원 (고객·금융회사 50%씩)
+   * - 중도상환수수료: 대출일부터 3년 이내 상환 시에만, 실비용 안에서 (2025.1.13 개편)
+   */
+  finance: {
+    interestIncomeTaxRate: 0.14,
+    ruralTaxRate: 0.014,
+    mutualDepositLimit: 30_000_000,
+    stampTax: [
+      { upTo: 50_000_000, tax: 0 },
+      { upTo: 100_000_000, tax: 70_000 },
+      { upTo: 1_000_000_000, tax: 150_000 },
+      { upTo: Infinity, tax: 350_000 },
+    ],
+    prepaymentFeeMonths: 36,
+  },
+
   // 소득세는 국세청 근로소득 간이세액표(withholding2026.ts)를 조회해 계산합니다.
   localIncomeTaxRate: 0.1, // 지방소득세 = 소득세의 10%
 

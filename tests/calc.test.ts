@@ -18,6 +18,7 @@ import { GUIDES } from '../src/guides.ts';
 import { legalConversionRate, jeonseToWolse, wolseToJeonse, impliedConversionRate } from '../src/lib/rentConversion.ts';
 import { SALARY_PAGE_AMOUNTS, salaryPageData, manLabel, minWageMonthly } from '../src/lib/salaryPages.ts';
 import { calcAverage, sharesForTarget, calcTrade, calcOverseasTax, calcDividend, investmentForMonthly, dividendTax } from '../src/lib/stock.ts';
+import { calcLoan, annuityPayment, calcSavings, interestTax, installmentAsDepositRate, stampTax, prepaymentFee, calcRefinance } from '../src/lib/finance.ts';
 
 // ---- 간이세액표 (소득세법 시행령 별표 2, 2026.2.27 개정) 원본 값과 대조 ----
 
@@ -844,4 +845,66 @@ test('연말정산 시뮬레이션: 카드·연금 추가 시 환급 증가', ()
   const capped = planYearEnd({ ...base, pensionSavings: 5_000_000, irp: 3_500_000 }, 0, 3_000_000);
   assert.equal(capped.pensionExtra, 500_000);
   assert.equal(capped.pensionGain, 82_500);
+});
+
+/* ───── 금융: 대출·예적금·갈아타기 ───── */
+test('대출 원리금균등: 1억 4.5% 30년 → 월 506,685원, 잔액 0', () => {
+  const r = calcLoan({ principal: 100_000_000, rate: 0.045, months: 360, method: 'equal-payment' });
+  assert.equal(r.firstPayment, 506_685);
+  assert.equal(r.rows.length, 360);
+  assert.equal(r.rows.at(-1)!.balance, 0);
+  assert.equal(r.rows.reduce((a, x) => a + x.principal, 0), 100_000_000);
+  assert.ok(Math.abs(r.totalInterest - (506_685 * 360 - 100_000_000)) < 1_000);
+});
+
+test('대출 원금균등·만기일시·거치', () => {
+  const e = calcLoan({ principal: 100_000_000, rate: 0.045, months: 360, method: 'equal-principal' });
+  assert.equal(e.firstPayment, 277_778 + 375_000);
+  assert.equal(e.totalInterest, 67_687_500);
+  const b = calcLoan({ principal: 100_000_000, rate: 0.045, months: 12, method: 'bullet' });
+  assert.equal(b.firstPayment, 375_000);
+  assert.equal(b.lastPayment, 100_375_000);
+  assert.equal(b.totalInterest, 4_500_000);
+  // 거치 12개월: 이자만 6만원, 이후 12개월 원리금균등
+  const g = calcLoan({ principal: 12_000_000, rate: 0.06, months: 24, method: 'equal-payment', graceMonths: 12 });
+  assert.equal(g.firstPayment, 60_000);
+  assert.equal(g.firstAmortPayment, Math.round(annuityPayment(12_000_000, 0.06, 12)));
+  // 금리 0%
+  assert.equal(calcLoan({ principal: 1_200_000, rate: 0, months: 12, method: 'equal-payment' }).firstPayment, 100_000);
+});
+
+test('예금·적금 이자: 15.4%(10원 미만 절사), 상호금융 1.4%, 비과세', () => {
+  const d = calcSavings({ kind: 'deposit', amount: 10_000_000, rate: 0.035, months: 12, compounding: 'simple', taxType: 'general' });
+  assert.equal(d.interest, 350_000);
+  assert.equal(d.tax, 53_900);
+  assert.equal(d.maturity, 10_296_100);
+  const s = calcSavings({ kind: 'installment', amount: 1_000_000, rate: 0.04, months: 12, compounding: 'simple', taxType: 'general' });
+  // 100만 × 4%/12 × (12×13/2) = 260,000
+  assert.equal(s.interest, 260_000);
+  assert.equal(s.tax, 40_040);
+  const m = calcSavings({ kind: 'deposit', amount: 10_000_000, rate: 0.036, months: 12, compounding: 'monthly', taxType: 'free' });
+  assert.equal(m.interest, Math.floor(10_000_000 * (Math.pow(1.003, 12) - 1)));
+  assert.equal(m.tax, 0);
+  assert.deepEqual(interestTax(123_456, 'mutual'), { incomeTax: 0, localTax: 0, ruralTax: 1_720 });
+  const over = calcSavings({ kind: 'deposit', amount: 40_000_000, rate: 0.03, months: 12, compounding: 'simple', taxType: 'mutual' });
+  assert.equal(over.overMutualLimit, true);
+  // 이자 120만 중 3,000만원분 90만은 1.4%, 나머지 30만은 15.4%
+  assert.equal(over.ruralTax, 12_600);
+  assert.equal(over.incomeTax, 42_000);
+  assert.equal(over.localTax, 4_200);
+  // 12개월 적금 4%는 예금 약 2.17%와 이자가 같음
+  assert.ok(Math.abs(installmentAsDepositRate(0.04, 12) - 0.021667) < 1e-5);
+});
+
+test('대출 갈아타기: 인지세·중도상환수수료·손익분기', () => {
+  assert.deepEqual(stampTax(50_000_000), { total: 0, borrower: 0 });
+  assert.deepEqual(stampTax(200_000_000), { total: 150_000, borrower: 75_000 });
+  assert.equal(prepaymentFee(200_000_000, 0.0065, 12), 866_666);
+  assert.equal(prepaymentFee(200_000_000, 0.0065, 36), 0);
+  const r = calcRefinance({ balance: 200_000_000, currentRate: 0.05, remainingMonths: 300, newRate: 0.04, method: 'equal-payment', feeRate: 0.0065, elapsedMonths: 12, otherCosts: 500_000 });
+  assert.equal(r.totalCost, 866_666 + 75_000 + 500_000);
+  assert.equal(r.netBenefit, r.interestSaving - r.totalCost);
+  assert.ok(r.breakEvenMonth! > 0 && r.breakEvenMonth! < 24);
+  // 금리가 오르면 손익분기 없음
+  assert.equal(calcRefinance({ balance: 100_000_000, currentRate: 0.04, remainingMonths: 120, newRate: 0.045, method: 'equal-payment', feeRate: 0, elapsedMonths: 40, otherCosts: 0 }).breakEvenMonth, null);
 });

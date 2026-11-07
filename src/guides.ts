@@ -13,6 +13,22 @@ export interface GuideMeta {
 
 export const GUIDES: GuideMeta[] = [
   {
+    slug: 'loan-repayment-guide',
+    title: '대출 상환 방식 비교: 원리금균등·원금균등·만기일시',
+    description: '같은 대출도 상환 방식에 따라 월 부담과 총이자가 크게 달라져요. 금액·금리별 표와 고르는 기준, 중도상환 팁을 정리했습니다.',
+    published: '2026-11-07',
+    updated: '2026-11-07',
+    calculator: { href: '/loan-interest', label: '내 대출 월 상환액 계산하기' },
+  },
+  {
+    slug: 'savings-interest-guide',
+    title: '예금·적금 이자 세금과 실제 수익률 정리',
+    description: '이자소득세 15.4%, 적금 금리가 실제로는 절반 수준인 이유, 비과세·세금우대 통장과 파킹통장 비교를 예시로 정리했습니다.',
+    published: '2026-11-07',
+    updated: '2026-11-07',
+    calculator: { href: '/savings-interest', label: '세후 이자 계산하기' },
+  },
+  {
     slug: 'card-deduction-guide',
     title: '신용카드 소득공제 계산법: 25% 넘으면 체크카드',
     description: '총급여 25% 문턱, 결제수단별 공제율(15·30·40%), 자녀 수별 한도와 연말에 어떤 카드를 쓰면 유리한지 예시로 정리했습니다.',

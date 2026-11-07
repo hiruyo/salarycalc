@@ -1,0 +1,187 @@
+---
+import Base from '../layouts/Base.astro';
+import ResultActions from '../components/ResultActions.astro';
+import SaveHistory from '../components/SaveHistory.astro';
+import { GUIDES } from '../guides';
+import { RATES } from '../rates/2026';
+import { calcRefinance } from '../lib/finance';
+const F = RATES.finance;
+const won = (n: number) => n.toLocaleString('ko-KR');
+const man = (n: number) => `${(n / 10_000).toLocaleString('ko-KR')}만원`;
+const relatedGuides = GUIDES.filter((g) => ['loan-repayment-guide'].includes(g.slug));
+const ex = calcRefinance({ balance: 200_000_000, currentRate: 0.05, remainingMonths: 300, newRate: 0.04, method: 'equal-payment', feeRate: 0.0065, elapsedMonths: 12, otherCosts: 500_000 });
+---
+
+<Base
+  title="대출 갈아타기 계산기 - 중도상환수수료 빼고 이득일까"
+  description="지금 대출과 새 대출 금리를 비교해 중도상환수수료·인지세·부대비용을 빼고도 이득인지, 몇 개월 만에 본전인지 계산합니다."
+>
+  <h1>대출 갈아타기 계산기</h1>
+  <p class="lead">금리가 낮은 대출로 옮길 때 줄어드는 이자와 드는 비용을 비교해, 실제로 얼마 이득인지 계산해요.</p>
+
+  <div class="calc-layout">
+    <form id="calc-form" class="card" onsubmit="return false;">
+      <p class="subhead">지금 대출</p>
+      <label for="balance">남은 대출 원금 (만원)</label>
+      <input id="balance" type="number" inputmode="numeric" min="0" step="100" value="20000" />
+      <div class="pair">
+        <div>
+          <label for="cur-rate">지금 금리 (%)</label>
+          <input id="cur-rate" type="number" inputmode="decimal" min="0" step="0.01" value="5" />
+        </div>
+        <div>
+          <label for="remain">남은 기간 (개월)</label>
+          <input id="remain" type="number" inputmode="numeric" min="1" step="1" value="300" />
+        </div>
+      </div>
+      <label for="method">상환 방식</label>
+      <select id="method">
+        <option value="equal-payment" selected>원리금균등</option>
+        <option value="equal-principal">원금균등</option>
+        <option value="bullet">만기일시</option>
+      </select>
+
+      <p class="subhead">새 대출</p>
+      <div class="pair">
+        <div>
+          <label for="new-rate">새 금리 (%)</label>
+          <input id="new-rate" type="number" inputmode="decimal" min="0" step="0.01" value="4" />
+        </div>
+        <div>
+          <label for="new-months">새 기간 (개월, 선택)</label>
+          <input id="new-months" type="number" inputmode="numeric" min="1" step="1" placeholder="남은 기간과 같게" />
+        </div>
+      </div>
+
+      <p class="subhead">비용</p>
+      <div class="pair">
+        <div>
+          <label for="elapsed">지금 대출 받은 지 (개월)</label>
+          <input id="elapsed" type="number" inputmode="numeric" min="0" step="1" value="12" />
+        </div>
+        <div>
+          <label for="fee-rate">중도상환수수료율 (%)</label>
+          <input id="fee-rate" type="number" inputmode="decimal" min="0" step="0.01" value="0.65" />
+        </div>
+      </div>
+      <div class="hint">대출일부터 3년이 지나면 수수료가 없어요. 수수료율은 대출 약정서나 은행 앱에서 확인하세요. 2025년 1월 13일 이후 은행 대출은 주택담보대출 0.6% 안팎, 신용대출 0.1% 안팎이 많아요.</div>
+      <label for="other">기타 비용 (만원)</label>
+      <input id="other" type="number" inputmode="decimal" min="0" step="1" value="50" />
+      <div class="hint">근저당 설정·말소, 감정평가, 법무사 비용 등. 은행이 부담하는 경우가 많으니 확인하세요. 인지세는 자동으로 계산해요.</div>
+    </form>
+
+    <div class="receipt" data-history-results>
+      <div class="result-main">
+        <div class="label">갈아타면 (비용 빼고)</div>
+        <div class="big" id="out-net">-</div>
+      </div>
+      <table>
+        <tbody>
+          <tr><th>지금 대출 남은 이자</th><td id="out-cur">-</td></tr>
+          <tr><th>새 대출 총이자</th><td id="out-new">-</td></tr>
+          <tr class="total"><th>줄어드는 이자</th><td id="out-saving">-</td></tr>
+          <tr><th>중도상환수수료</th><td id="out-fee">-</td></tr>
+          <tr><th>인지세 (본인 부담 50%)</th><td id="out-stamp">-</td></tr>
+          <tr><th>기타 비용</th><td id="out-other">-</td></tr>
+          <tr class="total"><th>비용 합계</th><td id="out-cost">-</td></tr>
+          <tr><th>월 상환액 (지금 → 새 대출)</th><td id="out-monthly">-</td></tr>
+          <tr><th>본전 시점</th><td id="out-be">-</td></tr>
+        </tbody>
+      </table>
+      <p class="hint" id="out-tip"></p>
+      <ResultActions calc="loan-refinance" />
+    </div>
+    <SaveHistory calc="loan-refinance" title="대출갈아타기" />
+  </div>
+
+  <p class="notice">
+    금리가 남은 기간 동안 그대로라고 가정했어요. 변동금리는 앞으로 바뀔 수 있고, 새 대출의 한도·심사 결과에 따라 조건이 달라질 수 있어요.
+  </p>
+
+  <h2>예시: 2억원, 5% → 4%</h2>
+  <p>
+    남은 원금 2억원, 남은 기간 25년(원리금균등)인 대출을 받은 지 1년 만에 4%로 갈아타면,
+    줄어드는 이자는 약 {man(Math.round(ex.interestSaving / 10_000) * 10_000)}이고 비용은 중도상환수수료 {won(ex.prepaymentFee)}원,
+    인지세 {won(ex.stampTax)}원, 기타 50만원으로 총 {won(ex.totalCost)}원이에요. 약 {ex.breakEvenMonth}개월이면 비용을 회수해요.
+  </p>
+
+  <h2>갈아타기 전에 확인할 것</h2>
+  <ul>
+    <li><strong>중도상환수수료</strong>: 대출일부터 3년 이내에 갚을 때만 붙고, 남은 기간에 비례해 줄어요. 수수료 = 상환금액 × 수수료율 × (3년 − 경과 기간) ÷ 3년</li>
+    <li><strong>인지세</strong>: 새 대출 계약서에 붙는 세금이에요. {man(F.stampTax[0].upTo)} 이하 비과세, 1억원 이하 7만원, 10억원 이하 15만원, 초과 35만원을 은행과 반씩 내요.</li>
+    <li><strong>금리 차이만 보지 마세요</strong>: 새 대출 기간을 늘리면 월 상환액은 줄어도 총이자는 늘 수 있어요. 기간을 같게 두고 비교하는 게 정확해요.</li>
+    <li><strong>대환대출 서비스</strong>: 은행·핀테크 앱의 온라인 대환대출 서비스로 여러 금융회사 금리를 한 번에 비교하고 바로 갈아탈 수 있어요(신용대출·주택담보대출·전세대출).</li>
+  </ul>
+
+  <h2>자주 묻는 질문</h2>
+  <details>
+    <summary>금리 차이가 얼마나 나야 갈아탈 만한가요?</summary>
+    <p>남은 원금과 기간, 수수료에 따라 달라요. 남은 기간이 길고 원금이 클수록 작은 금리 차이도 이득이 커요. 반대로 1~2년 안에 다 갚을 대출이라면 수수료와 부대비용 때문에 손해일 수 있어요.</p>
+  </details>
+  <details>
+    <summary>3년이 지나면 수수료가 없나요?</summary>
+    <p>대부분의 대출은 대출일부터 3년이 지나면 중도상환수수료가 없어요. 금융소비자보호법에 따라 3년 이후에는 원칙적으로 수수료를 받을 수 없어요.</p>
+  </details>
+
+  <h2>관련 가이드</h2>
+  <ul class="links">
+    {relatedGuides.map((g) => (
+      <li>
+        <a href={`/guide/${g.slug}`}>
+          <strong>{g.title}</strong>
+          <span>{g.description}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+
+  <script>
+    import { calcRefinance, type RepayMethod } from '../lib/finance';
+
+    const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+    const num = (id: string) => Number($<HTMLInputElement>(id).value) || 0;
+    const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
+    const signed = (n: number) => `${n > 0 ? '+' : n < 0 ? '−' : ''}${Math.abs(n).toLocaleString('ko-KR')}원`;
+    const set = (id: string, text: string) => {
+      $(id).textContent = text;
+    };
+    const period = (m: number) => (m >= 12 ? `${Math.floor(m / 12)}년${m % 12 ? ` ${m % 12}개월` : ''}` : `${m}개월`);
+
+    function render() {
+      const r = calcRefinance({
+        balance: num('balance') * 10_000,
+        currentRate: num('cur-rate') / 100,
+        remainingMonths: Math.round(num('remain')),
+        newRate: num('new-rate') / 100,
+        newMonths: Math.round(num('new-months')) || undefined,
+        method: $<HTMLSelectElement>('method').value as RepayMethod,
+        feeRate: num('fee-rate') / 100,
+        elapsedMonths: Math.round(num('elapsed')),
+        otherCosts: num('other') * 10_000,
+      });
+      const ok = num('balance') > 0 && num('remain') > 0;
+      set('out-net', ok ? signed(r.netBenefit) : '-');
+      $('out-net').classList.toggle('neg', ok && r.netBenefit < 0);
+      set('out-cur', won(r.currentInterest));
+      set('out-new', won(r.newInterest));
+      set('out-saving', signed(r.interestSaving));
+      set('out-fee', won(r.prepaymentFee));
+      set('out-stamp', won(r.stampTax));
+      set('out-other', won(r.otherCosts));
+      set('out-cost', won(r.totalCost));
+      set('out-monthly', `${won(r.currentMonthly)} → ${won(r.newMonthly)}`);
+      set('out-be', r.breakEvenMonth ? `${period(r.breakEvenMonth)} 뒤` : '회수 못 함');
+
+      const tips: string[] = [];
+      if (ok && r.netBenefit > 0) tips.push(`갈아타는 게 ${won(r.netBenefit)} 이득이에요.`);
+      else if (ok) tips.push('비용을 빼면 지금 대출을 유지하는 게 나아요.');
+      if (!r.sameTerm) tips.push('새 대출 기간이 달라서 총이자 비교에는 기간 차이도 섞여 있어요.');
+      if (r.prepaymentFee === 0 && num('elapsed') >= 36) tips.push('대출일부터 3년이 지나 중도상환수수료가 없어요.');
+      set('out-tip', tips.join(' '));
+    }
+
+    $('calc-form').addEventListener('input', render);
+    $('calc-form').addEventListener('change', render);
+    render();
+  </script>
+</Base>
